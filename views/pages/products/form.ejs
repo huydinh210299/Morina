@@ -1,0 +1,55 @@
+<section class="mx-auto max-w-4xl space-y-6">
+  <%- include("../../partials/product-management-tabs", { activeProductManagementTab: "products" }) %>
+
+  <div class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
+    <h1 class="text-3xl font-black text-slate-900"><%= title %></h1>
+
+    <form action="<%= formAction %>" method="<%= formMethod %>" class="mt-8 grid gap-5 md:grid-cols-2">
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">Mã</label>
+        <input name="code" type="text" required value="<%= product?.code || '' %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+      </div>
+
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">Danh mục</label>
+        <select name="category" required class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100">
+          <option value="">Chọn danh mục</option>
+          <% categories.forEach((category) => { %>
+            <option
+              value="<%= category._id %>"
+              title="<%= category.description || category.code %>"
+              <%= String(product?.category) === String(category._id) ? "selected" : "" %>
+            >
+              <%= category.description ? `${category.code} - ${category.description}` : category.code %>
+            </option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">Giá cả ngày</label>
+        <input name="fullDayPrice" type="number" min="0" step="0.01" required value="<%= product?.fullDayPrice ?? '' %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+      </div>
+
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">Giá 8 giờ</label>
+        <input name="eightHPrice" type="number" min="0" step="0.01" required value="<%= product?.eightHPrice ?? '' %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+      </div>
+
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">Kích cỡ</label>
+        <input name="size" type="text" value="<%= product?.size || '' %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="mb-2 block text-sm font-semibold text-slate-700">Ghi chú</label>
+        <textarea name="note" rows="4" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"><%= product?.note || '' %></textarea>
+      </div>
+
+      <div class="md:col-span-2 flex gap-3">
+        <button type="submit" class="rounded-full bg-brand-500 px-6 py-3 font-semibold text-white transition hover:bg-brand-700">Lưu sản phẩm</button>
+        <a href="/products" class="rounded-full bg-slate-100 px-6 py-3 font-semibold text-slate-700">Hủy</a>
+      </div>
+    </form>
+  </div>
+</section>

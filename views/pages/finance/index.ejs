@@ -1,0 +1,231 @@
+<%
+  const revenue = revenueSummary || {};
+  const paymentSection = paymentManagement || {};
+  const filters = paymentSection.filters || {};
+  const payments = paymentSection.payments || [];
+  const pagination = paymentSection.pagination || {};
+  const editingPayment = paymentSection.editingPayment || null;
+
+  const paymentParams = new URLSearchParams();
+  paymentParams.set("tab", "payments");
+  paymentParams.set("paymentMonth", filters.paymentMonth || new Date().getMonth() + 1);
+  paymentParams.set("paymentYear", filters.paymentYear || new Date().getFullYear());
+
+  const buildPaymentPageUrl = (page) => {
+    const params = new URLSearchParams(paymentParams.toString());
+    params.set("page", page);
+    return `/finance?${params.toString()}`;
+  };
+
+  const buildPaymentEditUrl = (paymentId) => {
+    const params = new URLSearchParams(paymentParams.toString());
+    params.set("page", pagination.page || 1);
+    params.set("edit", paymentId);
+    return `/finance?${params.toString()}`;
+  };
+%>
+
+<section class="space-y-6">
+  <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div>
+      <h1 class="text-3xl font-black text-slate-900">Finance</h1>
+      <p class="mt-1 text-slate-500">Theo dõi doanh thu, lương nhân viên và các khoản chi của shop trong từng tháng.</p>
+    </div>
+    <div class="inline-flex rounded-full bg-white p-1 shadow-lg shadow-slate-200/60">
+      <a href="/finance?tab=revenue&summaryMonth=<%= revenue.selectedMonth %>" class="rounded-full px-5 py-3 text-sm font-semibold <%= activeTab === 'revenue' ? 'bg-slate-900 text-white' : 'text-slate-600' %>">Doanh thu</a>
+      <a href="/finance?<%= paymentParams.toString() %>" class="rounded-full px-5 py-3 text-sm font-semibold <%= activeTab === 'payments' ? 'bg-slate-900 text-white' : 'text-slate-600' %>">Khoản chi</a>
+    </div>
+  </div>
+
+  <% if (activeTab === "revenue") { %>
+    <form action="/finance" method="GET" class="rounded-[2rem] bg-white p-6 shadow-xl shadow-slate-200/60">
+      <input type="hidden" name="tab" value="revenue" />
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 class="text-2xl font-black text-slate-900">Doanh thu</h2>
+          <p class="mt-1 text-slate-500">Xem doanh thu, tổng lương đã trả và tổng khoản chi theo tháng năm.</p>
+        </div>
+        <div class="flex flex-wrap items-end gap-3">
+          <label class="block">
+            <span class="mb-2 block text-sm font-semibold text-slate-700">Tháng năm</span>
+            <input name="summaryMonth" type="month" value="<%= revenue.selectedMonth %>" class="rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+          </label>
+          <button type="submit" class="rounded-full bg-brand-500 px-5 py-3 font-semibold text-white transition hover:bg-brand-700">Xem báo cáo</button>
+        </div>
+      </div>
+    </form>
+
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
+        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Doanh thu</p>
+        <p class="mt-3 text-3xl font-black text-emerald-700"><%= formatCurrency(revenue.totalRevenue) %></p>
+        <p class="mt-2 text-sm text-slate-500"><%= revenue.orderCount %> orders in <%= revenue.selectedMonth %></p>
+      </div>
+      <div class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
+        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Lương nhân viên</p>
+        <p class="mt-3 text-3xl font-black text-brand-700"><%= formatCurrency(revenue.totalSalary) %></p>
+        <p class="mt-2 text-sm text-slate-500"><%= revenue.staffSalaryItems.length %> nhân viên đã được tính lương</p>
+      </div>
+      <div class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
+        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Khoản chi</p>
+        <p class="mt-3 text-3xl font-black text-rose-700"><%= formatCurrency(revenue.totalPayment) %></p>
+        <p class="mt-2 text-sm text-slate-500"><%= revenue.paymentCount %> khoản chi trong tháng</p>
+      </div>
+      <div class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
+        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Doanh thu ròng</p>
+        <p class="mt-3 text-3xl font-black <%= revenue.netRevenue >= 0 ? 'text-slate-900' : 'text-rose-700' %>"><%= formatCurrency(revenue.netRevenue) %></p>
+        <p class="mt-2 text-sm text-slate-500">Doanh thu - lương - khoản chi</p>
+      </div>
+    </div>
+
+    <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+      <div class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
+        <div class="flex items-center justify-between">
+          <h2 class="text-2xl font-black text-slate-900">Lương nhân viên tháng <%= revenue.selectedMonth %></h2>
+          <span class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600">Năm <%= revenue.year %></span>
+        </div>
+        <div class="mt-6 space-y-4">
+          <% if (revenue.staffSalaryItems.length === 0) { %>
+            <p class="text-slate-500">Chưa có nhân viên nào được thanh toán lương trong tháng này.</p>
+          <% } %>
+          <% revenue.staffSalaryItems.forEach((item) => { %>
+            <div class="flex items-center justify-between rounded-3xl border border-slate-200 px-5 py-4">
+              <div>
+                <p class="font-semibold text-slate-900"><%= item.username %></p>
+                <p class="mt-1 text-sm text-slate-500">Lương đã chốt trong tháng <%= revenue.selectedMonth %></p>
+              </div>
+              <p class="text-lg font-black text-brand-700"><%= formatCurrency(item.salary) %></p>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+
+      <div class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
+        <h2 class="text-2xl font-black text-slate-900">Tóm tắt kỳ này</h2>
+        <div class="mt-6 space-y-4 text-sm text-slate-600">
+          <div class="rounded-3xl bg-slate-50 p-5">
+            <p class="font-semibold text-slate-900">Tháng đang xem</p>
+            <p class="mt-2"><%= revenue.selectedMonth %></p>
+          </div>
+          <div class="rounded-3xl bg-slate-50 p-5">
+            <p class="font-semibold text-slate-900">Công thức</p>
+            <p class="mt-2">Doanh thu ròng = Doanh thu - Lương nhân viên - Khoản chi của shop</p>
+          </div>
+          <div class="rounded-3xl bg-slate-50 p-5">
+            <p class="font-semibold text-slate-900">Ghi chú</p>
+            <p class="mt-2">Doanh thu được tính theo đơn hàng tạo trong tháng. Khoản chi được tính theo ngày tạo khoản chi.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% } %>
+
+  <% if (activeTab === "payments") { %>
+    <div class="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+      <form action="<%= editingPayment ? `/finance/payments/${editingPayment._id}?tab=payments&paymentMonth=${filters.paymentMonth}&paymentYear=${filters.paymentYear}&page=${pagination.page || 1}&_method=PUT` : `/finance/payments?tab=payments&paymentMonth=${filters.paymentMonth}&paymentYear=${filters.paymentYear}&page=${pagination.page || 1}` %>" method="POST" class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
+        <h2 class="text-2xl font-black text-slate-900"><%= editingPayment ? "Cập nhật thu chi" : "Tạo thu chi" %></h2>
+        <p class="mt-2 text-slate-500">Lưu khoản chi của shop với số tiền và mô tả rõ ràng để dễ đối soát.</p>
+        <div class="mt-6 space-y-5">
+          <div>
+            <label class="mb-2 block text-sm font-semibold text-slate-700">Số tiền</label>
+            <input name="amount" type="number" min="0" step="1" required value="<%= editingPayment?.amount ?? '' %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+          </div>
+          <div>
+            <label class="mb-2 block text-sm font-semibold text-slate-700">Mô tả</label>
+            <textarea name="description" rows="5" placeholder="Nhập nội dung khoản chi" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"><%= editingPayment?.description || '' %></textarea>
+          </div>
+          <div class="flex gap-3">
+            <button type="submit" class="rounded-full bg-brand-500 px-6 py-3 font-semibold text-white transition hover:bg-brand-700"><%= editingPayment ? "Cập nhật" : "Thêm thu chi" %></button>
+            <% if (editingPayment) { %>
+              <a href="<%= buildPaymentPageUrl(pagination.page || 1) %>" class="rounded-full bg-slate-100 px-6 py-3 font-semibold text-slate-700">Hủy</a>
+            <% } %>
+          </div>
+        </div>
+      </form>
+
+      <div class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
+        <h2 class="text-2xl font-black text-slate-900">Lọc khoản chi</h2>
+        <form action="/finance" method="GET" class="mt-6 space-y-5">
+          <input type="hidden" name="tab" value="payments" />
+          <div class="grid gap-4 md:grid-cols-2">
+            <label class="block">
+              <span class="mb-2 block text-sm font-semibold text-slate-700">Tháng</span>
+              <select name="paymentMonth" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100">
+                <% for (let month = 1; month <= 12; month += 1) { %>
+                  <option value="<%= month %>" <%= Number(filters.paymentMonth) === month ? 'selected' : '' %>>Tháng <%= String(month).padStart(2, "0") %></option>
+                <% } %>
+              </select>
+            </label>
+            <label class="block">
+              <span class="mb-2 block text-sm font-semibold text-slate-700">Năm</span>
+              <input name="paymentYear" type="number" min="2000" step="1" value="<%= filters.paymentYear %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+            </label>
+          </div>
+          <div class="flex gap-3">
+            <button type="submit" class="rounded-full bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-700">Lọc khoản chi</button>
+            <a href="/finance?tab=payments" class="rounded-full bg-slate-100 px-5 py-3 font-semibold text-slate-700">Tháng hiện tại</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="overflow-hidden rounded-3xl bg-white shadow-lg shadow-slate-200/60">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-200">
+          <thead class="bg-slate-50">
+            <tr>
+              <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Payment ID</th>
+              <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Amount</th>
+              <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Description</th>
+              <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Created at</th>
+              <th class="px-6 py-4 text-right text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <% if (payments.length === 0) { %>
+              <tr>
+                <td colspan="5" class="px-6 py-10 text-center text-slate-500">Không có khoản chi nào trong bộ lọc hiện tại.</td>
+              </tr>
+            <% } %>
+            <% payments.forEach((payment) => { %>
+              <tr>
+                <td class="px-6 py-4 text-slate-600"><span class="font-semibold text-slate-900"><%= payment.id %></span></td>
+                <td class="px-6 py-4 text-slate-700"><%= formatCurrency(payment.amount) %></td>
+                <td class="px-6 py-4 text-slate-600"><%= payment.description || '-' %></td>
+                <td class="px-6 py-4 text-slate-600"><%= formatDateTime(payment.createdAt) %></td>
+                <td class="px-6 py-4">
+                  <div class="flex justify-end gap-2">
+                    <a href="<%= buildPaymentEditUrl(payment._id) %>" class="rounded-full bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-800">Edit</a>
+                    <form action="/finance/payments/<%= payment._id %>?tab=payments&paymentMonth=<%= filters.paymentMonth %>&paymentYear=<%= filters.paymentYear %>&page=<%= pagination.page || 1 %>&_method=DELETE" method="POST" onsubmit="return confirm('Xóa khoản chi này?');">
+                      <button type="submit" class="rounded-full bg-rose-100 px-4 py-2 text-sm font-semibold text-rose-800">Xóa</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex flex-col gap-4 border-t border-slate-200 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <p class="text-sm text-slate-500">
+          Trang <span class="font-semibold text-slate-700"><%= pagination.page %></span> / <span class="font-semibold text-slate-700"><%= pagination.totalPages %></span>
+          - Tong <span class="font-semibold text-slate-700"><%= pagination.totalItems %></span> payment
+        </p>
+        <div class="flex items-center gap-3">
+          <% if (pagination.hasPrev) { %>
+            <a href="<%= buildPaymentPageUrl(pagination.prevPage) %>" class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">Trang truoc</a>
+          <% } else { %>
+            <span class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-400">Trang trước</span>
+          <% } %>
+
+          <% if (pagination.hasNext) { %>
+            <a href="<%= buildPaymentPageUrl(pagination.nextPage) %>" class="rounded-full bg-brand-50 px-4 py-2 text-sm font-semibold text-brand-700 transition hover:bg-brand-100">Trang sau</a>
+          <% } else { %>
+            <span class="rounded-full bg-brand-50 px-4 py-2 text-sm font-semibold text-slate-400">Trang sau</span>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  <% } %>
+</section>

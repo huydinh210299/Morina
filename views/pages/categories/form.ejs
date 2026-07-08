@@ -1,0 +1,24 @@
+<section class="mx-auto max-w-3xl space-y-6">
+  <%- include("../../partials/product-management-tabs", { activeProductManagementTab: "categories" }) %>
+
+  <div class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
+    <h1 class="text-3xl font-black text-slate-900"><%= title %></h1>
+
+    <form action="<%= formAction %>" method="<%= formMethod %>" class="mt-8 space-y-5">
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">Mã</label>
+        <input name="code" type="text" required value="<%= category?.code || '' %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 uppercase outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+      </div>
+
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">Mô tả</label>
+        <textarea name="description" rows="4" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"><%= category?.description || '' %></textarea>
+      </div>
+
+      <div class="flex gap-3">
+        <button type="submit" class="rounded-full bg-brand-500 px-6 py-3 font-semibold text-white transition hover:bg-brand-700">Lưu danh mục</button>
+        <a href="/categories" class="rounded-full bg-slate-100 px-6 py-3 font-semibold text-slate-700">Hủy</a>
+      </div>
+    </form>
+  </div>
+</section>

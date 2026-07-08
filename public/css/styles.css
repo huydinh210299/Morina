@@ -1,0 +1,14 @@
+body {
+  font-family: "Be Vietnam Pro", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+table {
+  width: 100%;
+}
+
+input,
+select,
+textarea,
+button {
+  transition: all 0.2s ease;
+}

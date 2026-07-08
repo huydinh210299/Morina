@@ -1,0 +1,335 @@
+<%
+  const formatDateTimeLocal = (value) => {
+    if (!value) return "";
+    const date = new Date(value);
+    const offset = date.getTimezoneOffset();
+    const localDate = new Date(date.getTime() - offset * 60000);
+    return localDate.toISOString().slice(0, 16);
+  };
+
+  const orderProducts = order?.products?.length ? order.products : [{}];
+  const orderAccessories = order?.accessories?.length ? order.accessories : [];
+  const orderPayments = order?.payments?.length ? order.payments : [{}];
+  const sameDateTime = (left, right) => {
+    if (!left || !right) return false;
+    return new Date(left).getTime() === new Date(right).getTime();
+  };
+  const usesGeneralTimes = (item) => {
+    if (typeof item?.useGeneralTimes === "boolean") return item.useGeneralTimes;
+    if (!item?.startTime && !item?.endTime) return true;
+    return sameDateTime(item?.startTime, order?.generalStartTime) && sameDateTime(item?.endTime, order?.generalEndTime);
+  };
+  const calculatedOrderAmount =
+    orderProducts.reduce((sum, item) => sum + Number(item?.price || 0), 0) +
+    orderAccessories.reduce((sum, item) => sum + Number(item?.price || 0), 0) +
+    Number(order?.surcharge || 0);
+  const editableOrderAmount = order?.orderAmount ?? calculatedOrderAmount;
+  const totalWithDeposit = editableOrderAmount + Number(order?.deposit || 0);
+  const buildProductLabel = (product) => [product.code, product.size, product.note].filter(Boolean).join(" - ");
+  const buildAccessoryLabel = (accessory) => [accessory.code, accessory.name].filter(Boolean).join(" - ");
+  const productLookup = products.map((product) => ({
+    id: String(product._id),
+    code: product.code,
+    size: product.size || "",
+    note: product.note || "",
+    label: buildProductLabel(product),
+    searchText: [product.code, product.size, product.note].filter(Boolean).join(" ").toLowerCase(),
+    fullDayPrice: product.fullDayPrice
+  }));
+  const accessoryLookup = accessories.map((accessory) => ({
+    id: String(accessory._id),
+    code: accessory.code,
+    name: accessory.name,
+    label: buildAccessoryLabel(accessory),
+    searchText: [accessory.code, accessory.name].filter(Boolean).join(" ").toLowerCase(),
+    price: accessory.price
+  }));
+%>
+
+<section class="space-y-6">
+  <div>
+    <h1 class="text-3xl font-black text-slate-900"><%= title %></h1>
+    <p class="mt-1 text-slate-500">Tạo đơn hàng với dòng sản phẩm, dòng phụ kiện, thanh toán và các trạng thái vận hành.</p>
+  </div>
+
+  <form action="<%= formAction %>" method="<%= formMethod %>" class="space-y-6">
+    <script id="order-form-data" type="application/json"><%- JSON.stringify({ products: productLookup, accessories: accessoryLookup }) %></script>
+    <div class="grid gap-6 rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60 lg:grid-cols-2">
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">Tên khách hàng</label>
+        <input name="customerName" type="text" required value="<%= order?.customerName || '' %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+      </div>
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">Số điện thoại</label>
+        <input name="phone" type="text" required value="<%= order?.phone || '' %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+      </div>
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">Thuê từ</label>
+        <input name="generalStartTime" type="datetime-local" required value="<%= formatDateTimeLocal(order?.generalStartTime) %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+      </div>
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">Kết thúc thuê</label>
+        <input name="generalEndTime" type="datetime-local" required value="<%= formatDateTimeLocal(order?.generalEndTime) %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+      </div>
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">Phụ thu</label>
+        <input name="surcharge" type="number" min="0" step="0.01" required value="<%= order?.surcharge ?? 0 %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+      </div>
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">Tiền cọc</label>
+        <input name="deposit" type="number" min="0" step="0.01" required value="<%= order?.deposit ?? 0 %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+      </div>
+      <div class="lg:col-span-2">
+        <label class="mb-2 block text-sm font-semibold text-slate-700">Ghi chú</label>
+        <textarea name="note" rows="3" placeholder="Ghi chú về giao hàng, yêu cầu khách, tình trạng đơn..." class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"><%= order?.note || '' %></textarea>
+      </div>
+      <div class="rounded-3xl border border-brand-100 bg-brand-50/60 p-5 lg:col-span-2">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p class="text-sm font-semibold text-brand-900">Tổng tiền tính tự động</p>
+            <p data-calculated-total-display class="mt-1 text-2xl font-black text-brand-900"><%= formatCurrency(calculatedOrderAmount) %></p>
+            <p data-total-with-deposit-display class="mt-1 text-sm font-semibold text-brand-800">Tổng thu (gồm cọc): <%= formatCurrency(totalWithDeposit) %></p>
+            <p class="mt-1 text-sm text-brand-800">Gồm sản phẩm + phụ thu + phụ kiện. Có thể sửa tổng cuối để áp dụng giảm giá.</p>
+          </div>
+          <div class="w-full max-w-sm">
+            <label class="mb-2 block text-sm font-semibold text-slate-700">Tổng tiền hóa đơn</label>
+            <div class="flex gap-3">
+              <input name="orderAmount" data-order-amount-input type="number" min="0" step="0.01" value="<%= editableOrderAmount %>" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+              <button type="button" data-reset-order-amount class="shrink-0 rounded-full bg-white px-4 py-3 text-sm font-semibold text-brand-700 ring-1 ring-brand-200">Khôi phục</button>
+            </div>
+            <p data-order-amount-hint class="mt-2 text-sm text-slate-500"></p>
+          </div>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-6 lg:col-span-2">
+        <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+          <input name="bookship" type="checkbox" <%= order?.bookship ? "checked" : "" %> class="size-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500" />
+          Có book ship
+        </label>
+        <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+          <input name="important" type="checkbox" <%= order?.important ? "checked" : "" %> class="size-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500" />
+          Quan trọng
+        </label>
+        <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+          <input name="alreadyPickup" type="checkbox" <%= order?.alreadyPickup ? "checked" : "" %> class="size-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500" />
+          Đã lấy đồ
+        </label>
+        <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+          <input name="returned" type="checkbox" <%= order?.returned ? "checked" : "" %> class="size-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500" />
+          Đã trả đồ
+        </label>
+        <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+          <input name="returnDeposit" type="checkbox" <%= order?.returnDeposit ? "checked" : "" %> class="size-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500" />
+          Đã hoàn cọc
+        </label>
+      </div>
+    </div>
+
+    <div class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-black text-slate-900">Dòng sản phẩm</h2>
+        <button type="button" data-add-row="products" class="rounded-full bg-brand-50 px-4 py-2 text-sm font-semibold text-brand-700">Thêm dòng sản phẩm</button>
+      </div>
+      <div id="products-container" class="mt-6 space-y-4">
+        <% orderProducts.forEach((item) => { %>
+          <% const selectedProduct = products.find((product) => String(product._id) === String(item.product?._id || item.product || "")); %>
+          <div class="space-y-4 rounded-3xl border border-slate-200 p-4 product-row" data-line-row="product">
+            <div class="grid gap-4 md:grid-cols-[1.3fr_0.8fr_auto]">
+              <div>
+                <label class="mb-2 block text-sm font-semibold text-slate-700">Mã sản phẩm</label>
+                <div class="relative" data-search-select="product">
+                  <input
+                    type="text"
+                    value="<%= selectedProduct ? buildProductLabel(selectedProduct) : '' %>"
+                    placeholder="Tìm sản phẩm theo mã, size..."
+                    autocomplete="off"
+                    data-product-code-input
+                    data-search-input
+                    class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none"
+                  />
+                  <input type="hidden" name="productIds" value="<%= item.product?._id || item.product || '' %>" data-product-id-input />
+                  <div data-search-dropdown class="absolute left-0 right-0 z-20 mt-2 hidden max-h-64 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-200/80"></div>
+                </div>
+              </div>
+              <div>
+                <label class="mb-2 block text-sm font-semibold text-slate-700">Giá thuê</label>
+                <input name="productPrices" data-line-price type="number" min="0" step="0.01" placeholder="Giá 1 ngày" value="<%= item.price ?? '' %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none" />
+              </div>
+              <div class="flex items-end">
+                <button type="button" data-remove-row class="w-full rounded-full bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">Xóa</button>
+              </div>
+            </div>
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+                <input type="hidden" name="productUseGeneralTimes" value="off" />
+                <input name="productUseGeneralTimes" type="checkbox" value="on" data-use-general-toggle <%= usesGeneralTimes(item) ? "checked" : "" %> class="size-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500" />
+                Dùng thời gian thuê chung của đơn hàng
+              </label>
+              <div class="mt-4 grid gap-4 md:grid-cols-2" data-line-time-fields>
+                <input name="productStartTimes" data-line-start type="datetime-local" value="<%= formatDateTimeLocal(item.startTime || order?.generalStartTime) %>" class="rounded-2xl border border-slate-200 px-4 py-3 outline-none" />
+                <input name="productEndTimes" data-line-end type="datetime-local" value="<%= formatDateTimeLocal(item.endTime || order?.generalEndTime) %>" class="rounded-2xl border border-slate-200 px-4 py-3 outline-none" />
+              </div>
+              <p data-line-time-hint class="mt-2 text-sm text-slate-500"></p>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <div class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-black text-slate-900">Dòng phụ kiện</h2>
+        <button type="button" data-add-row="accessories" class="rounded-full bg-brand-50 px-4 py-2 text-sm font-semibold text-brand-700">Thêm dòng phụ kiện</button>
+      </div>
+      <div id="accessories-container" class="mt-6 space-y-4">
+        <% orderAccessories.forEach((item) => { %>
+          <% const selectedAccessory = accessories.find((accessory) => String(accessory._id) === String(item.accessory?._id || item.accessory || "")); %>
+          <div class="space-y-4 rounded-3xl border border-slate-200 p-4 accessory-row" data-line-row="accessory">
+            <div class="grid gap-4 md:grid-cols-[1.2fr_0.8fr_auto]">
+              <div>
+                <label class="mb-2 block text-sm font-semibold text-slate-700">Phụ kiện</label>
+                <div class="relative" data-search-select="accessory">
+                  <input
+                    type="text"
+                    value="<%= selectedAccessory ? buildAccessoryLabel(selectedAccessory) : '' %>"
+                    placeholder="Tìm phụ kiện theo mã hoặc tên"
+                    autocomplete="off"
+                    data-accessory-select
+                    data-search-input
+                    class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none"
+                  />
+                  <input type="hidden" name="accessoryIds" value="<%= item.accessory?._id || item.accessory || '' %>" data-accessory-id-input />
+                  <div data-search-dropdown class="absolute left-0 right-0 z-20 mt-2 hidden max-h-64 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-200/80"></div>
+                </div>
+              </div>
+              <div>
+                <label class="mb-2 block text-sm font-semibold text-slate-700">Giá phụ kiện</label>
+                <input name="accessoryPrices" data-line-price type="number" min="0" step="0.01" placeholder="Giá" value="<%= item.price ?? '' %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none" />
+              </div>
+              <div class="flex items-end">
+                <button type="button" data-remove-row class="w-full rounded-full bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">Xóa</button>
+              </div>
+            </div>
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+                <input type="hidden" name="accessoryUseGeneralTimes" value="off" />
+                <input name="accessoryUseGeneralTimes" type="checkbox" value="on" data-use-general-toggle <%= usesGeneralTimes(item) ? "checked" : "" %> class="size-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500" />
+                Dùng thời gian thuê chung của đơn hàng
+              </label>
+              <div class="mt-4 grid gap-4 md:grid-cols-2" data-line-time-fields>
+                <input name="accessoryStartTimes" data-line-start type="datetime-local" value="<%= formatDateTimeLocal(item.startTime || order?.generalStartTime) %>" class="rounded-2xl border border-slate-200 px-4 py-3 outline-none" />
+                <input name="accessoryEndTimes" data-line-end type="datetime-local" value="<%= formatDateTimeLocal(item.endTime || order?.generalEndTime) %>" class="rounded-2xl border border-slate-200 px-4 py-3 outline-none" />
+              </div>
+              <p data-line-time-hint class="mt-2 text-sm text-slate-500"></p>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <div class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-black text-slate-900">Thanh toán</h2>
+        <button type="button" data-add-row="payments" class="rounded-full bg-brand-50 px-4 py-2 text-sm font-semibold text-brand-700">Thêm thanh toán</button>
+      </div>
+      <div id="payments-container" class="mt-6 space-y-4">
+        <% orderPayments.forEach((item) => { %>
+          <div class="grid gap-4 rounded-3xl border border-slate-200 p-4 md:grid-cols-[1fr_1fr_auto] payment-row">
+            <input name="paymentAmounts" type="number" min="0" step="0.01" placeholder="Số tiền" value="<%= item.amount ?? '' %>" class="rounded-2xl border border-slate-200 px-4 py-3 outline-none" />
+            <select name="paymentTypes" class="rounded-2xl border border-slate-200 px-4 py-3 outline-none">
+              <option value="">Hình thức thanh toán</option>
+              <option value="0" <%= Number(item.type) === 0 ? "selected" : "" %>>Chuyển khoản</option>
+              <option value="1" <%= Number(item.type) === 1 ? "selected" : "" %>>Tiền mặt</option>
+            </select>
+            <button type="button" data-remove-row class="rounded-full bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700">Xóa</button>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap gap-3">
+      <button type="submit" class="rounded-full bg-brand-500 px-6 py-3 font-semibold text-white transition hover:bg-brand-700">Lưu đơn hàng</button>
+      <a href="/orders" class="rounded-full bg-slate-100 px-6 py-3 font-semibold text-slate-700">Hủy</a>
+    </div>
+  </form>
+</section>
+
+<template id="product-row-template">
+  <div class="space-y-4 rounded-3xl border border-slate-200 p-4 product-row" data-line-row="product">
+    <div class="grid gap-4 md:grid-cols-[1.3fr_0.8fr_auto]">
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">Mã sản phẩm</label>
+        <div class="relative" data-search-select="product">
+          <input type="text" placeholder="Tìm sản phẩm theo mã, size..." autocomplete="off" data-product-code-input data-search-input class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none" />
+          <input type="hidden" name="productIds" value="" data-product-id-input />
+          <div data-search-dropdown class="absolute left-0 right-0 z-20 mt-2 hidden max-h-64 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-200/80"></div>
+        </div>
+      </div>
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">Giá thuê</label>
+        <input name="productPrices" data-line-price type="number" min="0" step="0.01" placeholder="Giá 1 ngày" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none" />
+      </div>
+      <div class="flex items-end">
+        <button type="button" data-remove-row class="w-full rounded-full bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">Xóa</button>
+      </div>
+    </div>
+    <div class="rounded-2xl bg-slate-50 p-4">
+      <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+        <input type="hidden" name="productUseGeneralTimes" value="off" />
+        <input name="productUseGeneralTimes" type="checkbox" value="on" data-use-general-toggle checked class="size-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500" />
+        Dùng thời gian thuê chung của đơn hàng
+      </label>
+      <div class="mt-4 grid gap-4 md:grid-cols-2" data-line-time-fields>
+        <input name="productStartTimes" data-line-start type="datetime-local" class="rounded-2xl border border-slate-200 px-4 py-3 outline-none" />
+        <input name="productEndTimes" data-line-end type="datetime-local" class="rounded-2xl border border-slate-200 px-4 py-3 outline-none" />
+      </div>
+      <p data-line-time-hint class="mt-2 text-sm text-slate-500"></p>
+    </div>
+  </div>
+</template>
+
+<template id="accessory-row-template">
+  <div class="space-y-4 rounded-3xl border border-slate-200 p-4 accessory-row" data-line-row="accessory">
+    <div class="grid gap-4 md:grid-cols-[1.2fr_0.8fr_auto]">
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">Phụ kiện</label>
+        <div class="relative" data-search-select="accessory">
+          <input type="text" placeholder="Tìm phụ kiện theo mã hoặc tên" autocomplete="off" data-accessory-select data-search-input class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none" />
+          <input type="hidden" name="accessoryIds" value="" data-accessory-id-input />
+          <div data-search-dropdown class="absolute left-0 right-0 z-20 mt-2 hidden max-h-64 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-200/80"></div>
+        </div>
+      </div>
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">Giá phụ kiện</label>
+        <input name="accessoryPrices" data-line-price type="number" min="0" step="0.01" placeholder="Giá" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none" />
+      </div>
+      <div class="flex items-end">
+        <button type="button" data-remove-row class="w-full rounded-full bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">Xóa</button>
+      </div>
+    </div>
+    <div class="rounded-2xl bg-slate-50 p-4">
+      <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+        <input type="hidden" name="accessoryUseGeneralTimes" value="off" />
+        <input name="accessoryUseGeneralTimes" type="checkbox" value="on" data-use-general-toggle checked class="size-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500" />
+        Dùng thời gian thuê chung của đơn hàng
+      </label>
+      <div class="mt-4 grid gap-4 md:grid-cols-2" data-line-time-fields>
+        <input name="accessoryStartTimes" data-line-start type="datetime-local" class="rounded-2xl border border-slate-200 px-4 py-3 outline-none" />
+        <input name="accessoryEndTimes" data-line-end type="datetime-local" class="rounded-2xl border border-slate-200 px-4 py-3 outline-none" />
+      </div>
+      <p data-line-time-hint class="mt-2 text-sm text-slate-500"></p>
+    </div>
+  </div>
+</template>
+
+<template id="payment-row-template">
+  <div class="grid gap-4 rounded-3xl border border-slate-200 p-4 md:grid-cols-[1fr_1fr_auto] payment-row">
+    <input name="paymentAmounts" type="number" min="0" step="0.01" placeholder="Số tiền" class="rounded-2xl border border-slate-200 px-4 py-3 outline-none" />
+    <select name="paymentTypes" class="rounded-2xl border border-slate-200 px-4 py-3 outline-none">
+      <option value="">Hình thức thanh toán</option>
+      <option value="0">Chuyển khoản</option>
+      <option value="1">Tiền mặt</option>
+    </select>
+    <button type="button" data-remove-row class="rounded-full bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700">Xóa</button>
+  </div>
+</template>

@@ -1,0 +1,57 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure SSH
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          test -n "$EC2_HOST"
+          test -n "$EC2_SSH_KEY"
+          mkdir -p ~/.ssh
+          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+
+      - name: Package application
+        run: |
+          tar \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='.env' \
+            -czf rental-shop.tar.gz .
+
+      - name: Prepare environment payload
+        env:
+          APP_ENV_FILE: ${{ secrets.APP_ENV_FILE }}
+        run: |
+          test -n "$APP_ENV_FILE"
+          printf '%s' "$APP_ENV_FILE" | base64 -w 0 > rental-shop.env.b64
+
+      - name: Upload release bundle
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |
+          scp rental-shop.tar.gz rental-shop.env.b64 "${EC2_USER}@${EC2_HOST}:/tmp/"
+
+      - name: Deploy on server
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |
+          ssh "${EC2_USER}@${EC2_HOST}" \
+            "mkdir -p /opt/rental-shop && find /opt/rental-shop -mindepth 1 -maxdepth 1 -exec rm -rf {} + && tar -xzf /tmp/rental-shop.tar.gz -C /opt/rental-shop --strip-components=1 && APP_DIR=/opt/rental-shop ENV_B64_PATH=/tmp/rental-shop.env.b64 bash /opt/rental-shop/scripts/deploy.sh"

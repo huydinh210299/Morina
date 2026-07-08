@@ -1,0 +1,28 @@
+<nav class="border-b border-slate-200/70 bg-white/80 backdrop-blur">
+  <% const homeHref = "/dashboard"; %>
+  <div class="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+    <div>
+      <a href="<%= homeHref %>" class="text-2xl font-black tracking-tight text-brand-900">Morina</a>
+      <p class="text-sm text-slate-500">Tiệm thuê đồ Hà Nội</p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2 text-sm font-medium">
+      <a href="/dashboard" class="rounded-full px-4 py-2 text-slate-700 transition hover:bg-brand-50 hover:text-brand-700">Tổng quan</a>
+      <a href="/products" class="rounded-full px-4 py-2 text-slate-700 transition hover:bg-brand-50 hover:text-brand-700">Quản lý sản phẩm</a>
+      <a href="/orders" class="rounded-full px-4 py-2 text-slate-700 transition hover:bg-brand-50 hover:text-brand-700">Đơn hàng</a>
+      <% if (currentUser.role === "admin") { %>
+        <a href="/finance" class="rounded-full px-4 py-2 text-slate-700 transition hover:bg-brand-50 hover:text-brand-700">Tài chính</a>
+      <% } %>
+      <% if (currentUser.role === "staff") { %>
+        <a href="/users/timekeeping" class="rounded-full px-4 py-2 text-slate-700 transition hover:bg-brand-50 hover:text-brand-700">Chấm công</a>
+      <% } %>
+      <% if (currentUser.role === "admin") { %>
+        <a href="/users" class="rounded-full px-4 py-2 text-slate-700 transition hover:bg-brand-50 hover:text-brand-700">Quản lý</a>
+      <% } %>
+      <span class="rounded-full bg-slate-900 px-4 py-2 text-white"><%= currentUser.username %> | <%= currentUser.role %></span>
+      <form action="/auth/logout" method="POST">
+        <button type="submit" class="rounded-full bg-rose-600 px-4 py-2 text-white transition hover:bg-rose-700">Đăng xuất</button>
+      </form>
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %> | Morina</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                50: "#f5f8ff",
+                100: "#e6eeff",
+                500: "#2155ff",
+                700: "#1737a4",
+                900: "#101d4d"
+              }
+            }
+          }
+        }
+      };
+    </script>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body class="min-h-screen bg-slate-100 text-slate-900">
+    <div class="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(33,85,255,0.08),_transparent_35%),linear-gradient(to_bottom,_#f8fafc,_#e2e8f0)]">
+      <% if (currentUser) { %>
+        <%- include("../partials/navbar") %>
+      <% } %>
+
+      <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <%- include("../partials/flash") %>
+        <%- body %>
+      </main>
+    </div>
+    <script src="/js/app.js"></script>
+  </body>
+</html>

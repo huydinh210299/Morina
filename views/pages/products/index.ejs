@@ -1,0 +1,124 @@
+<section class="space-y-6">
+  <%- include("../../partials/product-management-tabs", { activeProductManagementTab: "products" }) %>
+  <%
+    const buildPageUrl = (page) => {
+      const params = new URLSearchParams();
+      if (filters.category) params.set("category", filters.category);
+      if (filters.productCode) params.set("productCode", filters.productCode);
+      params.set("page", String(page));
+      return `/products?${params.toString()}`;
+    };
+
+    const startItem = pagination.totalItems === 0 ? 0 : (pagination.currentPage - 1) * pagination.pageSize + 1;
+    const endItem = pagination.totalItems === 0
+      ? 0
+      : Math.min(pagination.currentPage * pagination.pageSize, pagination.totalItems);
+  %>
+
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-3xl font-black text-slate-900">Sản phẩm</h1>
+      <p class="mt-1 text-slate-500">Theo dõi đồ cho thuê, giá và kích cỡ.</p>
+    </div>
+    <% if (currentUser.role === "admin") { %>
+      <a href="/products/new" class="inline-flex rounded-full bg-brand-500 px-5 py-3 font-semibold text-white transition hover:bg-brand-700">Thêm sản phẩm</a>
+    <% } %>
+  </div>
+
+  <form method="GET" action="/products" class="grid gap-4 rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
+    <label class="block">
+      <span class="mb-2 block text-sm font-semibold text-slate-700">Danh mục</span>
+      <select name="category" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100">
+        <option value="">Tất cả danh mục</option>
+        <% categories.forEach((category) => { %>
+          <option
+            value="<%= category._id %>"
+            title="<%= category.description || category.code %>"
+            <%= filters.category === String(category._id) ? "selected" : "" %>
+          >
+            <%= category.description ? `${category.code} - ${category.description}` : category.code %>
+          </option>
+        <% }) %>
+      </select>
+    </label>
+
+    <label class="block">
+      <span class="mb-2 block text-sm font-semibold text-slate-700">Mã sản phẩm</span>
+      <input
+        type="text"
+        name="productCode"
+        value="<%= filters.productCode %>"
+        placeholder="Nhập mã cần tìm"
+        class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+      />
+    </label>
+
+    <div class="flex gap-3">
+      <button type="submit" class="inline-flex rounded-full bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-700">Lọc</button>
+      <a href="/products" class="inline-flex rounded-full bg-slate-100 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-200">Đặt lại</a>
+    </div>
+  </form>
+
+  <div class="overflow-hidden rounded-3xl bg-white shadow-lg shadow-slate-200/60">
+    <table class="min-w-full divide-y divide-slate-200">
+      <thead class="bg-slate-50">
+        <tr>
+          <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Mã</th>
+          <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Danh mục</th>
+          <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Giá</th>
+          <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Chi tiết</th>
+          <th class="px-6 py-4 text-right text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        <% if (products.length) { %>
+          <% products.forEach((product) => { %>
+            <tr>
+              <td class="px-6 py-4 font-semibold text-slate-900">
+                <a href="/products/<%= product._id %>" class="transition hover:text-brand-700"><%= product.code %></a>
+              </td>
+              <td class="px-6 py-4 text-slate-600"><%= product.category?.code || "-" %></td>
+              <td class="px-6 py-4 text-slate-600">Cả ngày: <%= formatCurrency(product.fullDayPrice) %><br />8 giờ: <%= formatCurrency(product.eightHPrice) %></td>
+              <td class="px-6 py-4 text-slate-600">Kích cỡ: <%= product.size || "-" %><br />Ghi chú: <%= product.note || "-" %></td>
+              <td class="px-6 py-4">
+                <div class="flex justify-end gap-2">
+                  <a href="/products/<%= product._id %>" class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">Xem</a>
+                  <a href="/products/<%= product._id %>/schedule" class="rounded-full bg-brand-100 px-4 py-2 text-sm font-semibold text-brand-800">Lịch thuê</a>
+                  <% if (currentUser.role === "admin") { %>
+                    <a href="/products/<%= product._id %>/edit" class="rounded-full bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-800">Sửa</a>
+                    <form action="/products/<%= product._id %>?_method=DELETE" method="POST" onsubmit="return confirm('Lưu trữ sản phẩm này?');">
+                      <button type="submit" class="rounded-full bg-rose-100 px-4 py-2 text-sm font-semibold text-rose-800">Lưu trữ</button>
+                    </form>
+                  <% } %>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="5" class="px-6 py-12 text-center text-slate-500">Không có sản phẩm phù hợp với bộ lọc hiện tại.</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="flex flex-col gap-3 rounded-3xl bg-white px-6 py-4 shadow-lg shadow-slate-200/60 sm:flex-row sm:items-center sm:justify-between">
+    <p class="text-sm text-slate-500">Hiển thị <%= startItem %>-<%= endItem %> / <%= pagination.totalItems %> sản phẩm</p>
+    <div class="flex items-center gap-2">
+      <% if (pagination.hasPrev) { %>
+        <a href="<%= buildPageUrl(pagination.prevPage) %>" class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">Trước</a>
+      <% } else { %>
+        <span class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-400">Trước</span>
+      <% } %>
+
+      <span class="rounded-full bg-brand-50 px-4 py-2 text-sm font-semibold text-brand-700">Trang <%= pagination.currentPage %>/<%= pagination.totalPages %></span>
+
+      <% if (pagination.hasNext) { %>
+        <a href="<%= buildPageUrl(pagination.nextPage) %>" class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">Tiếp</a>
+      <% } else { %>
+        <span class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-400">Tiếp</span>
+      <% } %>
+    </div>
+  </div>
+</section>

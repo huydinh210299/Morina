@@ -1,0 +1,40 @@
+<section class="mx-auto grid min-h-[75vh] max-w-6xl items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+  <div class="rounded-[2rem] bg-slate-900 p-10 text-white shadow-2xl shadow-slate-300">
+    <p class="text-sm font-semibold uppercase tracking-[0.35em] text-brand-100">Quản lý quán thuê đồ</p>
+    <h1 class="mt-5 text-5xl font-black leading-tight">Morina</h1>
+    <h1 class="mt-5 text-5xl font-black leading-tight">Quản lý đơn hàng, vật tư và dòng tiền</h1>
+    <div class="mt-10 grid gap-4 sm:grid-cols-3">
+      <div class="rounded-2xl bg-white/10 p-5">
+        <p class="text-sm text-slate-300">Kho hàng</p>
+        <p class="mt-2 text-2xl font-bold">Sản phẩm</p>
+      </div>
+      <div class="rounded-2xl bg-white/10 p-5">
+        <p class="text-sm text-slate-300">Vận hành</p>
+        <p class="mt-2 text-2xl font-bold">Đơn hàng</p>
+      </div>
+      <div class="rounded-2xl bg-white/10 p-5">
+        <p class="text-sm text-slate-300">Tài chính</p>
+        <p class="mt-2 text-2xl font-bold">Tiền mặt</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/70 sm:p-10">
+    <p class="text-sm font-semibold uppercase tracking-[0.35em] text-brand-700">Chào mừng trở lại</p>
+    <h2 class="mt-4 text-center text-3xl font-black text-slate-900">Đăng nhập trang quản trị</h2>
+
+    <form action="/auth/login" method="POST" class="mt-8 space-y-5">
+      <div>
+        <label for="username" class="mb-2 block text-sm font-semibold text-slate-700">Tên đăng nhập</label>
+        <input id="username" name="username" type="text" required class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+      </div>
+      <div>
+        <label for="password" class="mb-2 block text-sm font-semibold text-slate-700">Mật khẩu</label>
+        <input id="password" name="password" type="password" required class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+      </div>
+      <button type="submit" class="w-full rounded-2xl bg-brand-500 px-6 py-3 font-semibold text-white transition hover:bg-brand-700">
+        Đăng nhập
+      </button>
+    </form>
+  </div>
+</section>

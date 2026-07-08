@@ -1,0 +1,61 @@
+<section class="space-y-6">
+  <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div>
+      <h1 class="text-3xl font-black text-slate-900">Chấm công</h1>
+      <p class="mt-1 text-slate-500">Tạo chấm công theo ca làm và theo dõi trạng thái duyệt.</p>
+    </div>
+    <form method="GET" action="/users/timekeeping" class="flex items-center gap-3">
+      <input name="month" type="month" value="<%= selectedMonth %>" class="rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+      <button type="submit" class="rounded-full bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-700">Xem tháng</button>
+    </form>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
+    <form action="/users/timekeeping" method="POST" class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
+      <h2 class="text-2xl font-black text-slate-900">Tạo chấm công mới</h2>
+      <% if (shifts.length === 0) { %>
+        <p class="mt-4 text-slate-500">Chưa có ca làm nào. Hãy nhờ admin tạo ca làm trước.</p>
+      <% } else { %>
+        <div class="mt-6 space-y-5">
+          <div>
+            <label class="mb-2 block text-sm font-semibold text-slate-700">Ca làm</label>
+            <select name="shiftId" required class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100">
+              <option value="">Chọn ca làm</option>
+              <% shifts.forEach((shift) => { %>
+                <option value="<%= shift._id %>"><%= shift.name %> - <%= shift.hour %> giờ</option>
+              <% }) %>
+            </select>
+          </div>
+          <div>
+            <label class="mb-2 block text-sm font-semibold text-slate-700">Ngày làm</label>
+            <input name="date" type="date" required class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+          </div>
+          <button type="submit" class="rounded-full bg-brand-500 px-6 py-3 font-semibold text-white transition hover:bg-brand-700">Lưu chấm công</button>
+        </div>
+      <% } %>
+    </form>
+
+    <div class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
+      <h2 class="text-2xl font-black text-slate-900">Lịch sử tháng <%= selectedMonth %></h2>
+      <div class="mt-6 space-y-4">
+        <% if (entries.length === 0) { %>
+          <p class="text-slate-500">Chưa có chấm công trong tháng này.</p>
+        <% } %>
+        <% entries.forEach((entry) => { %>
+          <div class="rounded-3xl border border-slate-200 p-5">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p class="font-semibold text-slate-900"><%= entry.shiftName %> - <%= entry.hour %> giờ</p>
+                <p class="mt-1 text-sm text-slate-500"><%= formatDateTime(entry.date) %></p>
+                <p class="mt-1 text-sm text-slate-500"><%= entry.shiftDescription || "Không có mô tả" %></p>
+              </div>
+              <span class="rounded-full px-4 py-2 text-sm font-semibold <%= entry.approved ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' %>">
+                <%= entry.approved ? "Đã duyệt" : "Chờ duyệt" %>
+              </span>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+</section>

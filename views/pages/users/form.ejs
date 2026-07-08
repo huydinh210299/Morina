@@ -1,0 +1,37 @@
+<section class="mx-auto max-w-3xl rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
+  <h1 class="text-3xl font-black text-slate-900"><%= title %></h1>
+  <form action="<%= formAction %>" method="<%= formMethod %>" class="mt-8 space-y-5">
+    <div>
+      <label class="mb-2 block text-sm font-semibold text-slate-700">Tên đăng nhập</label>
+      <input name="username" type="text" required value="<%= userItem?.username || '' %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+    </div>
+
+    <div>
+      <label class="mb-2 block text-sm font-semibold text-slate-700">
+        Mật khẩu <%= userItem ? "(để trống nếu không đổi)" : "" %>
+      </label>
+      <input name="password" type="password" <%= userItem ? "" : "required" %> class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+    </div>
+
+    <div class="grid gap-5 sm:grid-cols-2">
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">Vai trò</label>
+        <select name="role" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100">
+          <% roles.forEach((role) => { %>
+            <option value="<%= role %>" <%= userItem?.role === role ? "selected" : "" %>><%= role %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">Tổng đơn</label>
+        <input name="totalOrder" type="number" min="0" required value="<%= userItem?.totalOrder ?? 0 %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+      </div>
+    </div>
+
+    <div class="flex gap-3">
+      <button type="submit" class="rounded-full bg-brand-500 px-6 py-3 font-semibold text-white transition hover:bg-brand-700">Lưu người dùng</button>
+      <a href="/users" class="rounded-full bg-slate-100 px-6 py-3 font-semibold text-slate-700">Hủy</a>
+    </div>
+  </form>
+</section>

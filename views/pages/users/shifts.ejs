@@ -1,0 +1,83 @@
+<section class="space-y-6">
+  <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+    <div>
+      <h1 class="text-3xl font-black text-slate-900">Quản lý ca làm</h1>
+      <p class="mt-1 text-slate-500">Tạo ca làm và cập nhật mức lương theo giờ dùng để tính lương tháng.</p>
+    </div>
+    <a href="/users" class="inline-flex rounded-full bg-slate-100 px-5 py-3 font-semibold text-slate-700">Quay lại quản lý</a>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
+    <form action="<%= editingShift ? `/users/shifts/${editingShift._id}?_method=PUT` : '/users/shifts' %>" method="POST" class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
+      <h2 class="text-2xl font-black text-slate-900"><%= editingShift ? "Cập nhật ca làm" : "Thêm ca làm" %></h2>
+      <div class="mt-6 space-y-5">
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-slate-700">Tên ca</label>
+          <input name="name" type="text" required value="<%= editingShift?.name || '' %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-slate-700">Số giờ</label>
+          <input name="hour" type="number" min="0" step="0.5" required value="<%= editingShift?.hour ?? '' %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-slate-700">Lương / giờ cho ca này (tùy chọn)</label>
+          <input name="salary" type="number" min="0" step="1" value="<%= editingShift?.salary ?? '' %>" placeholder="Để trống để dùng mặc định trong cài đặt" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-slate-700">Mô tả</label>
+          <textarea name="description" rows="4" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"><%= editingShift?.description || '' %></textarea>
+        </div>
+        <div class="flex gap-3">
+          <button type="submit" class="rounded-full bg-brand-500 px-6 py-3 font-semibold text-white transition hover:bg-brand-700"><%= editingShift ? "Lưu cập nhật" : "Lưu ca làm" %></button>
+          <% if (editingShift) { %>
+            <a href="/users/shifts" class="rounded-full bg-slate-100 px-6 py-3 font-semibold text-slate-700">Hủy</a>
+          <% } %>
+        </div>
+      </div>
+    </form>
+
+    <form action="/users/settings/hour-salary" method="POST" class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
+      <h2 class="text-2xl font-black text-slate-900">Lương theo giờ</h2>
+      <p class="mt-2 text-slate-500">Thiết lập đúng để tính lương tháng cho nhân viên dựa trên số giờ đã được duyệt.</p>
+      <div class="mt-6">
+        <label class="mb-2 block text-sm font-semibold text-slate-700">Mức lương / giờ</label>
+        <input name="value" type="number" min="0" step="1" value="<%= hourSalary %>" required class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+      </div>
+      <button type="submit" class="mt-5 rounded-full bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700">Cập nhật mức lương</button>
+    </form>
+  </div>
+
+  <div class="overflow-hidden rounded-3xl bg-white shadow-lg shadow-slate-200/60">
+    <table class="min-w-full divide-y divide-slate-200">
+      <thead class="bg-slate-50">
+        <tr>
+          <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Tên ca</th>
+          <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Giờ làm</th>
+          <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Lương / giờ</th>
+          <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Mo ta</th>
+          <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Cập nhật</th>
+          <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        <% if (shifts.length === 0) { %>
+          <tr>
+            <td colspan="6" class="px-6 py-8 text-center text-slate-500">Chua co ca lam nao.</td>
+          </tr>
+        <% } %>
+        <% shifts.forEach((shift) => { %>
+          <tr>
+            <td class="px-6 py-4 font-semibold text-slate-900"><%= shift.name %></td>
+            <td class="px-6 py-4 text-slate-700"><%= shift.hour %> giờ</td>
+            <td class="px-6 py-4 text-slate-600"><%= shift.salary !== null && shift.salary !== undefined ? formatCurrency(shift.salary) : `${formatCurrency(hourSalary)} (mặc định)` %></td>
+            <td class="px-6 py-4 text-slate-600"><%= shift.description || "-" %></td>
+            <td class="px-6 py-4 text-slate-600"><%= formatDateTime(shift.updatedAt) %></td>
+            <td class="px-6 py-4">
+              <a href="/users/shifts?edit=<%= shift._id %>" class="inline-flex rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">Sửa</a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
