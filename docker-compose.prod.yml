@@ -7,29 +7,6 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    depends_on:
-      mongodb:
-        condition: service_healthy
-
-  mongodb:
-    image: mongo:7
-    container_name: rental-shop-mongodb
-    restart: unless-stopped
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
-    volumes:
-      - mongodb_data:/data/db
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "mongosh --quiet --username \"$${MONGO_INITDB_ROOT_USERNAME}\" --password \"$${MONGO_INITDB_ROOT_PASSWORD}\" --authenticationDatabase admin --eval \"db.adminCommand({ ping: 1 })\""
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 20s
 
   nginx:
     image: nginx:1.27-alpine
@@ -44,6 +21,3 @@ services:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./certbot/www:/var/www/certbot
       - ./certbot/conf:/etc/letsencrypt
-
-volumes:
-  mongodb_data:

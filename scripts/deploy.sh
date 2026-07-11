@@ -19,7 +19,7 @@ LETSENCRYPT_EMAIL="${LETSENCRYPT_EMAIL:-}"
 
 APP_DIR="${APP_DIR}" DOMAIN_NAME="${DOMAIN_NAME}" bash "${APP_DIR}/scripts/render-nginx-conf.sh" http
 
-docker compose -f docker-compose.prod.yml up -d --build app mongodb nginx
+docker compose -f docker-compose.prod.yml up -d --build --remove-orphans app nginx
 
 if [ "${DOMAIN_NAME}" != "_" ] && [ -n "${LETSENCRYPT_EMAIL}" ]; then
   cert_path="${APP_DIR}/certbot/conf/live/${DOMAIN_NAME}/fullchain.pem"

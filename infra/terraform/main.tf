@@ -87,3 +87,13 @@ resource "aws_instance" "app" {
     Name = var.app_name
   }
 }
+
+# A stable address lets MongoDB Atlas restrict access to this server's /32 IP.
+resource "aws_eip" "app" {
+  domain   = "vpc"
+  instance = aws_instance.app.id
+
+  tags = {
+    Name = "${var.app_name}-eip"
+  }
+}

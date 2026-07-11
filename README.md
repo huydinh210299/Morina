@@ -9,7 +9,7 @@ RentalShop is a rental order management system built with Node.js, Express, Mong
 - Rental order creation, status updates, and payment tracking
 - Staff timekeeping, shift management, and payroll flows
 - Finance page for payment record management
-- Dockerized production setup and GitHub Actions deployment to AWS EC2
+- Dockerized production setup and GitHub Actions deployment to AWS EC2, using MongoDB Atlas
 
 ## Tech Stack
 
