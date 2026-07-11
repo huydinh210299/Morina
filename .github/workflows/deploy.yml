@@ -106,6 +106,7 @@ jobs:
 
           cd "$release_dir"
           npm ci --omit=dev
+          node -e 'require("dotenv").config(); const uri = process.env.MONGODB_URI || ""; if (!/^mongodb(\+srv)?:\/\//.test(uri)) { console.error("MONGODB_URI must start with mongodb:// or mongodb+srv://"); process.exit(1); }'
           pm2 startOrReload ecosystem.config.js --env production
           pm2 save
 
