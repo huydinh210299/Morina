@@ -1,10 +1,13 @@
-name: Deploy to EC2
+name: Deploy to Ubuntu VPS
 
 on:
   push:
     branches:
       - main
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   validate:
@@ -17,17 +20,14 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
-      - name: Install production dependencies
-        run: npm ci --omit=dev
+      - name: Install dependencies
+        run: npm ci
 
       - name: Check JavaScript syntax
         run: find . -path ./node_modules -prune -o -name '*.js' -print0 | xargs -0 -n1 node --check
-
-      - name: Verify production image builds
-        run: docker build -t rental-shop:ci .
 
   deploy:
     needs: validate
@@ -41,22 +41,33 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Validate deployment secrets
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          APP_ENV_FILE: ${{ secrets.APP_ENV_FILE }}
+        run: |
+          test -n "$VPS_HOST"
+          test -n "$VPS_USER"
+          test -n "$VPS_SSH_KEY"
+          test -n "$APP_ENV_FILE"
+
       - name: Configure SSH
         env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
         run: |
-          test -n "$EC2_HOST"
-          test -n "$EC2_SSH_KEY"
-          mkdir -p ~/.ssh
-          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
 
       - name: Package application
         run: |
           tar \
             --exclude='.git' \
+            --exclude='.github' \
             --exclude='node_modules' \
             --exclude='.env' \
             -czf rental-shop.tar.gz .
@@ -64,21 +75,55 @@ jobs:
       - name: Prepare environment payload
         env:
           APP_ENV_FILE: ${{ secrets.APP_ENV_FILE }}
-        run: |
-          test -n "$APP_ENV_FILE"
-          printf '%s' "$APP_ENV_FILE" | base64 -w 0 > rental-shop.env.b64
+        run: printf '%s' "$APP_ENV_FILE" | base64 -w 0 > rental-shop.env.b64
 
-      - name: Upload release bundle
+      - name: Upload release
         env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_USER: ${{ secrets.EC2_USER }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
         run: |
-          scp rental-shop.tar.gz rental-shop.env.b64 "${EC2_USER}@${EC2_HOST}:/tmp/"
+          scp rental-shop.tar.gz rental-shop.env.b64 \
+            "${VPS_USER}@${VPS_HOST}:/tmp/"
 
-      - name: Deploy on server
+      - name: Activate release
         env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_USER: ${{ secrets.EC2_USER }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          RELEASE_ID: ${{ github.sha }}
         run: |
-          ssh "${EC2_USER}@${EC2_HOST}" \
-            "mkdir -p /opt/rental-shop && find /opt/rental-shop -mindepth 1 -maxdepth 1 ! -name certbot -exec rm -rf {} + && tar -xzf /tmp/rental-shop.tar.gz -C /opt/rental-shop --strip-components=1 && APP_DIR=/opt/rental-shop ENV_B64_PATH=/tmp/rental-shop.env.b64 bash /opt/rental-shop/scripts/deploy.sh"
+          ssh "${VPS_USER}@${VPS_HOST}" \
+            "RELEASE_ID='$RELEASE_ID' bash -s" <<'DEPLOY'
+          set -euo pipefail
+
+          app_root=/opt/rental-shop
+          release_dir="$app_root/releases/$RELEASE_ID"
+
+          mkdir -p "$release_dir" "$app_root/shared"
+          tar -xzf /tmp/rental-shop.tar.gz -C "$release_dir"
+          base64 -d /tmp/rental-shop.env.b64 > "$app_root/shared/.env"
+          chmod 600 "$app_root/shared/.env"
+          ln -sfn "$app_root/shared/.env" "$release_dir/.env"
+
+          cd "$release_dir"
+          npm ci --omit=dev
+          pm2 startOrReload ecosystem.config.js --env production
+          pm2 save
+
+          healthy=false
+          for attempt in 1 2 3 4 5 6; do
+            if curl --fail --silent http://127.0.0.1:3000/health >/dev/null; then
+              healthy=true
+              break
+            fi
+            sleep 5
+          done
+
+          if [ "$healthy" != true ]; then
+            pm2 logs rental-shop --lines 100 --nostream
+            exit 1
+          fi
+
+          ln -sfn "$release_dir" "$app_root/current"
+          rm -f /tmp/rental-shop.tar.gz /tmp/rental-shop.env.b64
+          find "$app_root/releases" -mindepth 1 -maxdepth 1 -type d -mtime +7 -exec rm -rf {} +
+          DEPLOY
