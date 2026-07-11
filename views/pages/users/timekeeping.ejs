@@ -1,77 +1,77 @@
 <section class="space-y-6">
   <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
     <div>
-      <h1 class="text-3xl font-black text-slate-900">Cham cong</h1>
-      <p class="mt-1 text-slate-500">Tao cham cong theo ca lam va gui yeu cau hoa hong de admin duyet.</p>
+      <h1 class="text-3xl font-black text-slate-900">Chấm công</h1>
+      <p class="mt-1 text-slate-500">Tạo chấm công theo ca làm và gửi yêu cầu hoa hồng để quản trị viên duyệt.</p>
     </div>
     <form method="GET" action="/users/timekeeping" class="flex items-center gap-3">
       <input name="month" type="month" value="<%= selectedMonth %>" class="rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
-      <button type="submit" class="rounded-full bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-700">Xem thang</button>
+      <button type="submit" class="rounded-full bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-700">Xem tháng</button>
     </form>
   </div>
 
   <div class="grid gap-6 xl:grid-cols-[1fr_1fr_1.3fr]">
     <form action="/users/timekeeping" method="POST" class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
-      <h2 class="text-2xl font-black text-slate-900">Tao cham cong moi</h2>
+      <h2 class="text-2xl font-black text-slate-900">Tạo chấm công mới</h2>
       <% if (shifts.length === 0) { %>
-        <p class="mt-4 text-slate-500">Chua co ca lam nao. Hay nho admin tao ca lam truoc.</p>
+        <p class="mt-4 text-slate-500">Chưa có ca làm nào. Hãy nhờ quản trị viên tạo ca làm trước.</p>
       <% } else { %>
         <div class="mt-6 space-y-5">
           <div>
-            <label class="mb-2 block text-sm font-semibold text-slate-700">Ca lam</label>
+            <label class="mb-2 block text-sm font-semibold text-slate-700">Ca làm</label>
             <select name="shiftId" required class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100">
-              <option value="">Chon ca lam</option>
+              <option value="">Chọn ca làm</option>
               <% shifts.forEach((shift) => { %>
-                <option value="<%= shift._id %>"><%= shift.name %> - <%= shift.hour %> gio</option>
+                <option value="<%= shift._id %>"><%= shift.name %> - <%= shift.hour %> giờ</option>
               <% }) %>
             </select>
           </div>
           <div>
-            <label class="mb-2 block text-sm font-semibold text-slate-700">Ngay lam</label>
+            <label class="mb-2 block text-sm font-semibold text-slate-700">Ngày làm</label>
             <input name="date" type="date" required class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
           </div>
-          <button type="submit" class="rounded-full bg-brand-500 px-6 py-3 font-semibold text-white transition hover:bg-brand-700">Luu cham cong</button>
+          <button type="submit" class="rounded-full bg-brand-500 px-6 py-3 font-semibold text-white transition hover:bg-brand-700">Lưu chấm công</button>
         </div>
       <% } %>
     </form>
 
     <form action="/users/commissions" method="POST" class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
-      <h2 class="text-2xl font-black text-slate-900">Gui yeu cau hoa hong</h2>
+      <h2 class="text-2xl font-black text-slate-900">Gửi yêu cầu hoa hồng</h2>
       <input type="hidden" name="month" value="<%= selectedMonth %>" />
       <div class="mt-6 space-y-5">
         <div>
-          <label class="mb-2 block text-sm font-semibold text-slate-700">Ngay</label>
+          <label class="mb-2 block text-sm font-semibold text-slate-700">Ngày</label>
           <input name="date" type="date" required class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
         </div>
         <div>
-          <label class="mb-2 block text-sm font-semibold text-slate-700">So tien hoa hong</label>
+          <label class="mb-2 block text-sm font-semibold text-slate-700">Số tiền hoa hồng</label>
           <input name="amount" type="number" min="0" step="1" required class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
         </div>
         <div>
-          <label class="mb-2 block text-sm font-semibold text-slate-700">Mo ta</label>
-          <textarea name="description" rows="3" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" placeholder="Vi du: thuong upsell, ho tro khach VIP..."></textarea>
+          <label class="mb-2 block text-sm font-semibold text-slate-700">Mô tả</label>
+          <textarea name="description" rows="3" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" placeholder="Ví dụ: thưởng bán thêm, hỗ trợ khách VIP..."></textarea>
         </div>
-        <button type="submit" class="rounded-full bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700">Gui yeu cau</button>
+        <button type="submit" class="rounded-full bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700">Gửi yêu cầu</button>
       </div>
     </form>
 
     <div class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
-      <h2 class="text-2xl font-black text-slate-900">Lich su thang <%= selectedMonth %></h2>
+      <h2 class="text-2xl font-black text-slate-900">Lịch sử tháng <%= selectedMonth %></h2>
       <div class="mt-6 space-y-4">
         <% if (entries.length === 0 && commissionEntries.length === 0) { %>
-          <p class="text-slate-500">Chua co cham cong hay yeu cau hoa hong trong thang nay.</p>
+          <p class="text-slate-500">Chưa có chấm công hay yêu cầu hoa hồng trong tháng này.</p>
         <% } %>
 
         <% entries.forEach((entry) => { %>
           <div class="rounded-3xl border border-slate-200 p-5">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p class="font-semibold text-slate-900"><%= entry.shiftName %> - <%= entry.hour %> gio</p>
+                <p class="font-semibold text-slate-900"><%= entry.shiftName %> - <%= entry.hour %> giờ</p>
                 <p class="mt-1 text-sm text-slate-500"><%= formatDateTime(entry.date) %></p>
-                <p class="mt-1 text-sm text-slate-500"><%= entry.shiftDescription || "Khong co mo ta" %></p>
+                <p class="mt-1 text-sm text-slate-500"><%= entry.shiftDescription || "Không có mô tả" %></p>
               </div>
               <span class="rounded-full px-4 py-2 text-sm font-semibold <%= entry.approved ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' %>">
-                <%= entry.approved ? "Da duyet" : "Cho duyet" %>
+                <%= entry.approved ? "Đã duyệt" : "Chờ duyệt" %>
               </span>
             </div>
           </div>
@@ -81,14 +81,14 @@
           <div class="rounded-3xl border border-emerald-200 bg-emerald-50/40 p-5">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p class="font-semibold text-slate-900">Yeu cau hoa hong</p>
+                <p class="font-semibold text-slate-900">Yêu cầu hoa hồng</p>
                 <p class="mt-1 text-sm text-slate-500"><%= formatDateTime(entry.date) %></p>
-                <p class="mt-1 text-sm text-slate-500"><%= entry.description || "Khong co mo ta" %></p>
+                <p class="mt-1 text-sm text-slate-500"><%= entry.description || "Không có mô tả" %></p>
               </div>
               <div class="text-right">
                 <p class="text-lg font-black text-emerald-700"><%= formatCurrency(entry.amount) %></p>
                 <span class="mt-2 inline-flex rounded-full px-4 py-2 text-sm font-semibold <%= entry.approved ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' %>">
-                  <%= entry.approved ? "Da duyet" : "Cho admin duyet" %>
+                  <%= entry.approved ? "Đã duyệt" : "Chờ quản trị viên duyệt" %>
                 </span>
               </div>
             </div>

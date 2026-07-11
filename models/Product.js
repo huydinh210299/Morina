@@ -38,6 +38,11 @@ const productSchema = new mongoose.Schema(
       ref: "Category",
       required: true
     },
+    orderCount: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
     isDeleted: {
       type: Boolean,
       default: false

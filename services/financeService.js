@@ -71,7 +71,7 @@ const buildPaymentRedirect = ({ paymentMonth, paymentYear, page }) =>
 
 const findPaymentOrFail = async (id) => {
   if (!mongoose.isValidObjectId(id)) {
-    const error = new Error("Khong tim thay khoan chi.");
+    const error = new Error("Không tìm thấy khoản chi.");
     error.statusCode = 404;
     throw error;
   }
@@ -79,7 +79,7 @@ const findPaymentOrFail = async (id) => {
   const payment = await Payment.findById(id);
 
   if (!payment) {
-    const error = new Error("Khong tim thay khoan chi.");
+    const error = new Error("Không tìm thấy khoản chi.");
     error.statusCode = 404;
     throw error;
   }
@@ -221,7 +221,7 @@ const createPayment = async ({ validatedBody, user, query }) => {
   );
 
   return {
-    successMessage: "Tao khoan chi thanh cong.",
+    successMessage: "Tạo khoản chi thành công.",
     redirectTo: buildPaymentRedirect(filters)
   };
 };
@@ -243,7 +243,7 @@ const updatePayment = async ({ id, validatedBody, user, query }) => {
   );
 
   return {
-    successMessage: "Cap nhat khoan chi thanh cong.",
+    successMessage: "Cập nhật khoản chi thành công.",
     redirectTo: buildPaymentRedirect(filters)
   };
 };
@@ -254,7 +254,7 @@ const deletePayment = async ({ id, query }) => {
   await Payment.findByIdAndDelete(id);
 
   return {
-    successMessage: "Xoa khoan chi thanh cong.",
+    successMessage: "Xóa khoản chi thành công.",
     redirectTo: buildPaymentRedirect(filters)
   };
 };

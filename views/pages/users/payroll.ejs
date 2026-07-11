@@ -10,7 +10,7 @@
         <button type="submit" class="rounded-full bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-700">Xem tháng</button>
       </form>
       <% if (userItem.role === "staff") { %>
-        <form action="/users/<%= userItem._id %>/payroll/pay" method="POST" onsubmit="return confirm('Thanh toán lương và reset công, hoa hồng, lỗi phạt của tháng này?');">
+        <form action="/users/<%= userItem._id %>/payroll/pay" method="POST" onsubmit="return confirm('Thanh toán lương và đặt lại công, hoa hồng, lỗi phạt của tháng này?');">
           <input type="hidden" name="month" value="<%= selectedMonth %>" />
           <button type="submit" class="rounded-full bg-brand-500 px-5 py-3 font-semibold text-white transition hover:bg-brand-700">Thanh toán lương</button>
         </form>
@@ -105,7 +105,7 @@
                     </div>
                     <div class="flex gap-2">
                       <form action="/users/<%= userItem._id %>/commissions/<%= entry.id %>/approve?month=<%= selectedMonth %>" method="POST">
-                        <button type="submit" class="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700">Duyet</button>
+                        <button type="submit" class="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700">Duyệt</button>
                       </form>
                       <form action="/users/<%= userItem._id %>/commissions/<%= entry.id %>?month=<%= selectedMonth %>&_method=DELETE" method="POST" onsubmit="return confirm('Xóa yêu cầu hoa hồng này?');">
                         <button type="submit" class="rounded-full bg-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-300">Xóa</button>

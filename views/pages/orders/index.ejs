@@ -76,11 +76,11 @@
 
     <div class="mt-4 grid gap-4 rounded-2xl bg-slate-50 px-4 py-3 xl:grid-cols-[1fr_1fr_1fr_1fr_auto_auto_auto] xl:items-end">
       <label class="block text-sm font-semibold text-slate-700">
-        <span class="mb-2 block">Book ship</span>
+        <span class="mb-2 block">Đặt giao hàng</span>
         <select name="bookship" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100">
           <option value="all" <%= (currentFilters.bookship || "all") === "all" ? "selected" : "" %>>Tất cả</option>
-          <option value="true" <%= currentFilters.bookship === "true" ? "selected" : "" %>>Có ship</option>
-          <option value="false" <%= currentFilters.bookship === "false" ? "selected" : "" %>>Không ship</option>
+          <option value="true" <%= currentFilters.bookship === "true" ? "selected" : "" %>>Có giao hàng</option>
+          <option value="false" <%= currentFilters.bookship === "false" ? "selected" : "" %>>Không giao hàng</option>
         </select>
       </label>
       <label class="block text-sm font-semibold text-slate-700">
@@ -149,7 +149,7 @@
           <% orders.forEach((order) => { %>
             <tr>
               <td class="px-6 py-4 text-slate-600">
-                <span class="mr-2 inline-flex rounded-full bg-fuchsia-100 px-3 py-1 text-xs font-semibold text-fuchsia-800"><%= order.bookship ? "Có ship" : "Không ship" %></span>
+                <span class="mr-2 inline-flex rounded-full bg-fuchsia-100 px-3 py-1 text-xs font-semibold text-fuchsia-800"><%= order.bookship ? "Có giao hàng" : "Không giao hàng" %></span>
                 <% if (order.important) { %>
                   <span class="mr-2 inline-flex rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-800">Quan trọng</span>
                 <% } %>
@@ -163,7 +163,7 @@
               <td class="px-6 py-4 text-slate-600"><%= new Date(order.createdAt).toLocaleString() %></td>
               <td class="px-6 py-4 text-slate-600">
                 <%= formatCurrency(order.orderAmount) %><br />
-                <span class="text-xs text-slate-400">Coc: <%= formatCurrency(order.deposit || 0) %></span>
+                <span class="text-xs text-slate-400">Cọc: <%= formatCurrency(order.deposit || 0) %></span>
               </td>
               <td class="px-6 py-4 text-slate-600">
                 <span class="mr-2 inline-flex rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800"><%= order.alreadyPickup ? "Đã lấy" : "Chờ lấy" %></span>

@@ -28,7 +28,7 @@
 <section class="space-y-6">
   <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
     <div>
-      <h1 class="text-3xl font-black text-slate-900">Finance</h1>
+      <h1 class="text-3xl font-black text-slate-900">Tài chính</h1>
       <p class="mt-1 text-slate-500">Theo dõi doanh thu, lương nhân viên và các khoản chi của shop trong từng tháng.</p>
     </div>
     <div class="inline-flex rounded-full bg-white p-1 shadow-lg shadow-slate-200/60">
@@ -59,7 +59,7 @@
       <div class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
         <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Doanh thu</p>
         <p class="mt-3 text-3xl font-black text-emerald-700"><%= formatCurrency(revenue.totalRevenue) %></p>
-        <p class="mt-2 text-sm text-slate-500"><%= revenue.orderCount %> orders in <%= revenue.selectedMonth %></p>
+        <p class="mt-2 text-sm text-slate-500"><%= revenue.orderCount %> đơn hàng trong tháng <%= revenue.selectedMonth %></p>
       </div>
       <div class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
         <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Lương nhân viên</p>
@@ -174,11 +174,11 @@
         <table class="min-w-full divide-y divide-slate-200">
           <thead class="bg-slate-50">
             <tr>
-              <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Payment ID</th>
-              <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Amount</th>
-              <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Description</th>
-              <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Created at</th>
-              <th class="px-6 py-4 text-right text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Action</th>
+              <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Mã khoản chi</th>
+              <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Số tiền</th>
+              <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Mô tả</th>
+              <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Ngày tạo</th>
+              <th class="px-6 py-4 text-right text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Thao tác</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
@@ -195,7 +195,7 @@
                 <td class="px-6 py-4 text-slate-600"><%= formatDateTime(payment.createdAt) %></td>
                 <td class="px-6 py-4">
                   <div class="flex justify-end gap-2">
-                    <a href="<%= buildPaymentEditUrl(payment._id) %>" class="rounded-full bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-800">Edit</a>
+                    <a href="<%= buildPaymentEditUrl(payment._id) %>" class="rounded-full bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-800">Sửa</a>
                     <form action="/finance/payments/<%= payment._id %>?tab=payments&paymentMonth=<%= filters.paymentMonth %>&paymentYear=<%= filters.paymentYear %>&page=<%= pagination.page || 1 %>&_method=DELETE" method="POST" onsubmit="return confirm('Xóa khoản chi này?');">
                       <button type="submit" class="rounded-full bg-rose-100 px-4 py-2 text-sm font-semibold text-rose-800">Xóa</button>
                     </form>
@@ -210,11 +210,11 @@
       <div class="flex flex-col gap-4 border-t border-slate-200 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
         <p class="text-sm text-slate-500">
           Trang <span class="font-semibold text-slate-700"><%= pagination.page %></span> / <span class="font-semibold text-slate-700"><%= pagination.totalPages %></span>
-          - Tong <span class="font-semibold text-slate-700"><%= pagination.totalItems %></span> payment
+          - Tổng <span class="font-semibold text-slate-700"><%= pagination.totalItems %></span> khoản chi
         </p>
         <div class="flex items-center gap-3">
           <% if (pagination.hasPrev) { %>
-            <a href="<%= buildPaymentPageUrl(pagination.prevPage) %>" class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">Trang truoc</a>
+            <a href="<%= buildPaymentPageUrl(pagination.prevPage) %>" class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">Trang trước</a>
           <% } else { %>
             <span class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-400">Trang trước</span>
           <% } %>

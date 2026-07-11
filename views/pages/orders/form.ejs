@@ -106,7 +106,7 @@
       <div class="flex flex-wrap gap-6 lg:col-span-2">
         <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
           <input name="bookship" type="checkbox" <%= order?.bookship ? "checked" : "" %> class="size-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500" />
-          Có book ship
+          Có giao hàng
         </label>
         <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
           <input name="important" type="checkbox" <%= order?.important ? "checked" : "" %> class="size-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500" />
@@ -143,7 +143,7 @@
                   <input
                     type="text"
                     value="<%= selectedProduct ? buildProductLabel(selectedProduct) : '' %>"
-                    placeholder="Tìm sản phẩm theo mã, size..."
+                    placeholder="Tìm sản phẩm theo mã, kích cỡ..."
                     autocomplete="off"
                     data-product-code-input
                     data-search-input
@@ -262,7 +262,7 @@
       <div>
         <label class="mb-2 block text-sm font-semibold text-slate-700">Mã sản phẩm</label>
         <div class="relative" data-search-select="product">
-          <input type="text" placeholder="Tìm sản phẩm theo mã, size..." autocomplete="off" data-product-code-input data-search-input class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none" />
+          <input type="text" placeholder="Tìm sản phẩm theo mã, kích cỡ..." autocomplete="off" data-product-code-input data-search-input class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none" />
           <input type="hidden" name="productIds" value="" data-product-id-input />
           <div data-search-dropdown class="absolute left-0 right-0 z-20 mt-2 hidden max-h-64 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-200/80"></div>
         </div>

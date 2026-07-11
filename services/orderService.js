@@ -6,6 +6,7 @@ const { parseOrderPayload } = require("../utils/requestParsers");
 const { orderSchema, paymentSchema, orderStatusSchema } = require("../utils/validators");
 const { setCreateAuditFields, setUpdateAuditFields } = require("../utils/audit");
 const { USER_ROLES } = require("../utils/constants");
+const validationOptions = require("../utils/validationOptions");
 
 const PAGE_SIZE = 10;
 const STATUS_FILTER_ALL = "all";
@@ -56,10 +57,7 @@ const buildValidatedOrder = (body) => {
   payload.products = applyGeneralTimes(payload.products);
   payload.accessories = applyGeneralTimes(payload.accessories);
 
-  const { error, value } = orderSchema.validate(payload, {
-    abortEarly: false,
-    convert: true
-  });
+  const { error, value } = orderSchema.validate(payload, validationOptions);
 
   if (error) {
     const validationError = new Error(error.details.map((detail) => detail.message).join(", "));
@@ -71,10 +69,7 @@ const buildValidatedOrder = (body) => {
 };
 
 const validatePayload = (schema, payload) => {
-  const { error, value } = schema.validate(payload, {
-    abortEarly: false,
-    convert: true
-  });
+  const { error, value } = schema.validate(payload, validationOptions);
 
   if (error) {
     const validationError = new Error(error.details.map((detail) => detail.message).join(", "));
@@ -434,6 +429,16 @@ const createOrder = async ({ body, user }) => {
   await ensureOrderConflictConfirmed({ body, payload });
 
   await Order.create(setCreateAuditFields(payload, user));
+
+  const productIds = [...new Set(payload.products.map((item) => `${item.product}`))];
+  if (productIds.length) {
+    await Product.updateMany(
+      { _id: { $in: productIds } },
+      { $inc: { orderCount: 1 } },
+      { runValidators: true }
+    );
+  }
+
   if (user.role === USER_ROLES.STAFF) {
     await User.findOneAndUpdate(
       { id: user.id },
