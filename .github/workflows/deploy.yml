@@ -7,8 +7,35 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  validate:
     runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install production dependencies
+        run: npm ci --omit=dev
+
+      - name: Check JavaScript syntax
+        run: find . -path ./node_modules -prune -o -name '*.js' -print0 | xargs -0 -n1 node --check
+
+      - name: Verify production image builds
+        run: docker build -t rental-shop:ci .
+
+  deploy:
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: rental-shop-production
+      cancel-in-progress: false
 
     steps:
       - name: Checkout repository
@@ -54,4 +81,4 @@ jobs:
           EC2_USER: ${{ secrets.EC2_USER }}
         run: |
           ssh "${EC2_USER}@${EC2_HOST}" \
-            "mkdir -p /opt/rental-shop && find /opt/rental-shop -mindepth 1 -maxdepth 1 -exec rm -rf {} + && tar -xzf /tmp/rental-shop.tar.gz -C /opt/rental-shop --strip-components=1 && APP_DIR=/opt/rental-shop ENV_B64_PATH=/tmp/rental-shop.env.b64 bash /opt/rental-shop/scripts/deploy.sh"
+            "mkdir -p /opt/rental-shop && find /opt/rental-shop -mindepth 1 -maxdepth 1 ! -name certbot -exec rm -rf {} + && tar -xzf /tmp/rental-shop.tar.gz -C /opt/rental-shop --strip-components=1 && APP_DIR=/opt/rental-shop ENV_B64_PATH=/tmp/rental-shop.env.b64 bash /opt/rental-shop/scripts/deploy.sh"

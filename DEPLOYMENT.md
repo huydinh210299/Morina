@@ -87,12 +87,15 @@ The GitHub Actions workflow at [.github/workflows/deploy.yml](C:\Users\thinkbook
 
 The workflow will:
 
-1. Package the application
-2. Upload it to the EC2 instance over SSH
-3. Write the production `.env`
+1. Install dependencies, check JavaScript syntax, and build the Docker image
+2. Package and upload the application over SSH
+3. Preserve existing Let's Encrypt data and write the production `.env` with restricted permissions
 4. Start or rebuild the app and Nginx containers
-5. Request a Let's Encrypt certificate when domain settings are present
-6. Switch Nginx from HTTP-only to HTTPS
+5. Wait for the application health check and fail with container logs if it is unhealthy
+6. Request a Let's Encrypt certificate when domain settings are present
+7. Switch Nginx from HTTP-only to HTTPS
+
+The deploy job uses the GitHub `production` environment and a concurrency lock so two production deployments cannot run at the same time. You can optionally add required reviewers to that environment in GitHub for manual approval before deployment.
 
 ## 7. Verify the app
 
