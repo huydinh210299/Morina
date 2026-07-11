@@ -13,7 +13,7 @@ const findUserByIdOrFail = async (id, projection = "-password") => {
   const user = await User.findById(id).select(projection);
 
   if (!user) {
-    const error = new Error("Không tìm thấy người dùng.");
+    const error = new Error("Khong tim thay nguoi dung.");
     error.statusCode = 404;
     throw error;
   }
@@ -25,7 +25,7 @@ const findShiftByIdOrFail = async (id) => {
   const shift = await Shift.findById(id);
 
   if (!shift) {
-    const error = new Error("Không tìm thấy ca làm.");
+    const error = new Error("Khong tim thay ca lam.");
     error.statusCode = 404;
     throw error;
   }
@@ -40,7 +40,7 @@ const ensureUsernameAvailable = async (username, excludeId = null) => {
   });
 
   if (existingUser) {
-    const error = new Error("Tên đăng nhập đã tồn tại.");
+    const error = new Error("Ten dang nhap da ton tai.");
     error.statusCode = 400;
     throw error;
   }
@@ -80,6 +80,27 @@ const normalizeDate = (value) => {
 };
 
 const sortByDateDesc = (left, right) => new Date(right.date) - new Date(left.date);
+
+const buildAdjustmentRedirectMonth = (month, fallbackDate = new Date()) => {
+  if (typeof month === "string" && /^\d{4}-\d{2}$/.test(month)) {
+    return month;
+  }
+
+  return `${fallbackDate.getFullYear()}-${String(fallbackDate.getMonth() + 1).padStart(2, "0")}`;
+};
+
+const getAdjustmentItemsForRange = (items = [], range, { approvedOnly = false } = {}) =>
+  items
+    .filter((item) => isDateInRange(item.date, range.start, range.end))
+    .filter((item) => (approvedOnly ? item.approved : true))
+    .map((item) => ({
+      id: item._id,
+      date: item.date,
+      amount: Number(item.amount || 0),
+      description: item.description || "",
+      approved: item.approved
+    }))
+    .sort(sortByDateDesc);
 
 const getHourSalarySetting = async () => {
   let setting = await Setting.findOne({ key: HOUR_SALARY_KEY });
@@ -190,6 +211,14 @@ const buildSalaryHistory = (salary = []) =>
 
 const getCreatedDataCount = (userItem) => Number(userItem.totalOrder || 0);
 
+const ensureStaffUser = (userItem) => {
+  if (userItem.role !== USER_ROLES.STAFF) {
+    const error = new Error("Chi co the thao tac voi nhan vien.");
+    error.statusCode = 400;
+    throw error;
+  }
+};
+
 const getIndexData = async () => {
   const [users, hourSalarySetting, pendingUsers, commissionSetting, cashOnHandSetting] = await Promise.all([
     User.find().select("-password").sort({ createdAt: -1 }),
@@ -205,7 +234,7 @@ const getIndexData = async () => {
   );
 
   return {
-    title: "Quản lý người dùng",
+    title: "Quan ly nguoi dung",
     users,
     hourSalary: Number(hourSalarySetting.value || 0),
     commission: Number(commissionSetting.value || 0),
@@ -215,7 +244,7 @@ const getIndexData = async () => {
 };
 
 const getCreateData = () => ({
-  title: "Tạo người dùng",
+  title: "Tao nguoi dung",
   userItem: null,
   roles: Object.values(USER_ROLES),
   formAction: "/users",
@@ -226,8 +255,11 @@ const getShowData = async (id) => {
   const userItem = await findUserByIdOrFail(id);
 
   return {
-    title: "Chi tiết người dùng",
-    userItem
+    title: "Chi tiet nguoi dung",
+    userItem,
+    approvedCommissionCount: (userItem.commissions || []).filter((item) => item.approved).length,
+    pendingCommissionCount: (userItem.commissions || []).filter((item) => !item.approved).length,
+    faultCount: (userItem.faults || []).length
   };
 };
 
@@ -248,13 +280,13 @@ const createUser = async ({ validatedBody, user }) => {
   );
 
   return {
-    successMessage: "Tạo người dùng thành công.",
+    successMessage: "Tao nguoi dung thanh cong.",
     redirectTo: "/users"
   };
 };
 
 const getEditData = async (id) => ({
-  title: "Cập nhật người dùng",
+  title: "Cap nhat nguoi dung",
   userItem: await findUserByIdOrFail(id),
   roles: Object.values(USER_ROLES),
   formAction: `/users/${id}?_method=PUT`,
@@ -265,7 +297,7 @@ const updateUser = async ({ id, validatedBody, user }) => {
   const existingUser = await User.findById(id);
 
   if (!existingUser) {
-    const error = new Error("Không tìm thấy người dùng.");
+    const error = new Error("Khong tim thay nguoi dung.");
     error.statusCode = 404;
     throw error;
   }
@@ -287,7 +319,7 @@ const updateUser = async ({ id, validatedBody, user }) => {
   });
 
   return {
-    successMessage: "Cập nhật người dùng thành công.",
+    successMessage: "Cap nhat nguoi dung thanh cong.",
     redirectTo: "/users"
   };
 };
@@ -323,7 +355,7 @@ const createShift = async ({ validatedBody, user }) => {
   );
 
   return {
-    successMessage: "Tạo ca làm thành công.",
+    successMessage: "Tao ca lam thanh cong.",
     redirectTo: "/users/shifts"
   };
 };
@@ -342,7 +374,7 @@ const updateShift = async ({ id, validatedBody, user }) => {
   await existingShift.save();
 
   return {
-    successMessage: "Cập nhật ca làm thành công.",
+    successMessage: "Cap nhat ca lam thanh cong.",
     redirectTo: "/users/shifts"
   };
 };
@@ -353,7 +385,7 @@ const updateHourSalarySetting = async ({ validatedBody }) => {
   await setting.save();
 
   return {
-    successMessage: "Cập nhật lương theo giờ thành công.",
+    successMessage: "Cap nhat luong theo gio thanh cong.",
     redirectTo: "/users/shifts"
   };
 };
@@ -364,7 +396,7 @@ const updateCashOnHandSetting = async ({ validatedBody }) => {
   await setting.save();
 
   return {
-    successMessage: "Cập nhật số dư tiền mặt thành công.",
+    successMessage: "Cap nhat so du tien mat thanh cong.",
     redirectTo: "/users"
   };
 };
@@ -375,7 +407,7 @@ const updateCommissionSetting = async ({ validatedBody }) => {
   await setting.save();
 
   return {
-    successMessage: "Cập nhật hoa hồng theo đơn thành công.",
+    successMessage: "Cap nhat hoa hong theo don thanh cong.",
     redirectTo: "/users"
   };
 };
@@ -388,7 +420,7 @@ const getOwnTimekeepingData = async ({ userId, month }) => {
   ]);
 
   if (!userItem) {
-    const error = new Error("Không tìm thấy người dùng.");
+    const error = new Error("Khong tim thay nguoi dung.");
     error.statusCode = 404;
     throw error;
   }
@@ -405,10 +437,13 @@ const getOwnTimekeepingData = async ({ userId, month }) => {
     }))
     .sort(sortByDateDesc);
 
+  const commissionEntries = getAdjustmentItemsForRange(userItem.commissions, range);
+
   return {
-    title: "Chấm công của tôi",
+    title: "Cham cong cua toi",
     shifts,
     entries,
+    commissionEntries,
     selectedMonth: range.selectedMonth
   };
 };
@@ -418,7 +453,7 @@ const createTimekeeping = async ({ userId, validatedBody, user }) => {
   const userItem = await User.findById(userId);
 
   if (!userItem) {
-    const error = new Error("Không tìm thấy người dùng.");
+    const error = new Error("Khong tim thay nguoi dung.");
     error.statusCode = 404;
     throw error;
   }
@@ -431,7 +466,7 @@ const createTimekeeping = async ({ userId, validatedBody, user }) => {
   );
 
   if (hasDuplicate) {
-    const error = new Error("Bạn đã chấm công ca làm này trong ngày nay.");
+    const error = new Error("Ban da cham cong ca lam nay trong ngay nay.");
     error.statusCode = 400;
     throw error;
   }
@@ -445,8 +480,35 @@ const createTimekeeping = async ({ userId, validatedBody, user }) => {
   await userItem.save();
 
   return {
-    successMessage: "Tạo chấm công thành công, vui lòng chờ duyệt.",
+    successMessage: "Tao cham cong thanh cong, vui long cho duyet.",
     redirectTo: "/users/timekeeping"
+  };
+};
+
+const createCommissionRequest = async ({ userId, validatedBody, user }) => {
+  const userItem = await User.findById(userId);
+
+  if (!userItem) {
+    const error = new Error("Khong tim thay nguoi dung.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  ensureStaffUser(userItem);
+  userItem.commissions = userItem.commissions || [];
+
+  userItem.commissions.push({
+    date: normalizeDate(validatedBody.date),
+    amount: validatedBody.amount,
+    description: validatedBody.description,
+    approved: false
+  });
+  userItem.updatedBy = user.id;
+  await userItem.save();
+
+  return {
+    successMessage: "Da gui yeu cau hoa hong, vui long cho admin duyet.",
+    redirectTo: `/users/timekeeping?month=${buildAdjustmentRedirectMonth(validatedBody.month, new Date(validatedBody.date))}`
   };
 };
 
@@ -475,7 +537,7 @@ const getPendingTimekeepingData = async ({ month }) => {
     .sort(sortByDateDesc);
 
   return {
-    title: "Duyệt chấm công",
+    title: "Duyet cham cong",
     pendingEntries,
     selectedMonth: range.selectedMonth
   };
@@ -485,7 +547,7 @@ const approveTimekeeping = async ({ userId, timekeepingId, user }) => {
   const userItem = await User.findById(userId);
 
   if (!userItem) {
-    const error = new Error("Không tìm thấy người dùng.");
+    const error = new Error("Khong tim thay nguoi dung.");
     error.statusCode = 404;
     throw error;
   }
@@ -493,7 +555,7 @@ const approveTimekeeping = async ({ userId, timekeepingId, user }) => {
   const timekeepingEntry = userItem.timekeeping.id(timekeepingId);
 
   if (!timekeepingEntry) {
-    const error = new Error("Không tìm thấy bản ghi chấm công.");
+    const error = new Error("Khong tim thay ban ghi cham cong.");
     error.statusCode = 404;
     throw error;
   }
@@ -503,8 +565,38 @@ const approveTimekeeping = async ({ userId, timekeepingId, user }) => {
   await userItem.save();
 
   return {
-    successMessage: "Duyệt chấm công thành công.",
+    successMessage: "Duyet cham cong thanh cong.",
     redirectTo: "/users/timekeeping/pending"
+  };
+};
+
+const approveCommission = async ({ userId, commissionId, month, user }) => {
+  const userItem = await User.findById(userId);
+
+  if (!userItem) {
+    const error = new Error("Khong tim thay nguoi dung.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  ensureStaffUser(userItem);
+  userItem.commissions = userItem.commissions || [];
+
+  const commissionEntry = userItem.commissions.id(commissionId);
+
+  if (!commissionEntry) {
+    const error = new Error("Khong tim thay hoa hong.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  commissionEntry.approved = true;
+  userItem.updatedBy = user.id;
+  await userItem.save();
+
+  return {
+    successMessage: "Da duyet hoa hong thanh cong.",
+    redirectTo: `/users/${userId}/payroll?month=${buildAdjustmentRedirectMonth(month, new Date(commissionEntry.date))}`
   };
 };
 
@@ -517,23 +609,28 @@ const getPayrollData = async ({ userId, month }) => {
   ]);
 
   if (!userItem) {
-    const error = new Error("Không tìm thấy người dùng.");
+    const error = new Error("Khong tim thay nguoi dung.");
     error.statusCode = 404;
     throw error;
   }
 
   const approvedEntries = buildPayrollEntries(userItem.timekeeping, range, hourSalary);
+  const approvedCommissionEntries = getAdjustmentItemsForRange(userItem.commissions || [], range, { approvedOnly: true });
+  const pendingCommissionEntries = getAdjustmentItemsForRange(userItem.commissions || [], range).filter((item) => !item.approved);
+  const faultEntries = getAdjustmentItemsForRange(userItem.faults || [], range);
   const totalHour = approvedEntries.reduce((sum, entry) => sum + entry.hour, 0);
   const orderCount = getCreatedDataCount(userItem);
   const shiftSalary = approvedEntries.reduce((sum, entry) => sum + entry.totalSalary, 0);
-  const commissionSalary = orderCount * commission;
-  const salary = shiftSalary + commissionSalary;
+  const orderCommissionSalary = orderCount * commission;
+  const extraCommissionSalary = approvedCommissionEntries.reduce((sum, entry) => sum + entry.amount, 0);
+  const faultSalary = faultEntries.reduce((sum, entry) => sum + entry.amount, 0);
+  const salary = shiftSalary + orderCommissionSalary + extraCommissionSalary - faultSalary;
   const pendingCount = userItem.timekeeping.filter(
     (entry) => !entry.approved && entry.shiftId && isDateInRange(entry.date, range.start, range.end)
   ).length;
 
   return {
-    title: "Luong nhan vien",
+    title: "Lương nhân viên",
     userItem,
     approvedEntries,
     shiftPayrollSummary: buildShiftPayrollSummary(approvedEntries),
@@ -543,9 +640,14 @@ const getPayrollData = async ({ userId, month }) => {
     commission,
     orderCount,
     shiftSalary,
-    commissionSalary,
+    orderCommissionSalary,
+    extraCommissionSalary,
+    faultSalary,
     salary,
     pendingCount,
+    approvedCommissionEntries,
+    pendingCommissionEntries,
+    faultEntries,
     salaryHistory: buildSalaryHistory(userItem.salary)
   };
 };
@@ -560,35 +662,27 @@ const paySalary = async ({ userId, month, user }) => {
     throw error;
   }
 
-  if (userItem.role !== USER_ROLES.STAFF) {
-    const error = new Error("Chỉ có thể thanh toán lương cho nhân viên.");
-    error.statusCode = 400;
-    throw error;
-  }
-
-  const existingSalary = null;
-
-  if (existingSalary) {
-    const error = new Error("Tháng này đã được thanh toán lương.");
-    error.statusCode = 400;
-    throw error;
-  }
+  ensureStaffUser(userItem);
 
   const pendingCount = userItem.timekeeping.filter(
     (entry) => !entry.approved && entry.shiftId && isDateInRange(entry.date, range.start, range.end)
   ).length;
 
   if (pendingCount > 0) {
-    const error = new Error("Vẫn còn chấm công chờ duyệt trong tháng này.");
+    const error = new Error("Vẫn còn chấm công chờ duyệt trong tháng nay.");
     error.statusCode = 400;
     throw error;
   }
 
   const [hourSalary, commission] = await Promise.all([getHourSalaryValue(), getCommissionValue()]);
   const approvedEntries = buildPayrollEntries(userItem.timekeeping, range, hourSalary);
+  const approvedCommissionEntries = getAdjustmentItemsForRange(userItem.commissions || [], range, { approvedOnly: true });
+  const faultEntries = getAdjustmentItemsForRange(userItem.faults || [], range);
   const orderCount = getCreatedDataCount(userItem);
   const totalShiftSalary = approvedEntries.reduce((sum, entry) => sum + entry.totalSalary, 0);
-  const totalSalary = totalShiftSalary + orderCount * commission;
+  const totalExtraCommission = approvedCommissionEntries.reduce((sum, entry) => sum + entry.amount, 0);
+  const totalFault = faultEntries.reduce((sum, entry) => sum + entry.amount, 0);
+  const totalSalary = totalShiftSalary + orderCount * commission + totalExtraCommission - totalFault;
 
   const payrollMonth = range.start.getMonth() + 1;
   const payrollYear = range.start.getFullYear();
@@ -597,7 +691,7 @@ const paySalary = async ({ userId, month, user }) => {
   );
 
   if (totalSalary <= 0) {
-    const error = new Error("KhÃ´ng cÃ³ dá»¯ liá»‡u lÆ°Æ¡ng má»›i Ä‘á»ƒ thanh toÃ¡n.");
+    const error = new Error("Không có dữ liệu lương mới để thanh toán.");
     error.statusCode = 400;
     throw error;
   }
@@ -605,11 +699,17 @@ const paySalary = async ({ userId, month, user }) => {
   const remainingTimekeeping = userItem.timekeeping.filter(
     (entry) => !isDateInRange(entry.date, range.start, range.end)
   );
+  const remainingFaults = (userItem.faults || []).filter((entry) => !isDateInRange(entry.date, range.start, range.end));
+  const remainingCommissions = (userItem.commissions || []).filter(
+    (entry) => !isDateInRange(entry.date, range.start, range.end)
+  );
 
   const updatePayload = {
     $set: {
       totalOrder: 0,
       timekeeping: remainingTimekeeping,
+      faults: remainingFaults,
+      commissions: remainingCommissions,
       updatedBy: user.id
     }
   };
@@ -663,7 +763,7 @@ const paySalary = async ({ userId, month, user }) => {
   }
 
   if (updateResult.modifiedCount === 0) {
-    const error = new Error("Tháng này đã được thanh toán lương.");
+    const error = new Error("Tháng nay đã được thanh toán lương.");
     error.statusCode = 400;
     throw error;
   }
@@ -671,6 +771,32 @@ const paySalary = async ({ userId, month, user }) => {
   return {
     successMessage: "Đã thanh toán lương và chốt công trong tháng thành công.",
     redirectTo: `/users/${userId}/payroll?month=${range.selectedMonth}`
+  };
+};
+
+const createFault = async ({ userId, validatedBody, user }) => {
+  const userItem = await User.findById(userId);
+
+  if (!userItem) {
+    const error = new Error("Không tìm thấy người dùng.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  ensureStaffUser(userItem);
+  userItem.faults = userItem.faults || [];
+
+  userItem.faults.push({
+    date: normalizeDate(validatedBody.date),
+    amount: validatedBody.amount,
+    description: validatedBody.description
+  });
+  userItem.updatedBy = user.id;
+  await userItem.save();
+
+  return {
+    successMessage: "Đã thêm lỗi phạt cho nhân viên.",
+    redirectTo: `/users/${userId}/payroll?month=${buildAdjustmentRedirectMonth(validatedBody.month, new Date(validatedBody.date))}`
   };
 };
 
@@ -707,6 +833,68 @@ const deleteTimekeeping = async ({ userId, timekeepingId, user }) => {
   };
 };
 
+const deleteCommission = async ({ userId, commissionId, month, user }) => {
+  const userItem = await User.findById(userId);
+
+  if (!userItem) {
+    const error = new Error("Không tìm thấy người dùng.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  ensureStaffUser(userItem);
+  userItem.commissions = userItem.commissions || [];
+
+  const commissionEntry = userItem.commissions.id(commissionId);
+
+  if (!commissionEntry) {
+    const error = new Error("Không tìm thấy hoa hồng.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const redirectMonth = buildAdjustmentRedirectMonth(month, new Date(commissionEntry.date));
+  commissionEntry.deleteOne();
+  userItem.updatedBy = user.id;
+  await userItem.save();
+
+  return {
+    successMessage: "Đã xóa hoa hồng thành công.",
+    redirectTo: `/users/${userId}/payroll?month=${redirectMonth}`
+  };
+};
+
+const deleteFault = async ({ userId, faultId, month, user }) => {
+  const userItem = await User.findById(userId);
+
+  if (!userItem) {
+    const error = new Error("Không tìm thấy người dùng.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  ensureStaffUser(userItem);
+  userItem.faults = userItem.faults || [];
+
+  const faultEntry = userItem.faults.id(faultId);
+
+  if (!faultEntry) {
+    const error = new Error("Không tìm thấy lỗi phạt.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const redirectMonth = buildAdjustmentRedirectMonth(month, new Date(faultEntry.date));
+  faultEntry.deleteOne();
+  userItem.updatedBy = user.id;
+  await userItem.save();
+
+  return {
+    successMessage: "Đã xóa lỗi phạt thành công.",
+    redirectTo: `/users/${userId}/payroll?month=${redirectMonth}`
+  };
+};
+
 module.exports = {
   getIndexData,
   getCreateData,
@@ -722,9 +910,14 @@ module.exports = {
   updateCommissionSetting,
   getOwnTimekeepingData,
   createTimekeeping,
+  createCommissionRequest,
   getPendingTimekeepingData,
   approveTimekeeping,
   deleteTimekeeping,
+  approveCommission,
+  deleteCommission,
+  createFault,
+  deleteFault,
   getPayrollData,
   paySalary
 };

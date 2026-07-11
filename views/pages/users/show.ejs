@@ -2,32 +2,35 @@
   <div class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
     <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
       <div>
-        <p class="text-sm font-semibold uppercase tracking-[0.35em] text-brand-700">Chi tiết người dùng</p>
+        <p class="text-sm font-semibold uppercase tracking-[0.35em] text-brand-700">Chi tiet nguoi dung</p>
         <h1 class="mt-3 text-3xl font-black text-slate-900"><%= userItem.username %></h1>
         <p class="mt-2 text-slate-500"><%= userItem.role %></p>
       </div>
       <div class="flex flex-wrap gap-3">
-        <a href="/users/<%= userItem._id %>/payroll" class="rounded-full bg-emerald-100 px-5 py-3 font-semibold text-emerald-800">Lương tháng</a>
-        <a href="/users/<%= userItem._id %>/edit" class="rounded-full bg-amber-100 px-5 py-3 font-semibold text-amber-800">Sửa</a>
-        <a href="/users" class="rounded-full bg-slate-100 px-5 py-3 font-semibold text-slate-700">Quay lại</a>
+        <a href="/users/<%= userItem._id %>/payroll" class="rounded-full bg-emerald-100 px-5 py-3 font-semibold text-emerald-800">Luong thang</a>
+        <a href="/users/<%= userItem._id %>/edit" class="rounded-full bg-amber-100 px-5 py-3 font-semibold text-amber-800">Sua</a>
+        <a href="/users" class="rounded-full bg-slate-100 px-5 py-3 font-semibold text-slate-700">Quay lai</a>
       </div>
     </div>
 
     <div class="mt-8 grid gap-6 md:grid-cols-2">
       <div class="rounded-3xl bg-slate-50 p-5">
-        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Thông tin tài khoản</p>
-        <p class="mt-3 text-slate-700">Tên đăng nhập: <span class="font-semibold text-slate-900"><%= userItem.username %></span></p>
-        <p class="mt-2 text-slate-700">Vai trò: <span class="font-semibold text-slate-900"><%= userItem.role %></span></p>
-        <p class="mt-2 text-slate-700">Tổng đơn đã tạo: <span class="font-semibold text-slate-900"><%= userItem.totalOrder || 0 %></span></p>
-        <p class="mt-2 text-slate-700">Số lần đã nhận lương: <span class="font-semibold text-slate-900"><%= userItem.salary?.length || 0 %></span></p>
+        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Thong tin tai khoan</p>
+        <p class="mt-3 text-slate-700">Ten dang nhap: <span class="font-semibold text-slate-900"><%= userItem.username %></span></p>
+        <p class="mt-2 text-slate-700">Vai tro: <span class="font-semibold text-slate-900"><%= userItem.role %></span></p>
+        <p class="mt-2 text-slate-700">Tong don da tao: <span class="font-semibold text-slate-900"><%= userItem.totalOrder || 0 %></span></p>
+        <p class="mt-2 text-slate-700">So lan da nhan luong: <span class="font-semibold text-slate-900"><%= userItem.salary?.length || 0 %></span></p>
+        <p class="mt-2 text-slate-700">Hoa hong da duyet: <span class="font-semibold text-slate-900"><%= approvedCommissionCount %></span></p>
+        <p class="mt-2 text-slate-700">Hoa hong cho duyet: <span class="font-semibold text-slate-900"><%= pendingCommissionCount %></span></p>
+        <p class="mt-2 text-slate-700">So loi phat: <span class="font-semibold text-slate-900"><%= faultCount %></span></p>
       </div>
 
       <div class="rounded-3xl bg-slate-50 p-5">
-        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Lịch sử cập nhật</p>
-        <p class="mt-3 text-slate-700">Tạo bởi: <span class="font-semibold text-slate-900"><%= userItem.createdBy %></span></p>
-        <p class="mt-2 text-slate-700">Cập nhật bởi: <span class="font-semibold text-slate-900"><%= userItem.updatedBy %></span></p>
-        <p class="mt-2 text-slate-700">Ngày tạo: <span class="font-semibold text-slate-900"><%= formatDateTime(userItem.createdAt) %></span></p>
-        <p class="mt-2 text-slate-700">Lần cập nhật cuối: <span class="font-semibold text-slate-900"><%= formatDateTime(userItem.updatedAt) %></span></p>
+        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Lich su cap nhat</p>
+        <p class="mt-3 text-slate-700">Tao boi: <span class="font-semibold text-slate-900"><%= userItem.createdBy %></span></p>
+        <p class="mt-2 text-slate-700">Cap nhat boi: <span class="font-semibold text-slate-900"><%= userItem.updatedBy %></span></p>
+        <p class="mt-2 text-slate-700">Ngay tao: <span class="font-semibold text-slate-900"><%= formatDateTime(userItem.createdAt) %></span></p>
+        <p class="mt-2 text-slate-700">Lan cap nhat cuoi: <span class="font-semibold text-slate-900"><%= formatDateTime(userItem.updatedAt) %></span></p>
       </div>
     </div>
   </div>

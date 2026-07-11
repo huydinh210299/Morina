@@ -134,6 +134,45 @@ const getGeneralTimeInputs = () => ({
   end: document.querySelector('input[name="generalEndTime"]')
 });
 
+const getConflictOverrideInput = () => orderForm?.querySelector("[data-conflict-override]");
+
+const resetConflictOverride = () => {
+  const conflictOverrideInput = getConflictOverrideInput();
+  if (conflictOverrideInput) {
+    conflictOverrideInput.value = "false";
+  }
+};
+
+const formatConflictDateTime = (value) => {
+  if (!value) {
+    return "-";
+  }
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    dateStyle: "short",
+    timeStyle: "short"
+  }).format(new Date(value));
+};
+
+const buildConflictConfirmMessage = (result) => {
+  const lines = [
+    result.message || "Có sản phẩm trùng lịch với đơn hàng chưa hoàn tất."
+  ];
+
+  result.conflicts.slice(0, 6).forEach((conflict, index) => {
+    lines.push(
+      `${index + 1}. ${conflict.productLabel || "Sản phẩm"} | Đơn ${conflict.orderCode} | ${conflict.customerName || "Khách hàng"} | ${formatConflictDateTime(conflict.startTime)} - ${formatConflictDateTime(conflict.endTime)}`
+    );
+  });
+
+  if (result.conflicts.length > 6) {
+    lines.push(`... còn ${result.conflicts.length - 6} lượt trùng khác.`);
+  }
+
+  lines.push("Bạn có muốn tiếp tục lưu đơn hàng không?");
+  return lines.join("\n");
+};
+
 const updateLineTimeState = (row) => {
   const toggle = row.querySelector("[data-use-general-toggle]");
   const startInput = row.querySelector("[data-line-start]");
@@ -300,6 +339,48 @@ if (orderForm) {
   initializeOrderAmountOverride();
   syncAllLineTimes();
   updateOrderAmountState();
+
+  orderForm.addEventListener("submit", async (event) => {
+    const conflictOverrideInput = getConflictOverrideInput();
+
+    if (conflictOverrideInput?.value === "true") {
+      return;
+    }
+
+    event.preventDefault();
+
+    try {
+      const response = await fetch(orderForm.dataset.conflictCheckUrl || "/orders/conflicts", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+        },
+        body: new URLSearchParams(new FormData(orderForm)).toString()
+      });
+
+      if (!response.ok) {
+        orderForm.submit();
+        return;
+      }
+
+      const result = await response.json();
+
+      if (!result.hasConflicts) {
+        orderForm.submit();
+        return;
+      }
+
+      if (window.confirm(buildConflictConfirmMessage(result))) {
+        if (conflictOverrideInput) {
+          conflictOverrideInput.value = "true";
+        }
+        orderForm.submit();
+      }
+    } catch (error) {
+      orderForm.submit();
+    }
+  });
 }
 
 document.addEventListener("click", (event) => {
@@ -355,6 +436,10 @@ document.addEventListener("click", (event) => {
 });
 
 document.addEventListener("input", (event) => {
+  if (orderForm && orderForm.contains(event.target) && !event.target.matches("[data-conflict-override]")) {
+    resetConflictOverride();
+  }
+
   const row = event.target.closest("[data-line-row]");
 
   if (event.target.matches("[data-product-code-input]") && row) {
@@ -394,6 +479,10 @@ document.addEventListener("input", (event) => {
 });
 
 document.addEventListener("change", (event) => {
+  if (orderForm && orderForm.contains(event.target) && !event.target.matches("[data-conflict-override]")) {
+    resetConflictOverride();
+  }
+
   const row = event.target.closest("[data-line-row]");
 
   if (event.target.matches("[data-use-general-toggle]") && row) {

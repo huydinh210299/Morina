@@ -39,6 +39,44 @@ const salaryHistorySchema = new mongoose.Schema(
   { _id: false }
 );
 
+const faultSchema = new mongoose.Schema({
+  date: {
+    type: Date,
+    required: true
+  },
+  amount: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  description: {
+    type: String,
+    trim: true,
+    default: ""
+  }
+});
+
+const commissionSchema = new mongoose.Schema({
+  date: {
+    type: Date,
+    required: true
+  },
+  amount: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  description: {
+    type: String,
+    trim: true,
+    default: ""
+  },
+  approved: {
+    type: Boolean,
+    default: false
+  }
+});
+
 const userSchema = new mongoose.Schema(
   {
     id: {
@@ -73,6 +111,14 @@ const userSchema = new mongoose.Schema(
     },
     salary: {
       type: [salaryHistorySchema],
+      default: []
+    },
+    faults: {
+      type: [faultSchema],
+      default: []
+    },
+    commissions: {
+      type: [commissionSchema],
       default: []
     },
     lastAttendanceReminderAt: {

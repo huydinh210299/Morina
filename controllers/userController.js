@@ -106,6 +106,16 @@ const createTimekeeping = async (req, res) => {
   res.redirect(result.redirectTo);
 };
 
+const createCommissionRequest = async (req, res) => {
+  const result = await userService.createCommissionRequest({
+    userId: req.user._id,
+    validatedBody: req.validatedBody,
+    user: req.user
+  });
+  req.session.success = result.successMessage;
+  res.redirect(result.redirectTo);
+};
+
 const renderPendingTimekeeping = async (req, res) => {
   res.render(
     "pages/users/pending-timekeeping",
@@ -129,6 +139,49 @@ const deleteTimekeeping = async (req, res) => {
   const result = await userService.deleteTimekeeping({
     userId: req.params.userId,
     timekeepingId: req.params.timekeepingId,
+    user: req.user
+  });
+  req.session.success = result.successMessage;
+  res.redirect(result.redirectTo);
+};
+
+const approveCommission = async (req, res) => {
+  const result = await userService.approveCommission({
+    userId: req.params.userId,
+    commissionId: req.params.commissionId,
+    month: req.query.month,
+    user: req.user
+  });
+  req.session.success = result.successMessage;
+  res.redirect(result.redirectTo);
+};
+
+const deleteCommission = async (req, res) => {
+  const result = await userService.deleteCommission({
+    userId: req.params.userId,
+    commissionId: req.params.commissionId,
+    month: req.query.month,
+    user: req.user
+  });
+  req.session.success = result.successMessage;
+  res.redirect(result.redirectTo);
+};
+
+const createFault = async (req, res) => {
+  const result = await userService.createFault({
+    userId: req.params.userId,
+    validatedBody: req.validatedBody,
+    user: req.user
+  });
+  req.session.success = result.successMessage;
+  res.redirect(result.redirectTo);
+};
+
+const deleteFault = async (req, res) => {
+  const result = await userService.deleteFault({
+    userId: req.params.userId,
+    faultId: req.params.faultId,
+    month: req.query.month,
     user: req.user
   });
   req.session.success = result.successMessage;
@@ -170,9 +223,14 @@ module.exports = wrapControllerHandlers({
   updateCommission,
   renderOwnTimekeeping,
   createTimekeeping,
+  createCommissionRequest,
   renderPendingTimekeeping,
   approveTimekeeping,
   deleteTimekeeping,
+  approveCommission,
+  deleteCommission,
+  createFault,
+  deleteFault,
   renderPayroll,
   paySalary
 });

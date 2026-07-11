@@ -8,6 +8,7 @@ const router = express.Router();
 router.use(requireAuth, allowRoles(USER_ROLES.ADMIN, USER_ROLES.STAFF));
 router.get("/", orderController.renderIndex);
 router.get("/new", orderController.renderCreate);
+router.post("/conflicts", orderController.checkConflicts);
 router.post("/", orderController.create);
 router.post("/:id/payments", orderController.addPayment);
 router.post("/:id/status", orderController.updateStatus);

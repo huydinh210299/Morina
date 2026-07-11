@@ -9,6 +9,14 @@ const renderCreate = async (req, res) => {
   res.render("pages/orders/form", await orderService.getCreateData());
 };
 
+const renderOrderFormError = async (res, { id, body, message, statusCode }) => {
+  const viewData = id
+    ? await orderService.getEditDataFromBody(id, body, message)
+    : await orderService.getCreateDataFromBody(body, message);
+
+  res.status(statusCode || 400).render("pages/orders/form", viewData);
+};
+
 const create = async (req, res) => {
   try {
     const result = await orderService.createOrder(req);
@@ -20,9 +28,11 @@ const create = async (req, res) => {
       error.message = `Phát hiện giá trị trùng lặp cho ${Object.keys(error.keyPattern).join(", ")}.`;
     }
 
-    res
-      .status(error.statusCode || 400)
-      .render("pages/orders/form", await orderService.getCreateDataFromBody(req.body, error.message));
+    await renderOrderFormError(res, {
+      body: req.body,
+      message: error.message,
+      statusCode: error.statusCode
+    });
   }
 };
 
@@ -30,14 +40,32 @@ const renderEdit = async (req, res) => {
   res.render("pages/orders/form", await orderService.getEditData(req.params.id));
 };
 
+const checkConflicts = async (req, res) => {
+  res.json(
+    await orderService.checkOrderConflicts({
+      id: req.body.currentOrderId,
+      body: req.body
+    })
+  );
+};
+
 const update = async (req, res) => {
-  const result = await orderService.updateOrder({
-    id: req.params.id,
-    body: req.body,
-    user: req.user
-  });
-  req.session.success = result.successMessage;
-  res.redirect(result.redirectTo);
+  try {
+    const result = await orderService.updateOrder({
+      id: req.params.id,
+      body: req.body,
+      user: req.user
+    });
+    req.session.success = result.successMessage;
+    res.redirect(result.redirectTo);
+  } catch (error) {
+    await renderOrderFormError(res, {
+      id: req.params.id,
+      body: req.body,
+      message: error.message,
+      statusCode: error.statusCode
+    });
+  }
 };
 
 const remove = async (req, res) => {
@@ -73,6 +101,7 @@ const updateStatus = async (req, res) => {
 module.exports = wrapControllerHandlers({
   renderIndex,
   renderCreate,
+  checkConflicts,
   create,
   renderEdit,
   update,

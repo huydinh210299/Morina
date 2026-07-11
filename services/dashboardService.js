@@ -10,6 +10,30 @@ const getDayRange = (date) => {
   return { start, end };
 };
 
+const getTodayTomorrowFilter = () => {
+  const todayRange = getDayRange(new Date());
+  const tomorrow = new Date(todayRange.start);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowRange = getDayRange(tomorrow);
+
+  return {
+    $or: [
+      {
+        generalStartTime: {
+          $gte: todayRange.start,
+          $lte: todayRange.end
+        }
+      },
+      {
+        generalStartTime: {
+          $gte: tomorrowRange.start,
+          $lte: tomorrowRange.end
+        }
+      }
+    ]
+  };
+};
+
 const getDashboardData = async (user) => {
   const today = new Date();
   const tomorrow = new Date(today);
@@ -17,6 +41,7 @@ const getDashboardData = async (user) => {
 
   const todayRange = getDayRange(today);
   const tomorrowRange = getDayRange(tomorrow);
+  const todayTomorrowFilter = getTodayTomorrowFilter();
 
   const [todayOrders, tomorrowOrders, importantOrders, bookshipOrders] = await Promise.all([
     Order.countDocuments({
@@ -31,8 +56,21 @@ const getDashboardData = async (user) => {
         $lte: tomorrowRange.end
       }
     }),
-    Order.countDocuments({ important: true }),
-    Order.countDocuments({ bookship: true })
+    Order.countDocuments({
+      ...todayTomorrowFilter,
+      important: true,
+      $nor: [
+        {
+          returned: true,
+          returnDeposit: true
+        }
+      ]
+    }),
+    Order.countDocuments({
+      ...todayTomorrowFilter,
+      bookship: true,
+      alreadyPickup: false
+    })
   ]);
 
   return {

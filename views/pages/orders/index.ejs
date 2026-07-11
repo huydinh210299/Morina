@@ -9,6 +9,7 @@
   if (currentFilters.todayOrders) queryParams.set("todayOrders", "on");
   if (currentFilters.tomorrowOrders) queryParams.set("tomorrowOrders", "on");
   if (currentFilters.important) queryParams.set("important", "on");
+  if (currentFilters.excludeCompletedImportant) queryParams.set("excludeCompletedImportant", "on");
   if (currentFilters.bookship && currentFilters.bookship !== "all") queryParams.set("bookship", currentFilters.bookship);
   if (currentFilters.returned && currentFilters.returned !== "all") queryParams.set("returned", currentFilters.returned);
   if (currentFilters.refund && currentFilters.refund !== "all") queryParams.set("refund", currentFilters.refund);

@@ -33,6 +33,8 @@ const getOrderDependencies = async () => {
   return { products, accessories };
 };
 
+const buildProductLabel = (product) => [product?.code, product?.size, product?.note].filter(Boolean).join(" - ");
+
 const buildValidatedOrder = (body) => {
   const payload = parseOrderPayload(body);
   const applyGeneralTimes = (items = []) =>
@@ -108,6 +110,97 @@ const formatDateInput = (date) => {
 
 const parseCheckbox = (value) => ["on", "true", "1", true].includes(value);
 
+const toDayStart = (value) => {
+  const date = new Date(value);
+  date.setHours(0, 0, 0, 0);
+  return date;
+};
+
+const rangesOverlap = (startA, endA, startB, endB) =>
+  toDayStart(startA).getTime() <= toDayStart(endB).getTime() &&
+  toDayStart(endA).getTime() >= toDayStart(startB).getTime();
+
+const buildConflictMessage = (conflicts = []) => {
+  if (!conflicts.length) {
+    return "";
+  }
+
+  const productLabels = [...new Set(conflicts.map((conflict) => conflict.productLabel).filter(Boolean))];
+  const preview = productLabels.slice(0, 3).join(", ");
+  const suffix = productLabels.length > 3 ? ` và ${productLabels.length - 3} sản phẩm khác` : "";
+
+  return `Có sản phẩm đã được lên kế hoạch thuê trong khoảng thời gian này (${preview}${suffix}). Hãy xác nhận nếu vẫn muốn lưu đơn hàng.`;
+};
+
+const findConflictingProductLines = async ({ payload, excludeOrderId }) => {
+  const requestedProducts = payload.products.filter((item) => item.product);
+  const productIds = [...new Set(requestedProducts.map((item) => `${item.product}`))];
+
+  if (!productIds.length) {
+    return [];
+  }
+
+  const filter = {
+    returned: false,
+    "products.product": { $in: productIds }
+  };
+
+  if (excludeOrderId) {
+    filter._id = { $ne: excludeOrderId };
+  }
+
+  const orders = await Order.find(filter)
+    .populate("products.product")
+    .select("id customerName products");
+
+  const conflicts = [];
+
+  for (const requestedItem of requestedProducts) {
+    const requestedProductId = `${requestedItem.product}`;
+
+    for (const order of orders) {
+      for (const existingItem of order.products) {
+        const existingProductId = `${existingItem.product?._id || existingItem.product || ""}`;
+
+        if (existingProductId !== requestedProductId) {
+          continue;
+        }
+
+        if (!rangesOverlap(requestedItem.startTime, requestedItem.endTime, existingItem.startTime, existingItem.endTime)) {
+          continue;
+        }
+
+        conflicts.push({
+          productId: requestedProductId,
+          productLabel: buildProductLabel(existingItem.product),
+          orderId: `${order._id}`,
+          orderCode: order.id,
+          customerName: order.customerName,
+          requestedStartTime: requestedItem.startTime,
+          requestedEndTime: requestedItem.endTime,
+          startTime: existingItem.startTime,
+          endTime: existingItem.endTime
+        });
+      }
+    }
+  }
+
+  return conflicts.sort((left, right) => new Date(left.startTime) - new Date(right.startTime));
+};
+
+const ensureOrderConflictConfirmed = async ({ body, payload, excludeOrderId }) => {
+  const conflicts = await findConflictingProductLines({ payload, excludeOrderId });
+
+  if (!conflicts.length || parseCheckbox(body.conflictOverride)) {
+    return conflicts;
+  }
+
+  const error = new Error(buildConflictMessage(conflicts));
+  error.statusCode = 409;
+  error.conflicts = conflicts;
+  throw error;
+};
+
 const parseStatusFilter = (value) => {
   if (value === true || value === "true" || value === "1" || value === 1) {
     return STATUS_FILTER_TRUE;
@@ -158,6 +251,7 @@ const buildOrderFilters = (query = {}) => {
     todayOrders: parseCheckbox(query.todayOrders),
     tomorrowOrders: parseCheckbox(query.tomorrowOrders),
     important: parseCheckbox(query.important),
+    excludeCompletedImportant: parseCheckbox(query.excludeCompletedImportant),
     bookship: parseStatusFilter(query.bookship),
     returned: parseStatusFilter(query.returned),
     refund: parseStatusFilter(query.refund),
@@ -214,6 +308,15 @@ const buildOrderFilters = (query = {}) => {
 
   if (filters.important) {
     mongoFilter.important = true;
+  }
+
+  if (filters.excludeCompletedImportant) {
+    mongoFilter.$nor = [
+      {
+        returned: true,
+        returnDeposit: true
+      }
+    ];
   }
 
   if (filters.returned !== STATUS_FILTER_ALL) {
@@ -304,9 +407,31 @@ const getCreateDataFromBody = async (body, error) => ({
   error
 });
 
+const getEditData = async (id) => {
+  const [order, dependencies] = await Promise.all([findOrderOrFail(id), getOrderDependencies()]);
+
+  return {
+    title: "Chỉnh sửa đơn hàng",
+    order,
+    ...dependencies,
+    formAction: `/orders/${order._id}?_method=PUT`,
+    formMethod: "POST"
+  };
+};
+
+const getEditDataFromBody = async (id, body, error) => ({
+  ...(await getEditData(id)),
+  order: {
+    ...parseOrderPayload(body),
+    _id: id
+  },
+  error
+});
+
 const createOrder = async ({ body, user }) => {
   const payload = buildValidatedOrder(body);
   payload.orderAmount = resolveOrderAmount(payload);
+  await ensureOrderConflictConfirmed({ body, payload });
 
   await Order.create(setCreateAuditFields(payload, user));
   if (user.role === USER_ROLES.STAFF) {
@@ -323,22 +448,11 @@ const createOrder = async ({ body, user }) => {
   };
 };
 
-const getEditData = async (id) => {
-  const [order, dependencies] = await Promise.all([findOrderOrFail(id), getOrderDependencies()]);
-
-  return {
-    title: "Chỉnh sửa đơn hàng",
-    order,
-    ...dependencies,
-    formAction: `/orders/${order._id}?_method=PUT`,
-    formMethod: "POST"
-  };
-};
-
 const updateOrder = async ({ id, body, user }) => {
   await findOrderOrFail(id);
   const payload = buildValidatedOrder(body);
   payload.orderAmount = resolveOrderAmount(payload);
+  await ensureOrderConflictConfirmed({ body, payload, excludeOrderId: id });
 
   await Order.findByIdAndUpdate(id, setUpdateAuditFields(payload, user), {
     runValidators: true
@@ -407,15 +521,31 @@ const updateOrderStatus = async ({ id, body, user }) => {
   };
 };
 
+const checkOrderConflicts = async ({ id, body }) => {
+  const payload = buildValidatedOrder(body);
+  const conflicts = await findConflictingProductLines({
+    payload,
+    excludeOrderId: id
+  });
+
+  return {
+    hasConflicts: conflicts.length > 0,
+    message: buildConflictMessage(conflicts),
+    conflicts
+  };
+};
+
 module.exports = {
   getIndexData,
   getCreateData,
   getCreateDataFromBody,
-  createOrder,
   getEditData,
+  getEditDataFromBody,
+  createOrder,
   updateOrder,
   deleteOrder,
   getShowData,
   addOrderPayment,
-  updateOrderStatus
+  updateOrderStatus,
+  checkOrderConflicts
 };

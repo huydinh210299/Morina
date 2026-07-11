@@ -52,8 +52,10 @@
     <p class="mt-1 text-slate-500">Tạo đơn hàng với dòng sản phẩm, dòng phụ kiện, thanh toán và các trạng thái vận hành.</p>
   </div>
 
-  <form action="<%= formAction %>" method="<%= formMethod %>" class="space-y-6">
+  <form action="<%= formAction %>" method="<%= formMethod %>" class="space-y-6" data-conflict-check-url="/orders/conflicts">
     <script id="order-form-data" type="application/json"><%- JSON.stringify({ products: productLookup, accessories: accessoryLookup }) %></script>
+    <input type="hidden" name="currentOrderId" value="<%= order?._id || '' %>" />
+    <input type="hidden" name="conflictOverride" value="false" data-conflict-override />
     <div class="grid gap-6 rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60 lg:grid-cols-2">
       <div>
         <label class="mb-2 block text-sm font-semibold text-slate-700">Tên khách hàng</label>

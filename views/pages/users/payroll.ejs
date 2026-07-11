@@ -2,7 +2,7 @@
   <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
     <div>
       <h1 class="text-3xl font-black text-slate-900">Lương tháng</h1>
-      <p class="mt-1 text-slate-500">Tổng hợp giờ làm đã duyệt và hoa hồng đơn hàng của <span class="font-semibold text-slate-700"><%= userItem.username %></span>.</p>
+      <p class="mt-1 text-slate-500">Tổng hợp công đã duyệt, hoa hồng và lỗi phạt của <span class="font-semibold text-slate-700"><%= userItem.username %></span>.</p>
     </div>
     <div class="flex flex-wrap gap-3">
       <form method="GET" action="/users/<%= userItem._id %>/payroll" class="flex items-center gap-3">
@@ -10,7 +10,7 @@
         <button type="submit" class="rounded-full bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-700">Xem tháng</button>
       </form>
       <% if (userItem.role === "staff") { %>
-        <form action="/users/<%= userItem._id %>/payroll/pay" method="POST" onsubmit="return confirm('Thanh toán lương và xóa chấm công của tháng này?');">
+        <form action="/users/<%= userItem._id %>/payroll/pay" method="POST" onsubmit="return confirm('Thanh toán lương và reset công, hoa hồng, lỗi phạt của tháng này?');">
           <input type="hidden" name="month" value="<%= selectedMonth %>" />
           <button type="submit" class="rounded-full bg-brand-500 px-5 py-3 font-semibold text-white transition hover:bg-brand-700">Thanh toán lương</button>
         </form>
@@ -19,7 +19,7 @@
     </div>
   </div>
 
-  <div class="grid gap-4 md:grid-cols-5">
+  <div class="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
     <div class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
       <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Giờ đã duyệt</p>
       <p class="mt-3 text-3xl font-black text-slate-900"><%= totalHour %></p>
@@ -37,62 +37,176 @@
       <p class="mt-3 text-3xl font-black text-brand-700"><%= formatCurrency(commission) %></p>
     </div>
     <div class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
-      <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Lương tháng</p>
+      <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Chờ duyệt công</p>
+      <p class="mt-3 text-3xl font-black text-amber-700"><%= pendingCount %></p>
+    </div>
+    <div class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
+      <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Tổng lương</p>
       <p class="mt-3 text-3xl font-black text-brand-700"><%= formatCurrency(salary) %></p>
     </div>
   </div>
 
-  <div class="grid gap-4 lg:grid-cols-3">
+  <div class="grid gap-4 lg:grid-cols-4">
     <div class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
       <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Lương ca làm</p>
       <p class="mt-3 text-3xl font-black text-emerald-700"><%= formatCurrency(shiftSalary) %></p>
     </div>
     <div class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
-      <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Lương hoa hồng</p>
-      <p class="mt-3 text-3xl font-black text-brand-700"><%= formatCurrency(commissionSalary) %></p>
+      <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Hoa hồng theo đơn</p>
+      <p class="mt-3 text-3xl font-black text-brand-700"><%= formatCurrency(orderCommissionSalary) %></p>
     </div>
     <div class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
-      <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Chờ duyệt</p>
-      <p class="mt-3 text-3xl font-black text-amber-700"><%= pendingCount %></p>
+      <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Hoa hồng bổ sung</p>
+      <p class="mt-3 text-3xl font-black text-emerald-700"><%= formatCurrency(extraCommissionSalary) %></p>
+    </div>
+    <div class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
+      <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Tổng lỗi phạt</p>
+      <p class="mt-3 text-3xl font-black text-rose-700"><%= formatCurrency(faultSalary) %></p>
     </div>
   </div>
 
-  <div class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
-    <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h2 class="text-2xl font-black text-slate-900">Tổng giờ theo từng ca</h2>
-        <p class="text-sm text-slate-500">Hiển thị tổng số giờ và lương theo giờ của từng loại ca trong tháng <%= selectedMonth %>.</p>
-      </div>
-    </div>
-    <div class="mt-6 space-y-4">
-      <% if (shiftPayrollSummary.length === 0) { %>
-        <p class="text-slate-500">Chưa có ca làm nào được duyệt trong tháng này.</p>
-      <% } %>
-      <% shiftPayrollSummary.forEach((item) => { %>
-        <div class="rounded-3xl border border-slate-200 p-5">
-          <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <p class="font-semibold text-slate-900"><%= item.shiftName %></p>
-              <p class="mt-1 text-sm text-slate-500"><%= item.shiftDescription || "Không có mô tả" %></p>
-              <p class="mt-2 text-sm text-slate-500">Số ca đã duyệt: <span class="font-semibold text-slate-700"><%= item.shiftCount %></span></p>
+  <% if (userItem.role === "staff") { %>
+    <div class="grid gap-6 xl:grid-cols-3">
+      <form action="/users/<%= userItem._id %>/faults" method="POST" class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
+        <h2 class="text-2xl font-black text-slate-900">Thêm lỗi phạt</h2>
+        <input type="hidden" name="month" value="<%= selectedMonth %>" />
+        <div class="mt-6 space-y-5">
+          <div>
+            <label class="mb-2 block text-sm font-semibold text-slate-700">Ngày</label>
+            <input name="date" type="date" required class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+          </div>
+          <div>
+            <label class="mb-2 block text-sm font-semibold text-slate-700">Số tiền phạt</label>
+            <input name="amount" type="number" min="0" step="1" required class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+          </div>
+          <div>
+            <label class="mb-2 block text-sm font-semibold text-slate-700">Mô tả</label>
+            <textarea name="description" rows="3" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" placeholder="Ví dụ: đi muộn, làm hỏng đồ, vi phạm quy định..."></textarea>
+          </div>
+          <button type="submit" class="rounded-full bg-rose-600 px-6 py-3 font-semibold text-white transition hover:bg-rose-700">Thêm lỗi phạt</button>
+        </div>
+      </form>
+
+      <div class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60 xl:col-span-2">
+        <div class="grid gap-6 lg:grid-cols-2">
+          <div>
+            <h2 class="text-2xl font-black text-slate-900">Hoa hồng chờ duyệt</h2>
+            <div class="mt-6 space-y-4">
+              <% if (pendingCommissionEntries.length === 0) { %>
+                <p class="text-slate-500">Không có yêu cầu hoa hồng nào chờ duyệt trong tháng nay.</p>
+              <% } %>
+              <% pendingCommissionEntries.forEach((entry) => { %>
+                <div class="rounded-3xl border border-amber-200 bg-amber-50/60 p-5">
+                  <div class="flex flex-col gap-3">
+                    <div>
+                      <p class="font-semibold text-slate-900"><%= formatCurrency(entry.amount) %></p>
+                      <p class="mt-1 text-sm text-slate-500"><%= formatDateTime(entry.date) %></p>
+                      <p class="mt-1 text-sm text-slate-500"><%= entry.description || "Không có mô tả" %></p>
+                    </div>
+                    <div class="flex gap-2">
+                      <form action="/users/<%= userItem._id %>/commissions/<%= entry.id %>/approve?month=<%= selectedMonth %>" method="POST">
+                        <button type="submit" class="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700">Duyet</button>
+                      </form>
+                      <form action="/users/<%= userItem._id %>/commissions/<%= entry.id %>?month=<%= selectedMonth %>&_method=DELETE" method="POST" onsubmit="return confirm('Xóa yêu cầu hoa hồng này?');">
+                        <button type="submit" class="rounded-full bg-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-300">Xóa</button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              <% }) %>
             </div>
-            <div class="grid gap-3 sm:grid-cols-3 lg:min-w-[460px]">
-              <div class="rounded-2xl bg-slate-50 px-4 py-3">
-                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Tổng giờ</p>
-                <p class="mt-2 text-lg font-black text-slate-900"><%= item.totalHour %> giờ</p>
-              </div>
-              <div class="rounded-2xl bg-slate-50 px-4 py-3">
-                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Lương / giờ</p>
-                <p class="mt-2 text-lg font-black text-emerald-700"><%= formatCurrency(item.shiftRate) %></p>
-              </div>
-              <div class="rounded-2xl bg-emerald-50 px-4 py-3">
-                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Thành tiền</p>
-                <p class="mt-2 text-lg font-black text-emerald-700"><%= formatCurrency(item.totalSalary) %></p>
-              </div>
+          </div>
+
+          <div>
+            <h2 class="text-2xl font-black text-slate-900">Lỗi phạt đã áp dụng</h2>
+            <div class="mt-6 space-y-4">
+              <% if (faultEntries.length === 0) { %>
+                <p class="text-slate-500">Không có lỗi phạt nào trong tháng nay.</p>
+              <% } %>
+              <% faultEntries.forEach((entry) => { %>
+                <div class="rounded-3xl border border-rose-200 bg-rose-50/60 p-5">
+                  <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p class="font-semibold text-slate-900"><%= formatCurrency(entry.amount) %></p>
+                      <p class="mt-1 text-sm text-slate-500"><%= formatDateTime(entry.date) %></p>
+                      <p class="mt-1 text-sm text-slate-500"><%= entry.description || "Không có mô tả" %></p>
+                    </div>
+                    <form action="/users/<%= userItem._id %>/faults/<%= entry.id %>?month=<%= selectedMonth %>&_method=DELETE" method="POST" onsubmit="return confirm('Xóa lỗi phạt này?');">
+                      <button type="submit" class="rounded-full bg-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-300">Xóa</button>
+                    </form>
+                  </div>
+                </div>
+              <% }) %>
             </div>
           </div>
         </div>
-      <% }) %>
+      </div>
+    </div>
+  <% } %>
+
+  <div class="grid gap-6 xl:grid-cols-2">
+    <div class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
+      <h2 class="text-2xl font-black text-slate-900">Hoa hồng đã duyệt</h2>
+      <div class="mt-6 space-y-4">
+        <% if (approvedCommissionEntries.length === 0) { %>
+          <p class="text-slate-500">Không có hoa hồng bổ sung nào đã duyệt trong tháng này.</p>
+        <% } %>
+        <% approvedCommissionEntries.forEach((entry) => { %>
+          <div class="rounded-3xl border border-emerald-200 bg-emerald-50/50 p-5">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p class="font-semibold text-slate-900"><%= formatCurrency(entry.amount) %></p>
+                <p class="mt-1 text-sm text-slate-500"><%= formatDateTime(entry.date) %></p>
+                <p class="mt-1 text-sm text-slate-500"><%= entry.description || "Không có mô tả" %></p>
+              </div>
+              <% if (userItem.role === "staff") { %>
+                <form action="/users/<%= userItem._id %>/commissions/<%= entry.id %>?month=<%= selectedMonth %>&_method=DELETE" method="POST" onsubmit="return confirm('Xóa hoa hồng này?');">
+                  <button type="submit" class="rounded-full bg-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-300">Xóa</button>
+                </form>
+              <% } %>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <div class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 class="text-2xl font-black text-slate-900">Tổng giờ theo từng ca</h2>
+          <p class="text-sm text-slate-500">Hiển thị tổng số giờ và thành tiền theo từng loại ca trong tháng <%= selectedMonth %>.</p>
+        </div>
+      </div>
+      <div class="mt-6 space-y-4">
+        <% if (shiftPayrollSummary.length === 0) { %>
+          <p class="text-slate-500">Chưa có ca làm nào được duyệt trong tháng nay.</p>
+        <% } %>
+        <% shiftPayrollSummary.forEach((item) => { %>
+          <div class="rounded-3xl border border-slate-200 p-5">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <p class="font-semibold text-slate-900"><%= item.shiftName %></p>
+                <p class="mt-1 text-sm text-slate-500"><%= item.shiftDescription || "Không có mô tả" %></p>
+                <p class="mt-2 text-sm text-slate-500">Số ca đã duyệt: <span class="font-semibold text-slate-700"><%= item.shiftCount %></span></p>
+              </div>
+              <div class="grid gap-3 sm:grid-cols-3 lg:min-w-[460px]">
+                <div class="rounded-2xl bg-slate-50 px-4 py-3">
+                  <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Tổng giờ</p>
+                  <p class="mt-2 text-lg font-black text-slate-900"><%= item.totalHour %> giờ</p>
+                </div>
+                <div class="rounded-2xl bg-slate-50 px-4 py-3">
+                  <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Lương / giờ</p>
+                  <p class="mt-2 text-lg font-black text-emerald-700"><%= formatCurrency(item.shiftRate) %></p>
+                </div>
+                <div class="rounded-2xl bg-emerald-50 px-4 py-3">
+                  <p class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Thành tiền</p>
+                  <p class="mt-2 text-lg font-black text-emerald-700"><%= formatCurrency(item.totalSalary) %></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
     </div>
   </div>
 
@@ -100,7 +214,7 @@
     <h2 class="text-2xl font-black text-slate-900">Chi tiết ca đã duyệt trong tháng <%= selectedMonth %></h2>
     <div class="mt-6 space-y-4">
       <% if (approvedEntries.length === 0) { %>
-        <p class="text-slate-500">Chưa có ca làm nào được duyệt trong tháng này.</p>
+        <p class="text-slate-500">Chưa có ca làm nào được duyệt trong tháng nay.</p>
       <% } %>
       <% approvedEntries.forEach((entry) => { %>
         <div class="rounded-3xl border border-slate-200 p-5">

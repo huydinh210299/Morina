@@ -8,7 +8,8 @@ const {
   shiftSchema,
   timekeepingCreateSchema,
   settingValueSchema,
-  payrollPaymentSchema
+  payrollPaymentSchema,
+  payrollAdjustmentSchema
 } = require("../utils/validators");
 const { USER_ROLES } = require("../utils/constants");
 
@@ -27,6 +28,12 @@ router.post(
   validate(timekeepingCreateSchema),
   userController.createTimekeeping
 );
+router.post(
+  "/commissions",
+  allowRoles(USER_ROLES.STAFF),
+  validate(payrollAdjustmentSchema),
+  userController.createCommissionRequest
+);
 
 router.get(
   "/timekeeping/pending",
@@ -42,6 +49,27 @@ router.delete(
   "/:userId/timekeeping/:timekeepingId",
   allowRoles(USER_ROLES.ADMIN),
   userController.deleteTimekeeping
+);
+router.post(
+  "/:userId/commissions/:commissionId/approve",
+  allowRoles(USER_ROLES.ADMIN),
+  userController.approveCommission
+);
+router.delete(
+  "/:userId/commissions/:commissionId",
+  allowRoles(USER_ROLES.ADMIN),
+  userController.deleteCommission
+);
+router.post(
+  "/:userId/faults",
+  allowRoles(USER_ROLES.ADMIN),
+  validate(payrollAdjustmentSchema),
+  userController.createFault
+);
+router.delete(
+  "/:userId/faults/:faultId",
+  allowRoles(USER_ROLES.ADMIN),
+  userController.deleteFault
 );
 
 router.get("/", allowRoles(USER_ROLES.ADMIN), userController.renderIndex);
