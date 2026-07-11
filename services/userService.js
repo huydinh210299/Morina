@@ -234,7 +234,7 @@ const getIndexData = async () => {
   );
 
   return {
-    title: "Quan ly nguoi dung",
+    title: "Quản lý người dùng",
     users,
     hourSalary: Number(hourSalarySetting.value || 0),
     commission: Number(commissionSetting.value || 0),
@@ -255,7 +255,7 @@ const getShowData = async (id) => {
   const userItem = await findUserByIdOrFail(id);
 
   return {
-    title: "Chi tiet nguoi dung",
+    title: "Chi tiết người dùng",
     userItem,
     approvedCommissionCount: (userItem.commissions || []).filter((item) => item.approved).length,
     pendingCommissionCount: (userItem.commissions || []).filter((item) => !item.approved).length,
