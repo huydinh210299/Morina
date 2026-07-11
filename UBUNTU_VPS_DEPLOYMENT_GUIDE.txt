@@ -46,8 +46,8 @@ Replace these placeholders throughout the guide:
 
   YOUR_VPS_IP             Public IP address of the VPS
   YOUR_GITHUB_REPO_URL    GitHub repository URL
-  app.example.com         The domain or subdomain used for the application
-  you@example.com         Email address used for Let's Encrypt notices
+  morina.click            The production domain purchased from Spaceship
+  YOUR_EMAIL_ADDRESS      Email address used for Let's Encrypt notices
 
 
 ======================================================================
@@ -508,6 +508,17 @@ Generate JWT_SECRET on Ubuntu with:
 APP_ENV_FILE is encoded during upload, decoded on the VPS, stored as
 /opt/rental-shop/shared/.env, and protected with permission mode 600.
 
+SECURITY NOTE:
+
+Never paste a completed APP_ENV_FILE, private SSH key, MongoDB URI, JWT
+secret, or production password into chat, an issue, a screenshot, or Git.
+If a secret is accidentally shared, treat it as exposed and rotate it:
+
+  - Reset the Atlas database user's password.
+  - Generate a new JWT_SECRET with openssl rand -hex 32.
+  - Set a new ADMIN_PASSWORD.
+  - Update APP_ENV_FILE and deploy again.
+
 
 ======================================================================
 13. HOW THE CI/CD FILES WORK
@@ -657,39 +668,99 @@ After a domain and HTTPS are configured, change it back and redeploy:
 
 Do not leave COOKIE_SECURE=false after HTTPS is available.
 
+15.1 Reset an existing seeded administrator password
+
+ADMIN_USERNAME and ADMIN_PASSWORD create the administrator only when that
+username does not already exist. Changing ADMIN_PASSWORD in GitHub does not
+automatically modify a previously created user's password.
+
+After a successful deployment, connect to the VPS and enter the release:
+
+  ssh deploy@YOUR_VPS_IP
+  cd /opt/rental-shop/current
+
+Reset the stored password to the current ADMIN_PASSWORD value from .env:
+
+  node -e 'require("dotenv").config(); const mongoose=require("mongoose"); const bcrypt=require("bcryptjs"); const User=require("./models/User"); (async()=>{await mongoose.connect(process.env.MONGODB_URI); const password=await bcrypt.hash(process.env.ADMIN_PASSWORD,10); const result=await User.updateOne({username:process.env.ADMIN_USERNAME},{$set:{password}}); console.log({matched:result.matchedCount,updated:result.modifiedCount}); await mongoose.disconnect();})().catch(error=>{console.error(error.message);process.exit(1);})'
+
+Expected output includes matched: 1. This command reads the password from
+.env and does not print it.
+
+15.2 Diagnose login without exposing the password or JWT
+
+From /opt/rental-shop/current, run:
+
+  grep -E '^(NODE_ENV|COOKIE_SECURE|ADMIN_USERNAME)=' /opt/rental-shop/shared/.env
+  grep -n "COOKIE_SECURE" services/authService.js
+
+For plain HTTP testing, COOKIE_SECURE must be false. Test the login directly
+against Node.js:
+
+  node -e 'require("dotenv").config(); const body=new URLSearchParams({username:process.env.ADMIN_USERNAME,password:process.env.ADMIN_PASSWORD}); fetch("http://127.0.0.1:3000/auth/login",{method:"POST",body,redirect:"manual",headers:{"content-type":"application/x-www-form-urlencoded"}}).then(r=>{const cookie=r.headers.get("set-cookie")||""; console.log({status:r.status,location:r.headers.get("location"),authCookieCreated:cookie.includes((process.env.COOKIE_NAME||"rentalshop_token")+"="),cookieIsSecure:/;\s*Secure/i.test(cookie)});}).catch(e=>{console.error(e.message);process.exit(1);})'
+
+A successful HTTP test shows status 302, location /dashboard,
+authCookieCreated true, and cookieIsSecure false. If location is /auth/login,
+reset the existing admin password. After correcting login, clear browser site
+data for the VPS IP or test in a private window.
+
 
 ======================================================================
-16. DOMAIN CONFIGURATION (COMPLETE THIS AFTER BUYING A DOMAIN)
+16. DOMAIN CONFIGURATION FOR MORINA.CLICK (SPACESHIP)
 ======================================================================
 
-Any normal domain is sufficient. A separate paid SSL product is not needed
-because Let's Encrypt provides the certificate for free.
+The production domain is morina.click, purchased from Spaceship. A separate
+paid SSL product is not needed because Let's Encrypt provides the certificate
+for free.
 
 16.1 Create a DNS record
 
-In the domain provider's DNS control panel, create:
+In Spaceship, open:
 
-  Type:   A
-  Host:   app
-  Value:  YOUR_VPS_IP
-  TTL:    300 or Automatic
+  Advanced DNS Manager -> morina.click -> DNS records -> Custom records
 
-This makes app.example.com point to the VPS. For the root domain instead,
-use @ as the host where supported.
+Create these records:
 
-If using Cloudflare, choose DNS only temporarily while setting up HTTPS.
+  Host   Type    Value          Purpose
+  @      A       YOUR_VPS_IP    Points morina.click to the VPS
+  www    CNAME   morina.click   Makes www.morina.click use the same target
+
+The CNAME value must be morina.click. Do not enter example.com; example.com
+is only a documentation placeholder. If the www address is not wanted, the
+CNAME is optional and www should be omitted from Nginx and Certbot too.
+
+Remove conflicting Spaceship parking records, old A/AAAA records for @, or
+an existing www CNAME. Do not add an AAAA record unless the VPS has working
+IPv6 configured.
+
+The final records should look like:
+
+  A      @      180.93.54.174
+  CNAME  www    morina.click
+
+The @ symbol represents the root domain morina.click. The www CNAME means
+www.morina.click points to morina.click, which then resolves through the A
+record to the VPS.
+
+If Spaceship is using custom nameservers, DNS records must be created at the
+provider controlling those nameservers. Records shown as inactive in
+Spaceship do not affect public DNS.
 
 16.2 Wait for DNS propagation
 
 From Windows:
 
-  nslookup app.example.com
+  nslookup morina.click 8.8.8.8
+  nslookup www.morina.click 8.8.8.8
 
 Or from the VPS:
 
-  getent hosts app.example.com
+  getent hosts morina.click
+  getent hosts www.morina.click
 
-The result must contain YOUR_VPS_IP before requesting a certificate.
+Both results must contain 180.93.54.174 before requesting a certificate.
+Propagation commonly takes 5-30 minutes, but it can take several hours and
+occasionally up to 24-48 hours. The configured 30-minute TTL means cached
+answers may remain for approximately 30 minutes.
 
 16.3 Update Nginx with the domain
 
@@ -703,7 +774,7 @@ Change:
 
 To:
 
-  server_name app.example.com;
+  server_name morina.click www.morina.click;
 
 Validate and reload:
 
@@ -712,7 +783,7 @@ Validate and reload:
 
 Test virtual-host routing:
 
-  curl -I -H "Host: app.example.com" http://127.0.0.1
+  curl -I -H "Host: morina.click" http://127.0.0.1
 
 
 ======================================================================
@@ -728,11 +799,12 @@ Request a certificate only after DNS resolves to the VPS:
 
   sudo certbot \
     --nginx \
-    -d app.example.com \
+    -d morina.click \
+    -d www.morina.click \
     --redirect \
     --agree-tos \
     --no-eff-email \
-    -m you@example.com
+    -m YOUR_EMAIL_ADDRESS
 
 Purpose:
 
@@ -744,12 +816,61 @@ Purpose:
 
 Verify:
 
-  curl -I https://app.example.com
-  curl https://app.example.com/health
+  curl -I https://morina.click
+  curl https://morina.click/health
 
 Open in a browser:
 
-  https://app.example.com
+  https://morina.click
+
+17.1 Recover when Certbot saves but cannot install the certificate
+
+This message means certificate issuance succeeded, but Certbot could not find
+an active Nginx server block matching the domain:
+
+  Could not automatically find a matching server block for morina.click
+
+First inspect active Nginx server names:
+
+  sudo nginx -T | grep -n "server_name"
+
+Ensure /etc/nginx/sites-available/rental-shop contains:
+
+  server_name morina.click www.morina.click;
+
+Ensure the configuration is enabled:
+
+  ls -l /etc/nginx/sites-enabled/
+  sudo ln -s /etc/nginx/sites-available/rental-shop /etc/nginx/sites-enabled/rental-shop
+  sudo rm -f /etc/nginx/sites-enabled/default
+
+Do not run ln again if the rental-shop link already exists. Validate and
+reload:
+
+  sudo nginx -t
+  sudo systemctl reload nginx
+  sudo nginx -T | grep -n "server_name"
+
+Install the certificate that Certbot already saved:
+
+  sudo certbot install --cert-name morina.click
+
+If HTTP is not redirected afterward, rerun:
+
+  sudo certbot --nginx -d morina.click -d www.morina.click --redirect
+
+If prompted, choose to reinstall/deploy the existing certificate rather than
+requesting a duplicate.
+
+17.2 Switch authentication cookies back to HTTPS-only
+
+After HTTPS works, update the GitHub APP_ENV_FILE secret:
+
+  COOKIE_SECURE=true
+  DOMAIN_NAME=morina.click
+
+Run the GitHub Actions workflow again, clear old browser cookies, and access
+only https://morina.click.
 
 Test automatic certificate renewal:
 
@@ -827,7 +948,7 @@ Useful VPS commands:
   curl http://127.0.0.1:3000/health
       Tests Node.js directly, bypassing Nginx.
 
-  curl https://app.example.com/health
+  curl https://morina.click/health
       Tests the complete HTTPS path.
 
   free -h
