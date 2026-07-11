@@ -85,4 +85,4 @@ The app exposes a health endpoint at `/health`.
 
 ## License
 
-MIT
+MIT.
