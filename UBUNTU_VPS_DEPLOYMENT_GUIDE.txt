@@ -1,0 +1,987 @@
+RENTALSHOP DEPLOYMENT GUIDE
+Ubuntu 22.04 + Node.js 22 + PM2 + Nginx + MongoDB Atlas + GitHub Actions
+
+Last updated: 2026-07-12
+
+======================================================================
+1. PURPOSE AND FINAL ARCHITECTURE
+======================================================================
+
+This guide deploys RentalShop to a small Ubuntu 22.04 VPS. It is designed
+for approximately 2-3 simultaneous users.
+
+The finished system works like this:
+
+  Developer pushes to GitHub main branch
+                |
+                v
+  GitHub Actions validates and packages the application
+                |
+                v
+  GitHub Actions uploads a release to the VPS over SSH
+                |
+                v
+  PM2 runs one Node.js application process on port 3000
+                |
+                v
+  Nginx receives public traffic on ports 80 and 443
+                |
+                v
+  MongoDB data is stored in MongoDB Atlas
+
+The VPS does not run MongoDB and does not need to clone the GitHub
+repository. GitHub Actions uploads each release.
+
+Recommended minimum VPS:
+
+  - Ubuntu 22.04 x64
+  - 1 vCPU
+  - 1 GB RAM plus 1 GB swap
+  - 16 GB storage
+
+Two GB RAM is more comfortable, but one GB is sufficient for this small
+workload when MongoDB remains on Atlas and only one PM2 process is used.
+
+Replace these placeholders throughout the guide:
+
+  YOUR_VPS_IP             Public IP address of the VPS
+  YOUR_GITHUB_REPO_URL    GitHub repository URL
+  app.example.com         The domain or subdomain used for the application
+  you@example.com         Email address used for Let's Encrypt notices
+
+
+======================================================================
+2. CONNECT TO THE NEW VPS
+======================================================================
+
+From a terminal on the local computer:
+
+  ssh root@YOUR_VPS_IP
+
+Purpose:
+
+  Opens an encrypted terminal session on the VPS as root. The provider
+  normally supplies the initial root password or SSH key.
+
+Confirm the operating system and resources:
+
+  lsb_release -a
+  free -h
+  df -h
+  nproc
+
+Purpose:
+
+  lsb_release -a  Shows the Ubuntu version.
+  free -h         Shows RAM and swap usage.
+  df -h           Shows storage usage.
+  nproc           Shows the number of available CPU cores.
+
+
+======================================================================
+3. UPDATE UBUNTU AND INSTALL BASE SOFTWARE
+======================================================================
+
+Run as root:
+
+  apt update
+  apt upgrade -y
+  apt install -y curl git nginx ufw unzip ca-certificates
+
+Purpose:
+
+  apt update       Refreshes the available package list.
+  apt upgrade -y  Installs available operating-system updates.
+  curl             Downloads content over HTTPS from the command line.
+  git              Provides Git tools when needed for diagnostics.
+  nginx            Provides the public web server and reverse proxy.
+  ufw              Provides a simple firewall interface.
+  unzip            Extracts ZIP archives.
+  ca-certificates  Allows the server to verify HTTPS certificates.
+
+Set the server timezone:
+
+  timedatectl set-timezone Asia/Bangkok
+  timedatectl
+
+Purpose:
+
+  Sets log and operating-system times to the expected timezone and then
+  displays the current time configuration.
+
+
+======================================================================
+4. ADD SWAP FOR A ONE-GB VPS
+======================================================================
+
+Swap uses disk as emergency memory. It is slower than RAM but reduces the
+chance that Linux kills Node.js during npm installation or a memory spike.
+
+Run as root:
+
+  fallocate -l 1G /swapfile
+  chmod 600 /swapfile
+  mkswap /swapfile
+  swapon /swapfile
+
+Purpose:
+
+  fallocate  Creates a one-GB file.
+  chmod 600  Allows only root to read and write the swap file.
+  mkswap     Formats the file as swap space.
+  swapon     Activates it immediately.
+
+Make swap survive a reboot:
+
+  echo '/swapfile none swap sw 0 0' >> /etc/fstab
+
+Reduce unnecessary swapping:
+
+  sysctl vm.swappiness=10
+  echo 'vm.swappiness=10' >> /etc/sysctl.conf
+
+Verify:
+
+  free -h
+  swapon --show
+
+
+======================================================================
+5. CREATE A NON-ROOT DEPLOYMENT USER
+======================================================================
+
+Do not run the application as root. Create a dedicated user:
+
+  adduser deploy
+  usermod -aG sudo deploy
+
+Purpose:
+
+  adduser creates the account and home directory. usermod adds the account
+  to the sudo group so it can perform approved administrative operations.
+
+If root uses an SSH key, copy it to the deployment user:
+
+  mkdir -p /home/deploy/.ssh
+  cp /root/.ssh/authorized_keys /home/deploy/.ssh/authorized_keys
+  chown -R deploy:deploy /home/deploy/.ssh
+  chmod 700 /home/deploy/.ssh
+  chmod 600 /home/deploy/.ssh/authorized_keys
+
+If /root/.ssh/authorized_keys does not exist, skip the copy command and
+initially sign in with the deploy password.
+
+Keep the root session open and test in a second local terminal:
+
+  ssh deploy@YOUR_VPS_IP
+  sudo whoami
+
+The sudo command should print:
+
+  root
+
+
+======================================================================
+6. CONFIGURE THE FIREWALL
+======================================================================
+
+Allow SSH before enabling the firewall so the current connection is not
+locked out:
+
+  sudo ufw allow OpenSSH
+  sudo ufw allow "Nginx Full"
+  sudo ufw enable
+  sudo ufw status
+
+Purpose:
+
+  OpenSSH allows port 22.
+  Nginx Full allows ports 80 and 443.
+  Port 3000 is intentionally not opened to the Internet.
+
+Enable and start Nginx:
+
+  sudo systemctl enable nginx
+  sudo systemctl restart nginx
+  sudo systemctl status nginx --no-pager
+
+Visiting http://YOUR_VPS_IP should initially show the Nginx welcome page.
+
+
+======================================================================
+7. INSTALL NODE.JS 22
+======================================================================
+
+Ubuntu's default repository may install the obsolete Node.js 12 package.
+Do not use Node.js 12. Add the NodeSource Node.js 22 repository.
+
+Remove an old installation when necessary:
+
+  sudo apt remove -y nodejs npm
+  sudo apt autoremove -y
+  sudo rm -f /etc/apt/sources.list.d/nodesource.list
+  sudo rm -f /etc/apt/keyrings/nodesource.gpg
+
+Install repository prerequisites:
+
+  sudo apt update
+  sudo apt install -y ca-certificates curl gnupg
+  sudo mkdir -p /etc/apt/keyrings
+
+Add the NodeSource signing key:
+
+  curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key |
+    sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+
+Add the Node.js 22 package repository:
+
+  echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" |
+    sudo tee /etc/apt/sources.list.d/nodesource.list
+
+Refresh packages and inspect the candidate version:
+
+  sudo apt update
+  apt-cache policy nodejs
+
+The Candidate line should show version 22.x from NodeSource. Then install:
+
+  sudo apt install -y nodejs
+
+Verify:
+
+  node --version
+  npm --version
+  which node
+
+Expected Node output is v22.x.x and the path is normally /usr/bin/node.
+
+
+======================================================================
+8. INSTALL AND CONFIGURE PM2
+======================================================================
+
+PM2 keeps Node.js running, restarts it after crashes, and manages logs.
+
+Run as the deploy user:
+
+  sudo npm install --global pm2
+  pm2 --version
+
+Install log rotation so logs do not fill the 16-GB disk:
+
+  pm2 install pm2-logrotate
+  pm2 set pm2-logrotate:max_size 10M
+  pm2 set pm2-logrotate:retain 7
+  pm2 set pm2-logrotate:compress true
+
+Configure PM2 to start when Ubuntu boots:
+
+  pm2 startup systemd -u deploy --hp /home/deploy
+
+PM2 prints a command beginning with "sudo env". Copy and run that exact
+command. The CI/CD deployment will later execute pm2 save after starting
+the application.
+
+Do not use "pm2 -i max" on a one-core/one-GB VPS. This project uses one
+fork-mode process with a 350-MB restart limit.
+
+
+======================================================================
+9. PREPARE THE SERVER FOR CI/CD RELEASES
+======================================================================
+
+Create directories owned by the deploy user:
+
+  sudo mkdir -p /opt/rental-shop/releases
+  sudo mkdir -p /opt/rental-shop/shared
+  sudo chown -R deploy:deploy /opt/rental-shop
+  ls -ld /opt/rental-shop
+
+Purpose:
+
+  releases  Contains one directory per deployed Git commit.
+  shared    Contains the production .env file shared by releases.
+  current   Is created by CI/CD and points to the active release.
+
+The VPS does not need to clone the repository. GitHub Actions uploads the
+release archive.
+
+
+======================================================================
+10. CREATE A GITHUB ACTIONS SSH KEY
+======================================================================
+
+On a Windows development computer, open PowerShell:
+
+  ssh-keygen `
+    -t ed25519 `
+    -C "github-actions-rental-shop" `
+    -f "$HOME\.ssh\rental_shop_github_actions"
+
+Press Enter twice when asked for a passphrase. The CI key must work
+non-interactively.
+
+This creates:
+
+  rental_shop_github_actions      Private key; store only in GitHub Secrets
+  rental_shop_github_actions.pub  Public key; place on the VPS
+
+IMPORTANT KEY PLACEMENT:
+
+  Laptop:        Keep both files while performing the setup.
+  VPS:           Copy only rental_shop_github_actions.pub.
+  GitHub Secret: Copy the contents of rental_shop_github_actions.
+
+Never copy the private rental_shop_github_actions file to the VPS. The VPS
+only needs the public key to verify connections. Anyone who obtains the
+private key can authenticate as the deploy user.
+
+10.1 Copy the public key from a Windows laptop to the VPS automatically
+
+In Windows PowerShell, run:
+
+  Get-Content "$HOME\.ssh\rental_shop_github_actions.pub" |
+    ssh deploy@YOUR_VPS_IP "umask 077; mkdir -p ~/.ssh; cat >> ~/.ssh/authorized_keys"
+
+Purpose:
+
+  Get-Content reads the public key on the laptop. SSH connects to the VPS.
+  The remote command creates ~/.ssh with secure permissions and appends the
+  public key to authorized_keys. This command transfers public key text
+  only; it does not transfer the private key.
+
+Then set and verify permissions on the VPS:
+
+  ssh deploy@YOUR_VPS_IP
+  chmod 700 ~/.ssh
+  chmod 600 ~/.ssh/authorized_keys
+  exit
+
+If the automatic PowerShell command succeeds, the manual copy procedure
+below is not required.
+
+10.2 Manual alternative for copying the public key
+
+Display the public key:
+
+  Get-Content "$HOME\.ssh\rental_shop_github_actions.pub"
+
+On the VPS as deploy:
+
+  mkdir -p ~/.ssh
+  chmod 700 ~/.ssh
+  nano ~/.ssh/authorized_keys
+
+Paste the public key as one complete line, save, and run:
+
+  chmod 600 ~/.ssh/authorized_keys
+
+10.3 Test the transferred public key
+
+Test from Windows:
+
+  ssh -i "$HOME\.ssh\rental_shop_github_actions" deploy@YOUR_VPS_IP
+
+The connection must succeed without asking for the deploy password.
+
+The -i option tells the local SSH client which private key to use. It reads
+the private key from the laptop; it does not upload that key to the VPS.
+
+10.4 Copy the private key into GitHub Secrets, not onto the VPS
+
+Display the private key on the Windows laptop:
+
+  Get-Content "$HOME\.ssh\rental_shop_github_actions" -Raw
+
+Copy the complete output, including these lines:
+
+  -----BEGIN OPENSSH PRIVATE KEY-----
+  -----END OPENSSH PRIVATE KEY-----
+
+Store it as the GitHub Actions secret named VPS_SSH_KEY as explained in
+section 12.3. After saving it, close the PowerShell window so the private
+key is no longer visible on the screen.
+
+
+======================================================================
+11. CONFIGURE MONGODB ATLAS
+======================================================================
+
+11.1 Create a database user
+
+In MongoDB Atlas, open:
+
+  Security -> Database Access
+
+Create a dedicated application user. This is not the Atlas website email
+and password. Give it read/write access to the rental-shop database.
+
+For initial setup, use a strong password containing only letters and
+numbers. Special characters must otherwise be URL-encoded.
+
+Common encodings:
+
+  @ becomes %40
+  : becomes %3A
+  / becomes %2F
+  # becomes %23
+  % becomes %25
+  ? becomes %3F
+
+11.2 Allow the VPS IP
+
+Open:
+
+  Security -> Network Access -> Add IP Address
+
+Add:
+
+  YOUR_VPS_IP/32
+
+Do not use 0.0.0.0/0 for production unless it is a short diagnostic test.
+
+11.3 Obtain the connection string
+
+Open:
+
+  Database -> Connect -> Drivers -> Node.js
+
+Atlas provides a string similar to:
+
+  mongodb+srv://<user>:<db_password>@morina.ygikito.mongodb.net/?appName=Morina
+
+Replace both placeholders, remove the angle brackets, and add the database
+name. The result should resemble:
+
+  mongodb+srv://rentalshop_app:ActualPassword@morina.ygikito.mongodb.net/rental-shop?retryWrites=true&w=majority&appName=Morina
+
+Never commit or publicly share the completed connection string.
+
+
+======================================================================
+12. ADD GITHUB ACTIONS SECRETS
+======================================================================
+
+Open the GitHub repository and navigate to:
+
+  Settings -> Secrets and variables -> Actions
+
+Create these repository secrets:
+
+12.1 VPS_HOST
+
+  YOUR_VPS_IP
+
+Use only the IP or hostname. Do not include a protocol or username.
+
+12.2 VPS_USER
+
+  deploy
+
+12.3 VPS_SSH_KEY
+
+Display the private key locally:
+
+  Get-Content "$HOME\.ssh\rental_shop_github_actions" -Raw
+
+Copy the entire value, including BEGIN and END lines, into VPS_SSH_KEY.
+Never commit this key.
+
+12.4 APP_ENV_FILE
+
+Store the complete production environment in this one multiline secret:
+
+  PORT=3000
+  NODE_ENV=production
+  JWT_SECRET=REPLACE_WITH_A_LONG_RANDOM_SECRET
+  JWT_EXPIRES_IN=1d
+  COOKIE_NAME=rentalshop_token
+  COOKIE_SECURE=true
+  ADMIN_USERNAME=morina
+  ADMIN_PASSWORD=REPLACE_WITH_A_STRONG_ADMIN_PASSWORD
+  MONGODB_URI=mongodb+srv://DATABASE_USER:DATABASE_PASSWORD@morina.ygikito.mongodb.net/rental-shop?retryWrites=true&w=majority&appName=Morina
+
+Generate JWT_SECRET on Ubuntu with:
+
+  openssl rand -hex 32
+
+APP_ENV_FILE is encoded during upload, decoded on the VPS, stored as
+/opt/rental-shop/shared/.env, and protected with permission mode 600.
+
+
+======================================================================
+13. HOW THE CI/CD FILES WORK
+======================================================================
+
+The repository contains:
+
+  .github/workflows/deploy.yml
+  ecosystem.config.js
+
+The workflow runs when code is pushed to main or manually from GitHub
+Actions.
+
+The validate job:
+
+  1. Checks out the source code.
+  2. Uses Node.js 22.
+  3. Runs npm ci.
+  4. Checks the syntax of JavaScript files.
+
+The deploy job:
+
+  1. Verifies that required GitHub Secrets exist.
+  2. Configures the GitHub runner's SSH key.
+  3. Packages source files into a compressed archive.
+  4. Uploads the release and encoded environment over SSH.
+  5. Extracts the release into /opt/rental-shop/releases/<commit>.
+  6. Runs npm ci --omit=dev on the VPS.
+  7. Validates the MongoDB URI prefix.
+  8. Starts or reloads the application with PM2.
+  9. Requests /health up to six times.
+ 10. Marks the release current only after a successful health check.
+ 11. Deletes release directories older than seven days.
+
+The ecosystem.config.js file configures:
+
+  - One application instance
+  - Fork mode
+  - Production environment
+  - 350-MB memory restart limit
+  - Timestamped PM2 logs
+
+
+======================================================================
+14. TRIGGER THE FIRST DEPLOYMENT
+======================================================================
+
+From the local repository:
+
+  git add .github/workflows/deploy.yml ecosystem.config.js
+  git commit -m "Deploy application to Ubuntu VPS with PM2"
+  git push origin main
+
+Purpose:
+
+  git add     Selects files for the commit.
+  git commit  Records the change locally.
+  git push    Sends the commit to GitHub and triggers CI/CD.
+
+Open GitHub:
+
+  Actions -> Deploy to Ubuntu VPS
+
+Both validate and deploy must succeed.
+
+Verify on the VPS:
+
+  pm2 status
+  pm2 logs rental-shop --lines 50 --nostream
+  curl http://127.0.0.1:3000/health
+  pm2 save
+
+Expected PM2 status is "online" and the health response contains:
+
+  "status":"ok"
+
+
+======================================================================
+15. CONFIGURE NGINX WITHOUT A DOMAIN
+======================================================================
+
+Create the Nginx site:
+
+  sudo nano /etc/nginx/sites-available/rental-shop
+
+Use this temporary IP-based configuration:
+
+  server {
+      listen 80;
+      listen [::]:80;
+
+      server_name _;
+
+      client_max_body_size 20m;
+
+      location / {
+          proxy_pass http://127.0.0.1:3000;
+          proxy_http_version 1.1;
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto $scheme;
+          proxy_connect_timeout 30s;
+          proxy_send_timeout 60s;
+          proxy_read_timeout 60s;
+      }
+  }
+
+Enable it:
+
+  sudo ln -s /etc/nginx/sites-available/rental-shop /etc/nginx/sites-enabled/rental-shop
+  sudo rm -f /etc/nginx/sites-enabled/default
+  sudo nginx -t
+  sudo systemctl reload nginx
+
+Purpose:
+
+  sites-available stores the configuration.
+  sites-enabled contains links to active sites.
+  nginx -t validates syntax before reloading.
+  reload applies changes without stopping active connections.
+
+Test locally on the VPS:
+
+  curl -I http://127.0.0.1
+  curl http://127.0.0.1/health
+
+The website is then visible at:
+
+  http://YOUR_VPS_IP
+
+IMPORTANT HTTP LIMITATION:
+
+The application marks its login cookie Secure in production. Browsers only
+send Secure cookies over HTTPS. The page may be visible over the IP while
+login does not remain authenticated. Plain HTTP also exposes traffic to
+interception. Do not use real sensitive data until HTTPS is configured.
+
+For short-term testing by IP over plain HTTP, set the following line in the
+GitHub APP_ENV_FILE secret and deploy again:
+
+  COOKIE_SECURE=false
+
+After a domain and HTTPS are configured, change it back and redeploy:
+
+  COOKIE_SECURE=true
+
+Do not leave COOKIE_SECURE=false after HTTPS is available.
+
+
+======================================================================
+16. DOMAIN CONFIGURATION (COMPLETE THIS AFTER BUYING A DOMAIN)
+======================================================================
+
+Any normal domain is sufficient. A separate paid SSL product is not needed
+because Let's Encrypt provides the certificate for free.
+
+16.1 Create a DNS record
+
+In the domain provider's DNS control panel, create:
+
+  Type:   A
+  Host:   app
+  Value:  YOUR_VPS_IP
+  TTL:    300 or Automatic
+
+This makes app.example.com point to the VPS. For the root domain instead,
+use @ as the host where supported.
+
+If using Cloudflare, choose DNS only temporarily while setting up HTTPS.
+
+16.2 Wait for DNS propagation
+
+From Windows:
+
+  nslookup app.example.com
+
+Or from the VPS:
+
+  getent hosts app.example.com
+
+The result must contain YOUR_VPS_IP before requesting a certificate.
+
+16.3 Update Nginx with the domain
+
+Edit:
+
+  sudo nano /etc/nginx/sites-available/rental-shop
+
+Change:
+
+  server_name _;
+
+To:
+
+  server_name app.example.com;
+
+Validate and reload:
+
+  sudo nginx -t
+  sudo systemctl reload nginx
+
+Test virtual-host routing:
+
+  curl -I -H "Host: app.example.com" http://127.0.0.1
+
+
+======================================================================
+17. INSTALL FREE HTTPS WITH LET'S ENCRYPT
+======================================================================
+
+Install Certbot and its Nginx integration:
+
+  sudo apt update
+  sudo apt install -y certbot python3-certbot-nginx
+
+Request a certificate only after DNS resolves to the VPS:
+
+  sudo certbot \
+    --nginx \
+    -d app.example.com \
+    --redirect \
+    --agree-tos \
+    --no-eff-email \
+    -m you@example.com
+
+Purpose:
+
+  --nginx       Lets Certbot update the Nginx configuration.
+  -d            Specifies the certificate domain.
+  --redirect    Redirects all HTTP traffic to HTTPS.
+  --agree-tos   Accepts the Let's Encrypt terms.
+  -m            Sets the renewal-notification email.
+
+Verify:
+
+  curl -I https://app.example.com
+  curl https://app.example.com/health
+
+Open in a browser:
+
+  https://app.example.com
+
+Test automatic certificate renewal:
+
+  sudo systemctl status certbot.timer --no-pager
+  sudo certbot renew --dry-run
+
+The dry run should report that all simulated renewals succeeded.
+
+
+======================================================================
+18. VERIFY SECURITY AND RESOURCE USAGE
+======================================================================
+
+Check firewall rules:
+
+  sudo ufw status
+
+Only OpenSSH and Nginx Full should be publicly allowed.
+
+Check listening ports:
+
+  sudo ss -ltnp
+
+Check application status and resources:
+
+  pm2 status
+  pm2 monit
+  free -h
+  df -h
+
+Exit pm2 monit with Ctrl+C.
+
+From Windows, verify that port 3000 is not publicly reachable:
+
+  Test-NetConnection YOUR_VPS_IP -Port 3000
+
+TcpTestSucceeded should be False.
+
+
+======================================================================
+19. NORMAL DEPLOYMENT AND OPERATIONS
+======================================================================
+
+Normal deployment:
+
+  git add <changed-files>
+  git commit -m "Describe the change"
+  git push origin main
+
+GitHub Actions performs the rest automatically.
+
+Useful VPS commands:
+
+  pm2 status
+      Shows whether the application is online.
+
+  pm2 logs rental-shop --lines 100
+      Streams recent application output. Exit with Ctrl+C.
+
+  pm2 logs rental-shop --lines 100 --nostream
+      Prints recent output and immediately returns to the shell.
+
+  pm2 restart rental-shop --update-env
+      Restarts the process and reloads environment variables.
+
+  pm2 save
+      Saves the current process list for reboot recovery.
+
+  sudo nginx -t
+      Checks Nginx syntax.
+
+  sudo systemctl reload nginx
+      Applies a valid Nginx configuration without a full stop.
+
+  curl http://127.0.0.1:3000/health
+      Tests Node.js directly, bypassing Nginx.
+
+  curl https://app.example.com/health
+      Tests the complete HTTPS path.
+
+  free -h
+      Shows RAM and swap usage.
+
+  df -h
+      Shows remaining disk capacity.
+
+
+======================================================================
+20. TROUBLESHOOTING PROBLEMS ENCOUNTERED DURING SETUP
+======================================================================
+
+20.1 Node reports v12.22.9
+
+Cause:
+
+  Ubuntu installed its old default Node.js package instead of NodeSource.
+
+Fix:
+
+  Repeat section 7 and confirm apt-cache policy nodejs shows version 22
+  before installing.
+
+20.2 "tar: .: file changed as we read it"
+
+Cause:
+
+  The workflow originally created rental-shop.tar.gz inside the directory
+  being archived. Tar encountered its own growing output file.
+
+Fix already included in the repository:
+
+  The archive is created at $RUNNER_TEMP/rental-shop.tar.gz instead.
+
+20.3 MongoParseError: Invalid scheme
+
+Cause:
+
+  MONGODB_URI did not start with mongodb:// or mongodb+srv://, or a shell
+  command/placeholder was stored instead of the connection string.
+
+Fix:
+
+  Update APP_ENV_FILE with the Drivers -> Node.js URI from Atlas. Do not
+  include "mongosh", quotes, or angle-bracket placeholders.
+
+20.4 AtlasError code 8000: bad auth
+
+Cause:
+
+  The Atlas database username or password is wrong. Network access is
+  already working when this error appears.
+
+Fix:
+
+  Reset the user under Security -> Database Access, update MONGODB_URI,
+  URL-encode special password characters, update APP_ENV_FILE, and rerun
+  the workflow.
+
+20.5 MongoDB connection timeout or server selection error
+
+Likely causes:
+
+  - VPS IP missing from Atlas Network Access.
+  - Incorrect cluster hostname.
+  - VPS DNS or outbound network problem.
+
+20.6 Nginx returns 502 Bad Gateway
+
+Run:
+
+  pm2 status
+  pm2 logs rental-shop --lines 100 --nostream
+  curl http://127.0.0.1:3000/health
+  sudo tail -n 100 /var/log/nginx/error.log
+
+A 502 normally means Node.js is stopped or not listening on port 3000.
+
+20.7 connect.session() MemoryStore warning
+
+This warning does not stop the application. Express's default session
+store is not intended for large production systems because sessions live
+in process memory. With 2-3 users and one PM2 process it can operate
+temporarily, but a persistent MongoDB-backed session store is a recommended
+future improvement.
+
+20.8 Login page appears but login does not persist over the IP
+
+Cause:
+
+  Production authentication cookies are Secure and browsers do not send
+  them over plain HTTP.
+
+Fix:
+
+  Complete the domain and HTTPS sections. Do not weaken the production
+  cookie merely to keep using public HTTP.
+
+
+======================================================================
+21. MAINTENANCE CHECKLIST
+======================================================================
+
+Weekly or periodically:
+
+  sudo apt update
+  apt list --upgradable
+  pm2 status
+  free -h
+  df -h
+  sudo ufw status
+
+Install Ubuntu updates during an appropriate maintenance period:
+
+  sudo apt upgrade -y
+
+Reboot if Ubuntu reports that a reboot is required:
+
+  test -f /var/run/reboot-required && cat /var/run/reboot-required
+  sudo reboot
+
+After reboot:
+
+  pm2 status
+  curl http://127.0.0.1:3000/health
+  sudo systemctl status nginx --no-pager
+
+Keep MongoDB Atlas backups appropriate to the importance of the data.
+The VPS release directories and GitHub repository do not back up the
+MongoDB database.
+
+
+======================================================================
+22. COMPLETION CHECKLIST
+======================================================================
+
+  [ ] Ubuntu 22.04 updated
+  [ ] One-GB swap enabled
+  [ ] deploy user works with SSH and sudo
+  [ ] UFW allows only SSH, HTTP, and HTTPS
+  [ ] Node.js 22 installed
+  [ ] PM2 installed with log rotation and startup service
+  [ ] /opt/rental-shop owned by deploy
+  [ ] GitHub Actions SSH key works
+  [ ] Atlas database user created
+  [ ] VPS IP allowed in Atlas
+  [ ] GitHub Secrets configured
+  [ ] CI validate job succeeds
+  [ ] CI deploy job succeeds
+  [ ] PM2 shows rental-shop online
+  [ ] Local /health endpoint succeeds
+  [ ] Nginx proxies the application
+  [ ] Domain A record points to the VPS (when domain is available)
+  [ ] HTTPS certificate installed (when domain is available)
+  [ ] Certbot renewal dry run succeeds
+  [ ] Port 3000 is not publicly accessible

@@ -3,6 +3,14 @@ const User = require("../models/User");
 const { USER_ROLES } = require("../utils/constants");
 const { generateToken } = require("../utils/auth");
 
+const shouldUseSecureCookie = () => {
+  if (process.env.COOKIE_SECURE !== undefined) {
+    return process.env.COOKIE_SECURE.toLowerCase() === "true";
+  }
+
+  return process.env.NODE_ENV === "production";
+};
+
 const normalizeDate = (value) => {
   const date = new Date(value);
   date.setHours(0, 0, 0, 0);
@@ -93,7 +101,7 @@ const loginUser = async ({ validatedBody }) => {
     cookieOptions: {
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: shouldUseSecureCookie(),
       maxAge: 24 * 60 * 60 * 1000
     },
     successMessage,
