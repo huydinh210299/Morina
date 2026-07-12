@@ -107,7 +107,10 @@ jobs:
           cd "$release_dir"
           npm ci --omit=dev
           node -e 'require("dotenv").config(); const uri = process.env.MONGODB_URI || ""; if (!/^mongodb(\+srv)?:\/\//.test(uri)) { console.error("MONGODB_URI must start with mongodb:// or mongodb+srv://"); process.exit(1); }'
-          pm2 startOrReload ecosystem.config.js --env production
+          # PM2 reload keeps the previous release's cwd when the same app name
+          # already exists. Recreate the process so it serves this release.
+          pm2 delete rental-shop || true
+          pm2 start ecosystem.config.js --env production
           pm2 save
 
           healthy=false
