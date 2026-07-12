@@ -37,6 +37,70 @@ const escapeHtml = (value) =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
 
+const initTableScrollFallback = () => {
+  document.querySelectorAll(".table-scroll").forEach((scrollArea) => {
+    if (scrollArea.dataset.touchScrollReady === "true") {
+      return;
+    }
+
+    scrollArea.dataset.touchScrollReady = "true";
+
+    let startX = 0;
+    let startY = 0;
+    let startScrollLeft = 0;
+    let isHorizontalGesture = false;
+
+    scrollArea.addEventListener(
+      "touchstart",
+      (event) => {
+        if (event.touches.length !== 1) {
+          return;
+        }
+
+        const touch = event.touches[0];
+        startX = touch.clientX;
+        startY = touch.clientY;
+        startScrollLeft = scrollArea.scrollLeft;
+        isHorizontalGesture = false;
+      },
+      { passive: true }
+    );
+
+    scrollArea.addEventListener(
+      "touchmove",
+      (event) => {
+        if (event.touches.length !== 1 || scrollArea.scrollWidth <= scrollArea.clientWidth) {
+          return;
+        }
+
+        const touch = event.touches[0];
+        const deltaX = touch.clientX - startX;
+        const deltaY = touch.clientY - startY;
+
+        if (!isHorizontalGesture) {
+          isHorizontalGesture = Math.abs(deltaX) > 6 && Math.abs(deltaX) > Math.abs(deltaY);
+        }
+
+        if (!isHorizontalGesture) {
+          return;
+        }
+
+        const maxScrollLeft = scrollArea.scrollWidth - scrollArea.clientWidth;
+        scrollArea.scrollLeft = Math.min(Math.max(startScrollLeft - deltaX, 0), maxScrollLeft);
+        event.preventDefault();
+      },
+      { passive: false }
+    );
+
+    const resetGesture = () => {
+      isHorizontalGesture = false;
+    };
+
+    scrollArea.addEventListener("touchend", resetGesture);
+    scrollArea.addEventListener("touchcancel", resetGesture);
+  });
+};
+
 const closeSearchDropdown = (wrapper) => {
   const dropdown = wrapper?.querySelector("[data-search-dropdown]");
   if (!dropdown) {
@@ -500,3 +564,5 @@ document.addEventListener("focusin", (event) => {
     renderSearchOptions(event.target.closest("[data-search-select]"), event.target.value);
   }
 });
+
+initTableScrollFallback();
