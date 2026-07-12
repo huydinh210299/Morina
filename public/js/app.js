@@ -48,12 +48,20 @@ const initTableScrollFallback = () => {
     let startX = 0;
     let startY = 0;
     let startScrollLeft = 0;
+    let pointerId = null;
     let isHorizontalGesture = false;
+
+    const hasHorizontalOverflow = () => scrollArea.scrollWidth > scrollArea.clientWidth;
+    const applyHorizontalScroll = (clientX) => {
+      const deltaX = clientX - startX;
+      const maxScrollLeft = scrollArea.scrollWidth - scrollArea.clientWidth;
+      scrollArea.scrollLeft = Math.min(Math.max(startScrollLeft - deltaX, 0), maxScrollLeft);
+    };
 
     scrollArea.addEventListener(
       "touchstart",
       (event) => {
-        if (event.touches.length !== 1) {
+        if (event.touches.length !== 1 || !hasHorizontalOverflow()) {
           return;
         }
 
@@ -69,7 +77,7 @@ const initTableScrollFallback = () => {
     scrollArea.addEventListener(
       "touchmove",
       (event) => {
-        if (event.touches.length !== 1 || scrollArea.scrollWidth <= scrollArea.clientWidth) {
+        if (event.touches.length !== 1 || !hasHorizontalOverflow()) {
           return;
         }
 
@@ -85,8 +93,7 @@ const initTableScrollFallback = () => {
           return;
         }
 
-        const maxScrollLeft = scrollArea.scrollWidth - scrollArea.clientWidth;
-        scrollArea.scrollLeft = Math.min(Math.max(startScrollLeft - deltaX, 0), maxScrollLeft);
+        applyHorizontalScroll(touch.clientX);
         event.preventDefault();
       },
       { passive: false }
@@ -98,6 +105,49 @@ const initTableScrollFallback = () => {
 
     scrollArea.addEventListener("touchend", resetGesture);
     scrollArea.addEventListener("touchcancel", resetGesture);
+
+    scrollArea.addEventListener("pointerdown", (event) => {
+      if (event.pointerType !== "touch" || !hasHorizontalOverflow()) {
+        return;
+      }
+
+      pointerId = event.pointerId;
+      startX = event.clientX;
+      startY = event.clientY;
+      startScrollLeft = scrollArea.scrollLeft;
+      isHorizontalGesture = false;
+      scrollArea.setPointerCapture?.(event.pointerId);
+    });
+
+    scrollArea.addEventListener("pointermove", (event) => {
+      if (event.pointerId !== pointerId || !hasHorizontalOverflow()) {
+        return;
+      }
+
+      const deltaX = event.clientX - startX;
+      const deltaY = event.clientY - startY;
+
+      if (!isHorizontalGesture) {
+        isHorizontalGesture = Math.abs(deltaX) > 6 && Math.abs(deltaX) > Math.abs(deltaY);
+      }
+
+      if (!isHorizontalGesture) {
+        return;
+      }
+
+      applyHorizontalScroll(event.clientX);
+      event.preventDefault();
+    });
+
+    const resetPointerGesture = (event) => {
+      if (event.pointerId === pointerId) {
+        pointerId = null;
+        resetGesture();
+      }
+    };
+
+    scrollArea.addEventListener("pointerup", resetPointerGesture);
+    scrollArea.addEventListener("pointercancel", resetPointerGesture);
   });
 };
 
