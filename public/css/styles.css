@@ -10,11 +10,10 @@ table {
 .table-scroll {
   box-sizing: border-box;
   display: block;
-  position: relative;
   width: 100%;
   min-width: 0;
-  max-width: calc(100vw - 2rem);
-  overflow-x: scroll;
+  max-width: 100%;
+  overflow-x: auto;
   overflow-y: hidden;
   overscroll-behavior-x: contain;
   touch-action: pan-x pan-y;
@@ -46,17 +45,7 @@ table {
   border-radius: 9999px;
 }
 
-@media (min-width: 640px) {
-  .table-scroll {
-    max-width: calc(100vw - 3rem);
-  }
-}
-
 @media (min-width: 1024px) {
-  .table-scroll {
-    max-width: 100%;
-  }
-
   .table-scroll table {
     min-width: max(42rem, 100%);
   }
