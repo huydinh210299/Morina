@@ -300,7 +300,6 @@ const buildOrderFilters = (query = {}) => {
 
   if (filters.returnDueToday) {
     const todayRange = getDayRange(new Date());
-    filters.returned = STATUS_FILTER_FALSE;
     delete mongoFilter.generalStartTime;
     mongoFilter.generalEndTime = {
       $gte: todayRange.start,
@@ -326,7 +325,7 @@ const buildOrderFilters = (query = {}) => {
     ];
   }
 
-  if (filters.returned !== STATUS_FILTER_ALL) {
+  if (!filters.returnDueToday && filters.returned !== STATUS_FILTER_ALL) {
     mongoFilter.returned = filters.returned === STATUS_FILTER_TRUE;
   }
 
