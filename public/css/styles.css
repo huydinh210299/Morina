@@ -24,7 +24,7 @@ table {
 
 .table-scroll table {
   width: max-content;
-  min-width: max(42rem, 100%);
+  min-width: 42rem;
 }
 
 .table-scroll th,
@@ -55,6 +55,10 @@ table {
 @media (min-width: 1024px) {
   .table-scroll {
     max-width: 100%;
+  }
+
+  .table-scroll table {
+    min-width: max(42rem, 100%);
   }
 }
 
