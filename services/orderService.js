@@ -245,6 +245,7 @@ const buildOrderFilters = (query = {}) => {
       typeof query.rentEndDate === "string" && query.rentEndDate ? query.rentEndDate : formatDateInput(defaultEndDate),
     todayOrders: parseCheckbox(query.todayOrders),
     tomorrowOrders: parseCheckbox(query.tomorrowOrders),
+    returnDueToday: parseCheckbox(query.returnDueToday),
     important: parseCheckbox(query.important),
     excludeCompletedImportant: parseCheckbox(query.excludeCompletedImportant),
     bookship: parseStatusFilter(query.bookship),
@@ -295,6 +296,17 @@ const buildOrderFilters = (query = {}) => {
         $lte: range.end
       }
     }));
+  }
+
+  if (filters.returnDueToday) {
+    const todayRange = getDayRange(new Date());
+    filters.returned = STATUS_FILTER_FALSE;
+    delete mongoFilter.generalStartTime;
+    mongoFilter.generalEndTime = {
+      $gte: todayRange.start,
+      $lte: todayRange.end
+    };
+    mongoFilter.returned = false;
   }
 
   if (filters.phone) {
