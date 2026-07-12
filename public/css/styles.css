@@ -1,6 +1,6 @@
 body {
   font-family: "Be Vietnam Pro", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 table {
@@ -24,6 +24,17 @@ table {
 .table-scroll table {
   width: max-content;
   min-width: 42rem;
+}
+
+@media (max-width: 1023px) {
+  .table-scroll {
+    overflow-x: scroll;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-scroll table {
+    min-width: max(42rem, 100%);
+  }
 }
 
 .table-scroll th,
