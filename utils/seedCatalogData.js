@@ -1,6 +1,7 @@
 const Category = require("../models/Category");
 const Accessory = require("../models/Accessory");
 const Shift = require("../models/Shift");
+const { seedProductData } = require("./seedProductData");
 
 const DEFAULT_CATEGORIES = [
   { code: "AD", description: "Áo dài" },
@@ -85,6 +86,8 @@ const seedCatalogData = async (user) => {
   const userId = user?.id || user?._id?.toString() || "system";
 
   await seedCategoryData(userId);
+  const categories = await Category.find({ code: { $in: DEFAULT_CATEGORIES.map(({ code }) => code) } });
+  await seedProductData(userId, categories);
   await seedAccessoryData(userId);
   await seedShiftData(userId);
 };
