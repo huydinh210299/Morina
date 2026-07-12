@@ -7,7 +7,8 @@ const buildProducts = (categoryCode, prefix, fullDayPrices, eightHPrices = fullD
     code: `${prefix}${String(index + 1).padStart(2, "0")}`,
     categoryCode,
     fullDayPrice: fullDayPrice * PRICE_MULTIPLIER,
-    eightHPrice: eightHPrices[index] * PRICE_MULTIPLIER
+    eightHPrice: eightHPrices[index] * PRICE_MULTIPLIER,
+    note: categoryCode === "G" ? "Thuê cùng váy 25k" : ""
   }));
 
 const DEFAULT_PRODUCTS = [
@@ -42,6 +43,7 @@ const seedProductData = async (userId, categories) => {
           category,
           fullDayPrice: product.fullDayPrice,
           eightHPrice: product.eightHPrice,
+          note: product.note,
           createdBy: userId,
           updatedBy: userId
         }
