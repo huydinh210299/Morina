@@ -10,6 +10,7 @@
   if (currentFilters.tomorrowOrders) queryParams.set("tomorrowOrders", "on");
   if (currentFilters.returnDueToday) queryParams.set("returnDueToday", "on");
   if (currentFilters.overdueUnreturned) queryParams.set("overdueUnreturned", "on");
+  if (currentFilters.returnedNotRefunded) queryParams.set("returnedNotRefunded", "on");
   if (currentFilters.important) queryParams.set("important", "on");
   if (currentFilters.excludeCompletedImportant) queryParams.set("excludeCompletedImportant", "on");
   if (currentFilters.bookship && currentFilters.bookship !== "all") queryParams.set("bookship", currentFilters.bookship);
@@ -110,6 +111,10 @@
       <label class="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700">
         <input name="overdueUnreturned" type="checkbox" <%= currentFilters.overdueUnreturned ? "checked" : "" %> class="size-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500" />
         Quá hạn, chưa trả
+      </label>
+      <label class="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700">
+        <input name="returnedNotRefunded" type="checkbox" <%= currentFilters.returnedNotRefunded ? "checked" : "" %> class="size-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500" />
+        Đã trả hàng, chưa hoàn cọc
       </label>
       <label class="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700">
         <input name="important" type="checkbox" <%= currentFilters.important ? "checked" : "" %> class="size-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500" />

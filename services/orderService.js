@@ -247,6 +247,7 @@ const buildOrderFilters = (query = {}) => {
     tomorrowOrders: parseCheckbox(query.tomorrowOrders),
     returnDueToday: parseCheckbox(query.returnDueToday),
     overdueUnreturned: parseCheckbox(query.overdueUnreturned),
+    returnedNotRefunded: parseCheckbox(query.returnedNotRefunded),
     important: parseCheckbox(query.important),
     excludeCompletedImportant: parseCheckbox(query.excludeCompletedImportant),
     bookship: parseStatusFilter(query.bookship),
@@ -340,6 +341,11 @@ const buildOrderFilters = (query = {}) => {
 
   if (filters.refund !== STATUS_FILTER_ALL) {
     mongoFilter.returnDeposit = filters.refund === STATUS_FILTER_TRUE;
+  }
+
+  if (filters.returnedNotRefunded) {
+    mongoFilter.returned = true;
+    mongoFilter.returnDeposit = false;
   }
 
   if (filters.pickup !== STATUS_FILTER_ALL) {
