@@ -127,6 +127,8 @@ jobs:
             exit 1
           fi
 
+          npm run migrate
+
           ln -sfn "$release_dir" "$app_root/current"
           rm -f /tmp/rental-shop.tar.gz /tmp/rental-shop.env.b64
           find "$app_root/releases" -mindepth 1 -maxdepth 1 -type d -mtime +7 -exec rm -rf {} +

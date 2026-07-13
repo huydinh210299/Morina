@@ -1,7 +1,3 @@
-require("dotenv").config();
-
-const mongoose = require("mongoose");
-
 const COLLECTIONS = ["users", "categories", "products", "accessories", "orders", "payments", "shifts"];
 const AUDIT_COLLECTIONS = ["users", "categories", "products", "accessories", "orders", "payments", "shifts"];
 
@@ -30,13 +26,7 @@ const dropIdIndexes = async (collection) => {
   return idIndexes.map((index) => index.name);
 };
 
-const removeUuidIds = async () => {
-  if (!process.env.MONGODB_URI) {
-    throw new Error("MONGODB_URI is not defined in environment variables.");
-  }
-
-  await mongoose.connect(process.env.MONGODB_URI);
-  const db = mongoose.connection.db;
+const up = async (db) => {
   const users = await db.collection("users").find({ id: { $exists: true } }, { projection: { _id: 1, id: 1 } }).toArray();
   const userIdMap = new Map(users.filter((user) => user.id).map((user) => [user.id, user._id.toString()]));
 
@@ -55,10 +45,8 @@ const removeUuidIds = async () => {
   }
 };
 
-removeUuidIds()
-  .then(() => mongoose.disconnect())
-  .catch(async (error) => {
-    console.error("Failed to remove UUID ids:", error);
-    await mongoose.disconnect().catch(() => {});
-    process.exit(1);
-  });
+module.exports = {
+  id: "20260713-remove-uuid-ids",
+  description: "Replace redundant UUID id fields with MongoDB ObjectIds",
+  up
+};
