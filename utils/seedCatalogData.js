@@ -83,7 +83,7 @@ const seedShiftData = async (userId) => {
 };
 
 const seedCatalogData = async (user) => {
-  const userId = user?.id || user?._id?.toString() || "system";
+  const userId = user?._id?.toString() || "system";
 
   await seedCategoryData(userId);
   const categories = await Category.find({ code: { $in: DEFAULT_CATEGORIES.map(({ code }) => code) } });

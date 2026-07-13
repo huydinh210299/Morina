@@ -151,7 +151,7 @@ const getScheduleData = async (id) => {
     "products.product": product._id
   })
     .sort({ generalStartTime: 1 })
-    .select("id customerName phone generalStartTime generalEndTime products");
+    .select("customerName phone generalStartTime generalEndTime products");
 
   const rentSchedule = orders
     .flatMap((order) =>
@@ -159,7 +159,7 @@ const getScheduleData = async (id) => {
         .filter((item) => item.product && item.product.toString() === product._id.toString())
         .map((item) => ({
           orderId: order._id,
-          orderCode: order.id,
+          orderCode: order._id.toString(),
           customerName: order.customerName,
           phone: order.phone,
           startTime: item.startTime,

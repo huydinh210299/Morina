@@ -1,12 +1,12 @@
 const setCreateAuditFields = (payload, user) => ({
   ...payload,
-  createdBy: user.id,
-  updatedBy: user.id
+  createdBy: user._id.toString(),
+  updatedBy: user._id.toString()
 });
 
 const setUpdateAuditFields = (payload, user) => ({
   ...payload,
-  updatedBy: user.id
+  updatedBy: user._id.toString()
 });
 
 module.exports = {

@@ -146,7 +146,7 @@ const findConflictingProductLines = async ({ payload, excludeOrderId }) => {
 
   const orders = await Order.find(filter)
     .populate("products.product")
-    .select("id customerName products");
+    .select("customerName products");
 
   const conflicts = [];
 
@@ -169,7 +169,7 @@ const findConflictingProductLines = async ({ payload, excludeOrderId }) => {
           productId: requestedProductId,
           productLabel: buildProductLabel(existingItem.product),
           orderId: `${order._id}`,
-          orderCode: order.id,
+          orderCode: order._id.toString(),
           customerName: order.customerName,
           requestedStartTime: requestedItem.startTime,
           requestedEndTime: requestedItem.endTime,
@@ -492,8 +492,8 @@ const createOrder = async ({ body, user }) => {
   }
 
   if (user.role === USER_ROLES.STAFF) {
-    await User.findOneAndUpdate(
-      { id: user.id },
+    await User.findByIdAndUpdate(
+      user._id,
       { $inc: { totalOrder: 1 } },
       { runValidators: true }
     );
@@ -536,7 +536,7 @@ const getShowData = async (id) => {
   const order = await Order.findById(id).populate("products.product").populate("accessories.accessory");
 
   return {
-    title: `Đơn hàng ${order.id}`,
+    title: `Đơn hàng ${order._id}`,
     order
   };
 };

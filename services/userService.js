@@ -476,7 +476,7 @@ const createTimekeeping = async ({ userId, validatedBody, user }) => {
     date: normalizedDate,
     approved: false
   });
-  userItem.updatedBy = user.id;
+  userItem.updatedBy = user._id.toString();
   await userItem.save();
 
   return {
@@ -503,7 +503,7 @@ const createCommissionRequest = async ({ userId, validatedBody, user }) => {
     description: validatedBody.description,
     approved: false
   });
-  userItem.updatedBy = user.id;
+  userItem.updatedBy = user._id.toString();
   await userItem.save();
 
   return {
@@ -561,7 +561,7 @@ const approveTimekeeping = async ({ userId, timekeepingId, user }) => {
   }
 
   timekeepingEntry.approved = true;
-  userItem.updatedBy = user.id;
+  userItem.updatedBy = user._id.toString();
   await userItem.save();
 
   return {
@@ -591,7 +591,7 @@ const approveCommission = async ({ userId, commissionId, month, user }) => {
   }
 
   commissionEntry.approved = true;
-  userItem.updatedBy = user.id;
+  userItem.updatedBy = user._id.toString();
   await userItem.save();
 
   return {
@@ -710,7 +710,7 @@ const paySalary = async ({ userId, month, user }) => {
       timekeeping: remainingTimekeeping,
       faults: remainingFaults,
       commissions: remainingCommissions,
-      updatedBy: user.id
+      updatedBy: user._id.toString()
     }
   };
 
@@ -791,7 +791,7 @@ const createFault = async ({ userId, validatedBody, user }) => {
     amount: validatedBody.amount,
     description: validatedBody.description
   });
-  userItem.updatedBy = user.id;
+  userItem.updatedBy = user._id.toString();
   await userItem.save();
 
   return {
@@ -824,7 +824,7 @@ const deleteTimekeeping = async ({ userId, timekeepingId, user }) => {
   }
 
   timekeepingEntry.deleteOne();
-  userItem.updatedBy = user.id;
+  userItem.updatedBy = user._id.toString();
   await userItem.save();
 
   return {
@@ -855,7 +855,7 @@ const deleteCommission = async ({ userId, commissionId, month, user }) => {
 
   const redirectMonth = buildAdjustmentRedirectMonth(month, new Date(commissionEntry.date));
   commissionEntry.deleteOne();
-  userItem.updatedBy = user.id;
+  userItem.updatedBy = user._id.toString();
   await userItem.save();
 
   return {
@@ -886,7 +886,7 @@ const deleteFault = async ({ userId, faultId, month, user }) => {
 
   const redirectMonth = buildAdjustmentRedirectMonth(month, new Date(faultEntry.date));
   faultEntry.deleteOne();
-  userItem.updatedBy = user.id;
+  userItem.updatedBy = user._id.toString();
   await userItem.save();
 
   return {

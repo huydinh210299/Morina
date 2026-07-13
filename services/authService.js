@@ -82,8 +82,7 @@ const loginUser = async ({ validatedBody }) => {
 
   const token = generateToken({
     userId: user._id.toString(),
-    role: user.role,
-    uuid: user.id
+    role: user.role
   });
 
   let successMessage = `Chào mừng quay lại, ${user.username}.`;

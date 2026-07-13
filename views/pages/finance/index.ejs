@@ -189,7 +189,7 @@
             <% } %>
             <% payments.forEach((payment) => { %>
               <tr>
-                <td class="px-6 py-4 text-slate-600"><span class="font-semibold text-slate-900"><%= payment.id %></span></td>
+                <td class="px-6 py-4 text-slate-600"><span class="font-semibold text-slate-900"><%= payment._id %></span></td>
                 <td class="px-6 py-4 text-slate-700"><%= formatCurrency(payment.amount) %></td>
                 <td class="px-6 py-4 text-slate-600"><%= payment.description || '-' %></td>
                 <td class="px-6 py-4 text-slate-600"><%= formatDateTime(payment.createdAt) %></td>
