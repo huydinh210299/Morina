@@ -246,6 +246,7 @@ const buildOrderFilters = (query = {}) => {
     todayOrders: parseCheckbox(query.todayOrders),
     tomorrowOrders: parseCheckbox(query.tomorrowOrders),
     returnDueToday: parseCheckbox(query.returnDueToday),
+    overdueUnreturned: parseCheckbox(query.overdueUnreturned),
     important: parseCheckbox(query.important),
     excludeCompletedImportant: parseCheckbox(query.excludeCompletedImportant),
     bookship: parseStatusFilter(query.bookship),
@@ -298,13 +299,21 @@ const buildOrderFilters = (query = {}) => {
     }));
   }
 
-  if (filters.returnDueToday) {
+  if (filters.returnDueToday || filters.overdueUnreturned) {
     const todayRange = getDayRange(new Date());
     delete mongoFilter.generalStartTime;
-    mongoFilter.generalEndTime = {
-      $gte: todayRange.start,
-      $lte: todayRange.end
-    };
+
+    if (filters.returnDueToday && filters.overdueUnreturned) {
+      mongoFilter.generalEndTime = { $lte: todayRange.end };
+    } else if (filters.returnDueToday) {
+      mongoFilter.generalEndTime = {
+        $gte: todayRange.start,
+        $lte: todayRange.end
+      };
+    } else {
+      mongoFilter.generalEndTime = { $lt: new Date() };
+    }
+
     mongoFilter.returned = false;
   }
 
@@ -325,7 +334,7 @@ const buildOrderFilters = (query = {}) => {
     ];
   }
 
-  if (!filters.returnDueToday && filters.returned !== STATUS_FILTER_ALL) {
+  if (!filters.returnDueToday && !filters.overdueUnreturned && filters.returned !== STATUS_FILTER_ALL) {
     mongoFilter.returned = filters.returned === STATUS_FILTER_TRUE;
   }
 

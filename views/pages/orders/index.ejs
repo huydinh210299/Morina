@@ -9,6 +9,7 @@
   if (currentFilters.todayOrders) queryParams.set("todayOrders", "on");
   if (currentFilters.tomorrowOrders) queryParams.set("tomorrowOrders", "on");
   if (currentFilters.returnDueToday) queryParams.set("returnDueToday", "on");
+  if (currentFilters.overdueUnreturned) queryParams.set("overdueUnreturned", "on");
   if (currentFilters.important) queryParams.set("important", "on");
   if (currentFilters.excludeCompletedImportant) queryParams.set("excludeCompletedImportant", "on");
   if (currentFilters.bookship && currentFilters.bookship !== "all") queryParams.set("bookship", currentFilters.bookship);
@@ -125,6 +126,10 @@
         Cần trả hôm nay, chưa trả
       </label>
       <label class="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700">
+        <input name="overdueUnreturned" type="checkbox" <%= currentFilters.overdueUnreturned ? "checked" : "" %> class="size-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500" />
+        Quá hạn, chưa trả
+      </label>
+      <label class="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700">
         <input name="important" type="checkbox" <%= currentFilters.important ? "checked" : "" %> class="size-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500" />
         Đơn quan trọng
       </label>
@@ -137,6 +142,7 @@
         <thead class="bg-slate-50">
           <tr>
             <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Khách hàng</th>
+            <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Mã sản phẩm</th>
             <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Ngày thuê</th>
             <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Ngày tạo</th>
             <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Số tiền</th>
@@ -160,6 +166,18 @@
                 <% } %>
                 <%= order.customerName %><br />
                 <span class="text-xs text-slate-400"><%= order.phone %></span>
+              </td>
+              <td class="px-6 py-4 text-slate-600">
+                <% const productCodes = order.products.map((item) => item.product?.code).filter(Boolean); %>
+                <% if (productCodes.length) { %>
+                  <div class="flex flex-wrap gap-2">
+                    <% productCodes.forEach((code) => { %>
+                      <span class="inline-flex rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-800"><%= code %></span>
+                    <% }) %>
+                  </div>
+                <% } else { %>
+                  <span class="text-slate-400">—</span>
+                <% } %>
               </td>
               <td class="px-6 py-4 text-slate-600">
                 <%= new Date(order.generalStartTime).toLocaleString() %><br />
