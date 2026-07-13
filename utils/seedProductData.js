@@ -35,21 +35,24 @@ const seedProductData = async (userId, categories) => {
       throw new Error(`Không tìm thấy danh mục ${product.categoryCode} cho sản phẩm ${product.code}.`);
     }
 
-    await Product.updateOne(
-      { code: product.code },
-      {
-        $setOnInsert: {
-          code: product.code,
-          category,
-          fullDayPrice: product.fullDayPrice,
-          eightHPrice: product.eightHPrice,
-          note: product.note,
-          createdBy: userId,
-          updatedBy: userId
-        }
-      },
-      { upsert: true }
-    );
+    const update = {
+      $setOnInsert: {
+        code: product.code,
+        category,
+        fullDayPrice: product.fullDayPrice,
+        eightHPrice: product.eightHPrice,
+        createdBy: userId,
+        updatedBy: userId
+      }
+    };
+
+    if (product.categoryCode === "G") {
+      update.$set = {
+        note: product.note
+      };
+    }
+
+    await Product.updateOne({ code: product.code }, update, { upsert: true });
   }
 };
 
