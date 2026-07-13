@@ -43,7 +43,7 @@ const getDashboardData = async (user) => {
   const tomorrowRange = getDayRange(tomorrow);
   const todayTomorrowFilter = getTodayTomorrowFilter();
 
-  const [todayOrders, tomorrowOrders, importantOrders, bookshipOrders] = await Promise.all([
+  const [todayOrders, tomorrowOrders, importantOrders, bookshipOrders, returnDueTodayOrders, overdueUnreturnedOrders] = await Promise.all([
     Order.countDocuments({
       generalStartTime: {
         $gte: todayRange.start,
@@ -70,6 +70,17 @@ const getDashboardData = async (user) => {
       ...todayTomorrowFilter,
       bookship: true,
       alreadyPickup: false
+    }),
+    Order.countDocuments({
+      generalEndTime: {
+        $gte: todayRange.start,
+        $lte: todayRange.end
+      },
+      returned: false
+    }),
+    Order.countDocuments({
+      generalEndTime: { $lt: new Date() },
+      returned: false
     })
   ]);
 
@@ -80,7 +91,9 @@ const getDashboardData = async (user) => {
       todayOrders,
       tomorrowOrders,
       importantOrders,
-      bookshipOrders
+      bookshipOrders,
+      returnDueTodayOrders,
+      overdueUnreturnedOrders
     }
   };
 };
