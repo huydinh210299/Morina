@@ -11,7 +11,7 @@ const toNumber = (value) => {
 
 const normalizeCode = (value) => `${value || ""}`.trim().toUpperCase();
 
-const orderForm = document.querySelector('form[action="/orders"], form[action^="/orders/"]');
+const orderForm = document.querySelector("form[data-conflict-check-url]");
 const orderFormDataNode = document.getElementById("order-form-data");
 const orderFormData = orderFormDataNode ? JSON.parse(orderFormDataNode.textContent) : { products: [], accessories: [] };
 
