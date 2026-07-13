@@ -76,40 +76,22 @@
       </div>
     </div>
 
-    <div class="mt-4 grid gap-4 rounded-2xl bg-slate-50 px-4 py-3 xl:grid-cols-[1fr_1fr_1fr_1fr_auto_auto_auto] xl:items-end">
-      <label class="block text-sm font-semibold text-slate-700">
-        <span class="mb-2 block">Đặt giao hàng</span>
-        <select name="bookship" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100">
-          <option value="all" <%= (currentFilters.bookship || "all") === "all" ? "selected" : "" %>>Tất cả</option>
-          <option value="true" <%= currentFilters.bookship === "true" ? "selected" : "" %>>Có giao hàng</option>
-          <option value="false" <%= currentFilters.bookship === "false" ? "selected" : "" %>>Không giao hàng</option>
-        </select>
+    <div class="mt-4 grid gap-4 rounded-2xl bg-slate-50 px-4 py-3 sm:grid-cols-2 xl:grid-cols-4">
+      <label class="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700">
+        <input name="bookship" value="true" type="checkbox" <%= currentFilters.bookship === "true" ? "checked" : "" %> class="size-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500" />
+        Đặt giao hàng
       </label>
-      <label class="block text-sm font-semibold text-slate-700">
-        <span class="mb-2 block">Trạng thái trả hàng</span>
-        <select name="returned" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100">
-          <option value="all" <%= (currentFilters.returned || "all") === "all" ? "selected" : "" %>>Tất cả</option>
-          <option value="true" <%= currentFilters.returned === "true" ? "selected" : "" %>>Đã trả hàng</option>
-          <option value="false" <%= currentFilters.returned === "false" ? "selected" : "" %>>Chưa trả hàng</option>
-        </select>
+      <label class="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700">
+        <input name="returned" value="false" type="checkbox" <%= currentFilters.returned === "false" ? "checked" : "" %> class="size-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500" />
+        Chưa trả hàng
       </label>
-
-      <label class="block text-sm font-semibold text-slate-700">
-        <span class="mb-2 block">Trạng thái hoàn tiền</span>
-        <select name="refund" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100">
-          <option value="all" <%= (currentFilters.refund || "all") === "all" ? "selected" : "" %>>Tất cả</option>
-          <option value="true" <%= currentFilters.refund === "true" ? "selected" : "" %>>Đã hoàn tiền</option>
-          <option value="false" <%= currentFilters.refund === "false" ? "selected" : "" %>>Chưa hoàn tiền</option>
-        </select>
+      <label class="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700">
+        <input name="refund" value="false" type="checkbox" <%= currentFilters.refund === "false" ? "checked" : "" %> class="size-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500" />
+        Chưa hoàn tiền
       </label>
-
-      <label class="block text-sm font-semibold text-slate-700">
-        <span class="mb-2 block">Trạng thái lấy hàng</span>
-        <select name="pickup" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100">
-          <option value="all" <%= (currentFilters.pickup || "all") === "all" ? "selected" : "" %>>Tất cả</option>
-          <option value="true" <%= currentFilters.pickup === "true" ? "selected" : "" %>>Đã lấy hàng</option>
-          <option value="false" <%= currentFilters.pickup === "false" ? "selected" : "" %>>Chưa lấy hàng</option>
-        </select>
+      <label class="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700">
+        <input name="pickup" value="false" type="checkbox" <%= currentFilters.pickup === "false" ? "checked" : "" %> class="size-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500" />
+        Chưa lấy hàng
       </label>
 
       <label class="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700">
