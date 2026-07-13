@@ -6,6 +6,8 @@
   if (currentFilters.phone) queryParams.set("phone", currentFilters.phone);
   if (currentFilters.rentStartDate) queryParams.set("rentStartDate", currentFilters.rentStartDate);
   if (currentFilters.rentEndDate) queryParams.set("rentEndDate", currentFilters.rentEndDate);
+  if (currentFilters.returnStartDate) queryParams.set("returnStartDate", currentFilters.returnStartDate);
+  if (currentFilters.returnEndDate) queryParams.set("returnEndDate", currentFilters.returnEndDate);
   if (currentFilters.todayOrders) queryParams.set("todayOrders", "on");
   if (currentFilters.tomorrowOrders) queryParams.set("tomorrowOrders", "on");
   if (currentFilters.returnDueToday) queryParams.set("returnDueToday", "on");
@@ -75,6 +77,28 @@
         <button type="submit" class="rounded-full bg-brand-500 px-5 py-3 font-semibold text-white transition hover:bg-brand-700">Lọc</button>
         <a href="/orders" class="rounded-full bg-slate-100 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-200">Đặt lại</a>
       </div>
+    </div>
+
+    <div class="mt-4 grid gap-4 sm:grid-cols-2">
+      <label class="block">
+        <span class="mb-2 block text-sm font-semibold text-slate-700">Ngày trả từ</span>
+        <input
+          name="returnStartDate"
+          type="date"
+          value="<%= currentFilters.returnStartDate || '' %>"
+          class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+        />
+      </label>
+
+      <label class="block">
+        <span class="mb-2 block text-sm font-semibold text-slate-700">Ngày trả đến</span>
+        <input
+          name="returnEndDate"
+          type="date"
+          value="<%= currentFilters.returnEndDate || '' %>"
+          class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+        />
+      </label>
     </div>
 
     <div class="mt-4 grid gap-4 rounded-2xl bg-slate-50 px-4 py-3 sm:grid-cols-2 xl:grid-cols-4">

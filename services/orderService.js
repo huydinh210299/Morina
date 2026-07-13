@@ -243,6 +243,8 @@ const buildOrderFilters = (query = {}) => {
     rentStartDate: typeof query.rentStartDate === "string" && query.rentStartDate ? query.rentStartDate : formatDateInput(start),
     rentEndDate:
       typeof query.rentEndDate === "string" && query.rentEndDate ? query.rentEndDate : formatDateInput(defaultEndDate),
+    returnStartDate: typeof query.returnStartDate === "string" ? query.returnStartDate : "",
+    returnEndDate: typeof query.returnEndDate === "string" ? query.returnEndDate : "",
     todayOrders: parseCheckbox(query.todayOrders),
     tomorrowOrders: parseCheckbox(query.tomorrowOrders),
     returnDueToday: parseCheckbox(query.returnDueToday),
@@ -276,6 +278,30 @@ const buildOrderFilters = (query = {}) => {
 
     filters.rentStartDate = formatDateInput(normalizedStart);
     filters.rentEndDate = formatDateInput(normalizedEnd);
+  }
+
+  const returnStartDate = filters.returnStartDate ? new Date(filters.returnStartDate) : null;
+  const returnEndDate = filters.returnEndDate ? new Date(filters.returnEndDate) : null;
+  const returnDateFilter = {};
+
+  if (returnStartDate && !Number.isNaN(returnStartDate.getTime())) {
+    returnStartDate.setHours(0, 0, 0, 0);
+    returnDateFilter.$gte = returnStartDate;
+    filters.returnStartDate = formatDateInput(returnStartDate);
+  } else {
+    filters.returnStartDate = "";
+  }
+
+  if (returnEndDate && !Number.isNaN(returnEndDate.getTime())) {
+    returnEndDate.setHours(23, 59, 59, 999);
+    returnDateFilter.$lte = returnEndDate;
+    filters.returnEndDate = formatDateInput(returnEndDate);
+  } else {
+    filters.returnEndDate = "";
+  }
+
+  if (Object.keys(returnDateFilter).length) {
+    mongoFilter.generalEndTime = returnDateFilter;
   }
 
   if (filters.todayOrders || filters.tomorrowOrders) {
