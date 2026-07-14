@@ -414,9 +414,11 @@ const updateCommissionSetting = async ({ validatedBody }) => {
 
 const getOwnTimekeepingData = async ({ userId, month }) => {
   const range = parseMonthInput(month);
-  const [userItem, shifts] = await Promise.all([
+  const [userItem, shifts, hourSalary, commission] = await Promise.all([
     User.findById(userId).select("-password").populate("timekeeping.shiftId"),
-    Shift.find().sort({ name: 1 })
+    Shift.find().sort({ name: 1 }),
+    getHourSalaryValue(),
+    getCommissionValue()
   ]);
 
   if (!userItem) {
@@ -438,12 +440,29 @@ const getOwnTimekeepingData = async ({ userId, month }) => {
     .sort(sortByDateDesc);
 
   const commissionEntries = getAdjustmentItemsForRange(userItem.commissions, range);
+  const approvedEntries = buildPayrollEntries(userItem.timekeeping, range, hourSalary);
+  const approvedCommissionEntries = commissionEntries.filter((entry) => entry.approved);
+  const faultEntries = getAdjustmentItemsForRange(userItem.faults, range);
+  const shiftSalary = approvedEntries.reduce((sum, entry) => sum + entry.totalSalary, 0);
+  const orderCommissionSalary = getCreatedDataCount(userItem) * commission;
+  const extraCommissionSalary = approvedCommissionEntries.reduce((sum, entry) => sum + entry.amount, 0);
+  const faultSalary = faultEntries.reduce((sum, entry) => sum + entry.amount, 0);
+  const accruedSalary = shiftSalary + orderCommissionSalary + extraCommissionSalary - faultSalary;
+  const selectedSalaryHistory = (userItem.salary || []).find(
+    (entry) => entry.month === range.start.getMonth() + 1 && entry.year === range.start.getFullYear()
+  );
+  const paidSalary = Number(selectedSalaryHistory?.salary || 0);
 
   return {
-    title: "Cham cong cua toi",
+    title: "Chấm công của tôi",
     shifts,
     entries,
     commissionEntries,
+    faultEntries,
+    faultSalary,
+    accruedSalary,
+    paidSalary,
+    totalSalary: accruedSalary + paidSalary,
     selectedMonth: range.selectedMonth
   };
 };

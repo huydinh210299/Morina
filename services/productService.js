@@ -73,11 +73,28 @@ const getIndexData = async (query = {}) => {
     .populate("category")
     .sort({ code: 1 })
     .skip((currentPage - 1) * PAGE_SIZE)
-    .limit(PAGE_SIZE);
+    .limit(PAGE_SIZE)
+    .lean();
+
+  const productIds = products.map((product) => product._id);
+  const rentCounts = productIds.length
+    ? await Order.aggregate([
+        { $unwind: "$products" },
+        { $match: { "products.product": { $in: productIds } } },
+        { $group: { _id: "$products.product", count: { $sum: 1 } } }
+      ])
+    : [];
+  const rentCountByProductId = new Map(
+    rentCounts.map((item) => [item._id.toString(), item.count])
+  );
+  const productsWithRentCount = products.map((product) => ({
+    ...product,
+    rentCount: rentCountByProductId.get(product._id.toString()) || 0
+  }));
 
   return {
     title: "Sản phẩm",
-    products,
+    products: productsWithRentCount,
     categories,
     filters,
     pagination: {

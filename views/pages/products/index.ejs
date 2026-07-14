@@ -67,6 +67,7 @@
           <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Mã</th>
           <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Danh mục</th>
           <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Giá</th>
+          <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Số lần thuê</th>
           <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Chi tiết</th>
           <th class="px-6 py-4 text-right text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Thao tác</th>
         </tr>
@@ -80,6 +81,7 @@
               </td>
               <td class="px-6 py-4 text-slate-600"><%= product.category?.code || "-" %></td>
               <td class="px-6 py-4 text-slate-600">Cả ngày: <%= formatCurrency(product.fullDayPrice) %><br />8 giờ: <%= formatCurrency(product.eightHPrice) %></td>
+              <td class="px-6 py-4 font-semibold text-slate-900"><%= product.rentCount || 0 %></td>
               <td class="px-6 py-4 text-slate-600">Kích cỡ: <%= product.size || "-" %><br />Ghi chú: <%= product.note || "-" %></td>
               <td class="px-6 py-4">
                 <div class="flex justify-end gap-2">
@@ -97,7 +99,7 @@
           <% }) %>
         <% } else { %>
           <tr>
-            <td colspan="5" class="px-6 py-12 text-center text-slate-500">Không có sản phẩm phù hợp với bộ lọc hiện tại.</td>
+            <td colspan="6" class="px-6 py-12 text-center text-slate-500">Không có sản phẩm phù hợp với bộ lọc hiện tại.</td>
           </tr>
         <% } %>
       </tbody>

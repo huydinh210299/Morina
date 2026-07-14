@@ -2,12 +2,28 @@
   <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
     <div>
       <h1 class="text-3xl font-black text-slate-900">Chấm công</h1>
-      <p class="mt-1 text-slate-500">Tạo chấm công theo ca làm và gửi yêu cầu hoa hồng để quản trị viên duyệt.</p>
+      <p class="mt-1 text-slate-500">Theo dõi chấm công, hoa hồng, lỗi phạt và lương theo tháng.</p>
     </div>
     <form method="GET" action="/users/timekeeping" class="flex items-center gap-3">
       <input name="month" type="month" value="<%= selectedMonth %>" class="rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
       <button type="submit" class="rounded-full bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-700">Xem tháng</button>
     </form>
+  </div>
+
+  <div class="grid gap-4 md:grid-cols-3">
+    <div class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
+      <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Tổng lương tháng</p>
+      <p class="mt-3 text-3xl font-black text-brand-700"><%= formatCurrency(totalSalary) %></p>
+    </div>
+    <div class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
+      <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Lương chưa thanh toán</p>
+      <p class="mt-3 text-3xl font-black text-emerald-700"><%= formatCurrency(accruedSalary) %></p>
+    </div>
+    <div class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
+      <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Lỗi phạt</p>
+      <p class="mt-3 text-3xl font-black text-rose-700"><%= formatCurrency(faultSalary) %></p>
+      <p class="mt-2 text-sm text-slate-500">Đã thanh toán: <span class="font-semibold text-slate-700"><%= formatCurrency(paidSalary) %></span></p>
+    </div>
   </div>
 
   <div class="grid gap-6 xl:grid-cols-[1fr_1fr_1.3fr]">
@@ -58,8 +74,8 @@
     <div class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
       <h2 class="text-2xl font-black text-slate-900">Lịch sử tháng <%= selectedMonth %></h2>
       <div class="mt-6 space-y-4">
-        <% if (entries.length === 0 && commissionEntries.length === 0) { %>
-          <p class="text-slate-500">Chưa có chấm công hay yêu cầu hoa hồng trong tháng này.</p>
+        <% if (entries.length === 0 && commissionEntries.length === 0 && faultEntries.length === 0) { %>
+          <p class="text-slate-500">Chưa có chấm công, hoa hồng hay lỗi phạt trong tháng này.</p>
         <% } %>
 
         <% entries.forEach((entry) => { %>
@@ -91,6 +107,19 @@
                   <%= entry.approved ? "Đã duyệt" : "Chờ quản trị viên duyệt" %>
                 </span>
               </div>
+            </div>
+          </div>
+        <% }) %>
+
+        <% faultEntries.forEach((entry) => { %>
+          <div class="rounded-3xl border border-rose-200 bg-rose-50/40 p-5">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p class="font-semibold text-slate-900">Lỗi phạt</p>
+                <p class="mt-1 text-sm text-slate-500"><%= formatDateTime(entry.date) %></p>
+                <p class="mt-1 text-sm text-slate-500"><%= entry.description || "Không có mô tả" %></p>
+              </div>
+              <p class="text-lg font-black text-rose-700">-<%= formatCurrency(entry.amount) %></p>
             </div>
           </div>
         <% }) %>
