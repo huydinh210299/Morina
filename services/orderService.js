@@ -3,7 +3,7 @@ const Product = require("../models/Product");
 const Accessory = require("../models/Accessory");
 const User = require("../models/User");
 const { parseOrderPayload } = require("../utils/requestParsers");
-const { orderSchema, paymentSchema, orderStatusSchema } = require("../utils/validators");
+const { orderSchema, paymentSchema, orderStatusSchema, orderNoteSchema } = require("../utils/validators");
 const { setCreateAuditFields, setUpdateAuditFields } = require("../utils/audit");
 const { USER_ROLES } = require("../utils/constants");
 const validationOptions = require("../utils/validationOptions");
@@ -578,6 +578,22 @@ const updateOrderStatus = async ({ id, body, user }) => {
   };
 };
 
+const updateOrderNote = async ({ id, body, user }) => {
+  const order = await findOrderOrFail(id);
+  const notePayload = validatePayload(orderNoteSchema, {
+    note: body.note
+  });
+
+  order.note = notePayload.note;
+  Object.assign(order, setUpdateAuditFields({}, user));
+  await order.save();
+
+  return {
+    successMessage: "ÄÃ£ cáº­p nháº­t ghi chÃº Ä‘Æ¡n hÃ ng thÃ nh cÃ´ng.",
+    redirectTo: `/orders/${order._id}`
+  };
+};
+
 const checkOrderConflicts = async ({ id, body }) => {
   const payload = buildValidatedOrder(body);
   const conflicts = await findConflictingProductLines({
@@ -604,5 +620,6 @@ module.exports = {
   getShowData,
   addOrderPayment,
   updateOrderStatus,
+  updateOrderNote,
   checkOrderConflicts
 };

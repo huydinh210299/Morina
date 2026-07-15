@@ -98,6 +98,16 @@ const updateStatus = async (req, res) => {
   res.redirect(result.redirectTo);
 };
 
+const updateNote = async (req, res) => {
+  const result = await orderService.updateOrderNote({
+    id: req.params.id,
+    body: req.body,
+    user: req.user
+  });
+  req.session.success = result.successMessage;
+  res.redirect(result.redirectTo);
+};
+
 module.exports = wrapControllerHandlers({
   renderIndex,
   renderCreate,
@@ -108,5 +118,6 @@ module.exports = wrapControllerHandlers({
   remove,
   renderShow,
   addPayment,
-  updateStatus
+  updateStatus,
+  updateNote
 });

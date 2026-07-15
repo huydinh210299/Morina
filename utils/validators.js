@@ -102,6 +102,10 @@ const orderStatusSchema = Joi.object({
   returnDeposit: Joi.boolean().truthy("on").falsy("off").falsy("").default(false)
 });
 
+const orderNoteSchema = Joi.object({
+  note: Joi.string().trim().allow("").default("")
+});
+
 const orderSchema = Joi.object({
   phone: Joi.string().trim().required(),
   customerName: Joi.string().trim().required(),
@@ -136,5 +140,6 @@ module.exports = {
   accessorySchema,
   orderSchema,
   paymentSchema,
-  orderStatusSchema
+  orderStatusSchema,
+  orderNoteSchema
 };

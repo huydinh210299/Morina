@@ -12,6 +12,7 @@ router.post("/conflicts", orderController.checkConflicts);
 router.post("/", orderController.create);
 router.post("/:id/payments", orderController.addPayment);
 router.post("/:id/status", orderController.updateStatus);
+router.post("/:id/note", orderController.updateNote);
 router.get("/:id", orderController.renderShow);
 router.get("/:id/edit", allowRoles(USER_ROLES.ADMIN), orderController.renderEdit);
 router.put("/:id", allowRoles(USER_ROLES.ADMIN), orderController.update);
