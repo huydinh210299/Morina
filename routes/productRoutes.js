@@ -9,6 +9,7 @@ const router = express.Router();
 
 router.use(requireAuth, allowRoles(USER_ROLES.ADMIN, USER_ROLES.STAFF));
 router.get("/", productController.renderIndex);
+router.get("/images", productController.renderImages);
 router.get("/new", allowRoles(USER_ROLES.ADMIN), productController.renderCreate);
 router.post("/", allowRoles(USER_ROLES.ADMIN), validate(productSchema), productController.create);
 router.get("/:id", productController.renderShow);

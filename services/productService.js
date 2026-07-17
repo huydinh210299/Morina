@@ -5,10 +5,32 @@ const mongoose = require("mongoose");
 const { setCreateAuditFields, setUpdateAuditFields } = require("../utils/audit");
 
 const PAGE_SIZE = 10;
+const IMAGE_PAGE_SIZE = 24;
 
 const getCategories = () => Category.find().sort({ code: 1 });
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const getGoogleDriveFileId = (url = "") => {
+  const idFromQuery = url.match(/[?&]id=([^&]+)/)?.[1];
+  const idFromPath = url.match(/\/d\/([^/]+)/)?.[1];
+
+  return idFromQuery || idFromPath || "";
+};
+
+const getDisplayImageUrl = (url = "") => {
+  if (!url.includes("drive.google.com")) {
+    return url;
+  }
+
+  const fileId = getGoogleDriveFileId(url);
+
+  if (!fileId) {
+    return url;
+  }
+
+  return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+};
 
 const findProductOrFail = async (id) => {
   const product = await Product.findById(id);
@@ -102,6 +124,82 @@ const getIndexData = async (query = {}) => {
       totalPages,
       totalItems,
       pageSize: PAGE_SIZE,
+      hasPrev: currentPage > 1,
+      hasNext: currentPage < totalPages,
+      prevPage: currentPage - 1,
+      nextPage: currentPage + 1
+    }
+  };
+};
+
+const getImageIndexData = async (query = {}) => {
+  const requestedPage = Math.max(parseInt(query.page, 10) || 1, 1);
+  const filters = {
+    category: query.category?.trim() || "",
+    productCode: query.productCode?.trim() || ""
+  };
+  const conditions = {
+    isDeleted: false
+  };
+
+  if (filters.category) {
+    if (!mongoose.Types.ObjectId.isValid(filters.category)) {
+      return {
+        title: "Hình anh san pham",
+        products: [],
+        categories: await getCategories(),
+        filters,
+        pagination: {
+          currentPage: 1,
+          totalPages: 1,
+          totalItems: 0,
+          pageSize: IMAGE_PAGE_SIZE,
+          hasPrev: false,
+          hasNext: false,
+          prevPage: 0,
+          nextPage: 2
+        }
+      };
+    }
+
+    conditions.category = filters.category;
+  }
+
+  if (filters.productCode) {
+    conditions.code = {
+      $regex: escapeRegex(filters.productCode),
+      $options: "i"
+    };
+  }
+
+  const [categories, totalItems] = await Promise.all([
+    getCategories(),
+    Product.countDocuments(conditions)
+  ]);
+
+  const totalPages = Math.max(Math.ceil(totalItems / IMAGE_PAGE_SIZE), 1);
+  const currentPage = Math.min(requestedPage, totalPages);
+  const products = await Product.find(conditions)
+    .populate("category")
+    .sort({ code: 1 })
+    .skip((currentPage - 1) * IMAGE_PAGE_SIZE)
+    .limit(IMAGE_PAGE_SIZE)
+    .lean();
+  const productsWithDisplayImages = products.map((product) => ({
+    ...product,
+    displayImageUrl: getDisplayImageUrl(product.imageUrl)
+  }));
+
+  return {
+    title: "Hình ảnh sản phẩm",
+    products: productsWithDisplayImages,
+    categories,
+    filters,
+    pagination: {
+      currentPage,
+      totalPages,
+      totalItems,
+      pageSize: IMAGE_PAGE_SIZE,
       hasPrev: currentPage > 1,
       hasNext: currentPage < totalPages,
       prevPage: currentPage - 1,
@@ -226,6 +324,7 @@ const archiveProduct = async ({ id, user }) => {
 
 module.exports = {
   getIndexData,
+  getImageIndexData,
   getCreateData,
   createProduct,
   getEditData,

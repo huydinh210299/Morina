@@ -1,0 +1,118 @@
+<section class="min-w-0 space-y-6">
+  <%- include("../../partials/product-management-tabs", { activeProductManagementTab: "product-images" }) %>
+  <%
+    const buildPageUrl = (page) => {
+      const params = new URLSearchParams();
+      if (filters.category) params.set("category", filters.category);
+      if (filters.productCode) params.set("productCode", filters.productCode);
+      params.set("page", String(page));
+      return `/products/images?${params.toString()}`;
+    };
+
+    const startItem = pagination.totalItems === 0 ? 0 : (pagination.currentPage - 1) * pagination.pageSize + 1;
+    const endItem = pagination.totalItems === 0
+      ? 0
+      : Math.min(pagination.currentPage * pagination.pageSize, pagination.totalItems);
+  %>
+
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-3xl font-black text-slate-900">Hình ảnh sản phẩm</h1>
+      <p class="mt-1 text-slate-500">Xem mã sản phẩm và ảnh từ Google Drive.</p>
+    </div>
+  </div>
+
+  <form method="GET" action="/products/images" class="grid gap-4 rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
+    <label class="block">
+      <span class="mb-2 block text-sm font-semibold text-slate-700">Danh mục</span>
+      <select name="category" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100">
+        <option value="">Tất cả danh mục</option>
+        <% categories.forEach((category) => { %>
+          <option
+            value="<%= category._id %>"
+            title="<%= category.description || category.code %>"
+            <%= filters.category === String(category._id) ? "selected" : "" %>
+          >
+            <%= category.description ? `${category.code} - ${category.description}` : category.code %>
+          </option>
+        <% }) %>
+      </select>
+    </label>
+
+    <label class="block">
+      <span class="mb-2 block text-sm font-semibold text-slate-700">Mã sản phẩm</span>
+      <input
+        type="text"
+        name="productCode"
+        value="<%= filters.productCode %>"
+        placeholder="Nhập mã cần tìm"
+        class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+      />
+    </label>
+
+    <div class="flex gap-3">
+      <button type="submit" class="inline-flex rounded-full bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-700">Lọc</button>
+      <a href="/products/images" class="inline-flex rounded-full bg-slate-100 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-200">Đặt lại</a>
+    </div>
+  </form>
+
+  <% if (products.length) { %>
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <% products.forEach((product) => { %>
+        <article class="overflow-hidden rounded-3xl bg-white shadow-lg shadow-slate-200/60">
+          <a href="/products/<%= product._id %>" class="block">
+            <div class="aspect-[4/5] bg-slate-100">
+              <% if (product.displayImageUrl || product.imageUrl) { %>
+                <img
+                  src="<%= product.displayImageUrl || product.imageUrl %>"
+                  alt="<%= product.code %>"
+                  loading="lazy"
+                  referrerpolicy="no-referrer"
+                  class="h-full w-full object-cover"
+                />
+              <% } else { %>
+                <div class="flex h-full items-center justify-center px-6 text-center text-sm font-semibold text-slate-400">
+                  Chua co anh
+                </div>
+              <% } %>
+            </div>
+            <div class="flex items-center justify-between gap-3 p-4">
+              <div class="min-w-0">
+                <h2 class="truncate text-lg font-black text-slate-900"><%= product.code %></h2>
+                <p class="mt-1 truncate text-sm text-slate-500"><%= product.category?.code || "-" %></p>
+              </div>
+              <% if (product.imageUrl) { %>
+                <span class="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">OK</span>
+              <% } else { %>
+                <span class="shrink-0 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">Missing</span>
+              <% } %>
+            </div>
+          </a>
+        </article>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <div class="rounded-3xl bg-white px-6 py-12 text-center text-slate-500 shadow-lg shadow-slate-200/60">
+      Khong co san pham phu hop voi bo loc hien tai.
+    </div>
+  <% } %>
+
+  <div class="flex flex-col gap-3 rounded-3xl bg-white px-6 py-4 shadow-lg shadow-slate-200/60 sm:flex-row sm:items-center sm:justify-between">
+    <p class="text-sm text-slate-500">Hien thi <%= startItem %>-<%= endItem %> / <%= pagination.totalItems %> san pham</p>
+    <div class="flex items-center gap-2">
+      <% if (pagination.hasPrev) { %>
+        <a href="<%= buildPageUrl(pagination.prevPage) %>" class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">Truoc</a>
+      <% } else { %>
+        <span class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-400">Truoc</span>
+      <% } %>
+
+      <span class="rounded-full bg-brand-50 px-4 py-2 text-sm font-semibold text-brand-700">Trang <%= pagination.currentPage %>/<%= pagination.totalPages %></span>
+
+      <% if (pagination.hasNext) { %>
+        <a href="<%= buildPageUrl(pagination.nextPage) %>" class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">Tiep</a>
+      <% } else { %>
+        <span class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-400">Tiep</span>
+      <% } %>
+    </div>
+  </div>
+</section>

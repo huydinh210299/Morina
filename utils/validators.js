@@ -66,6 +66,7 @@ const productSchema = Joi.object({
   eightHPrice: Joi.number().min(0).required(),
   note: Joi.string().trim().allow(""),
   size: Joi.string().trim().allow(""),
+  imageUrl: Joi.string().trim().uri().allow(""),
   category: Joi.string().trim().required()
 });
 

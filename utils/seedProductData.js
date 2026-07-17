@@ -1,6 +1,112 @@
+const fs = require("fs");
+const path = require("path");
 const Product = require("../models/Product");
 
 const PRICE_MULTIPLIER = 1000;
+const IMAGE_LINK_CSV_PATH = path.join(__dirname, "..", "data", "image_link.csv");
+
+const parseCsvLine = (line) => {
+  const values = [];
+  let current = "";
+  let insideQuotes = false;
+
+  for (let index = 0; index < line.length; index += 1) {
+    const char = line[index];
+    const nextChar = line[index + 1];
+
+    if (char === "\"" && insideQuotes && nextChar === "\"") {
+      current += "\"";
+      index += 1;
+      continue;
+    }
+
+    if (char === "\"") {
+      insideQuotes = !insideQuotes;
+      continue;
+    }
+
+    if (char === "," && !insideQuotes) {
+      values.push(current);
+      current = "";
+      continue;
+    }
+
+    current += char;
+  }
+
+  values.push(current);
+  return values;
+};
+
+const parseCsv = (content) => {
+  const lines = content.replace(/^\uFEFF/, "").split(/\r?\n/).filter(Boolean);
+
+  if (!lines.length) {
+    return [];
+  }
+
+  const headers = parseCsvLine(lines.shift()).map((header) => header.trim());
+
+  return lines.map((line) => {
+    const values = parseCsvLine(line);
+    return headers.reduce((row, header, index) => {
+      row[header] = values[index]?.trim() || "";
+      return row;
+    }, {});
+  });
+};
+
+const getDriveFileId = (row) => {
+  const directLink = row["Direct Image Link"] || "";
+  const viewLink = row["View Link"] || "";
+  const idFromQuery = directLink.match(/[?&]id=([^&]+)/)?.[1];
+  const idFromPath = viewLink.match(/\/d\/([^/]+)/)?.[1] || directLink.match(/\/d\/([^/]+)/)?.[1];
+
+  return idFromQuery || idFromPath || "";
+};
+
+const getDirectImageUrl = (row) => {
+  const fileId = getDriveFileId(row);
+
+  if (fileId) {
+    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+  }
+
+  return row["Direct Image Link"] || "";
+};
+
+const getProductCodeFromImageRow = (row) => {
+  const folderPath = row["Folder Path"] || "";
+  const originalName = row["Original Name"] || "";
+  const categoryCode = folderPath.split("/").pop()?.trim().toUpperCase();
+  const ordinal = originalName.match(/^(\d+)/)?.[1];
+
+  if (!categoryCode || !ordinal) {
+    return "";
+  }
+
+  return `${categoryCode}${String(Number(ordinal)).padStart(2, "0")}`;
+};
+
+const getProductImageUrls = () => {
+  if (!fs.existsSync(IMAGE_LINK_CSV_PATH)) {
+    return new Map();
+  }
+
+  const rows = parseCsv(fs.readFileSync(IMAGE_LINK_CSV_PATH, "utf8"));
+  const imageUrlByProductCode = new Map();
+
+  for (const row of rows) {
+    const productCode = getProductCodeFromImageRow(row);
+    const imageUrl = getDirectImageUrl(row);
+
+    if (productCode && imageUrl) {
+      imageUrlByProductCode.set(productCode, imageUrl);
+    }
+  }
+
+  return imageUrlByProductCode;
+};
 
 const buildProducts = (categoryCode, prefix, fullDayPrices, eightHPrices = fullDayPrices) =>
   fullDayPrices.map((fullDayPrice, index) => ({
@@ -27,6 +133,7 @@ const DEFAULT_PRODUCTS = [
 
 const seedProductData = async (userId, categories) => {
   const categoriesByCode = new Map(categories.map((category) => [category.code, category._id]));
+  const imageUrlByProductCode = getProductImageUrls();
 
   for (const product of DEFAULT_PRODUCTS) {
     const category = categoriesByCode.get(product.categoryCode);
@@ -45,9 +152,18 @@ const seedProductData = async (userId, categories) => {
         updatedBy: userId
       }
     };
+    const imageUrl = imageUrlByProductCode.get(product.code);
+
+    if (imageUrl) {
+      update.$set = {
+        ...update.$set,
+        imageUrl
+      };
+    }
 
     if (product.categoryCode === "G") {
       update.$set = {
+        ...update.$set,
         note: product.note
       };
     }
