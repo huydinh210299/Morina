@@ -37,6 +37,64 @@ const escapeHtml = (value) =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
 
+const productImageModal = document.querySelector("[data-product-image-modal]");
+const productImageModalImg = productImageModal?.querySelector("[data-product-image-modal-img]");
+const productImageModalEmpty = productImageModal?.querySelector("[data-product-image-modal-empty]");
+const productImageModalCode = productImageModal?.querySelector("[data-product-image-modal-code]");
+const productImageModalCategory = productImageModal?.querySelector("[data-product-image-modal-category]");
+const productImageModalDetail = productImageModal?.querySelector("[data-product-image-modal-detail]");
+
+const closeProductImageModal = () => {
+  if (!productImageModal) {
+    return;
+  }
+
+  productImageModal.classList.add("hidden");
+  productImageModal.classList.remove("flex");
+  productImageModal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("overflow-hidden");
+
+  if (productImageModalImg) {
+    productImageModalImg.src = "";
+    productImageModalImg.alt = "";
+  }
+};
+
+const openProductImageModal = (trigger) => {
+  if (!productImageModal || !trigger) {
+    return;
+  }
+
+  const imageUrl = trigger.dataset.productImageUrl || "";
+  const productCode = trigger.dataset.productCode || "";
+  const categoryCode = trigger.dataset.productCategory || "";
+  const detailUrl = trigger.dataset.productDetailUrl || "#";
+
+  if (productImageModalCode) {
+    productImageModalCode.textContent = productCode;
+  }
+
+  if (productImageModalCategory) {
+    productImageModalCategory.textContent = categoryCode;
+  }
+
+  if (productImageModalDetail) {
+    productImageModalDetail.href = detailUrl;
+  }
+
+  if (productImageModalImg && productImageModalEmpty) {
+    productImageModalImg.classList.toggle("hidden", !imageUrl);
+    productImageModalEmpty.classList.toggle("hidden", Boolean(imageUrl));
+    productImageModalImg.src = imageUrl;
+    productImageModalImg.alt = productCode;
+  }
+
+  productImageModal.classList.remove("hidden");
+  productImageModal.classList.add("flex");
+  productImageModal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("overflow-hidden");
+};
+
 const closeSearchDropdown = (wrapper) => {
   const dropdown = wrapper?.querySelector("[data-search-dropdown]");
   if (!dropdown) {
@@ -384,6 +442,22 @@ if (orderForm) {
 }
 
 document.addEventListener("click", (event) => {
+  const productPreview = event.target.closest("[data-product-image-preview]");
+  if (productPreview) {
+    openProductImageModal(productPreview);
+    return;
+  }
+
+  if (event.target.closest("[data-product-image-modal-close]")) {
+    closeProductImageModal();
+    return;
+  }
+
+  if (productImageModal && event.target === productImageModal) {
+    closeProductImageModal();
+    return;
+  }
+
   const addType = event.target.getAttribute("data-add-row");
 
   if (addType === "products") {
@@ -498,5 +572,11 @@ document.addEventListener("change", (event) => {
 document.addEventListener("focusin", (event) => {
   if (event.target.matches("[data-search-input]")) {
     renderSearchOptions(event.target.closest("[data-search-select]"), event.target.value);
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && productImageModal && !productImageModal.classList.contains("hidden")) {
+    closeProductImageModal();
   }
 });

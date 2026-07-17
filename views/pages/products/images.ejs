@@ -60,7 +60,15 @@
     <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <% products.forEach((product) => { %>
         <article class="overflow-hidden rounded-3xl bg-white shadow-lg shadow-slate-200/60">
-          <a href="/products/<%= product._id %>" class="block">
+          <button
+            type="button"
+            class="block w-full text-left transition hover:-translate-y-0.5 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-brand-100"
+            data-product-image-preview
+            data-product-code="<%= product.code %>"
+            data-product-category="<%= product.category?.code || "-" %>"
+            data-product-image-url="<%= product.displayImageUrl || product.imageUrl || "" %>"
+            data-product-detail-url="/products/<%= product._id %>"
+          >
             <div class="aspect-[4/5] bg-slate-100">
               <% if (product.displayImageUrl || product.imageUrl) { %>
                 <img
@@ -87,7 +95,7 @@
                 <span class="shrink-0 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">Missing</span>
               <% } %>
             </div>
-          </a>
+          </button>
         </article>
       <% }) %>
     </div>
@@ -113,6 +121,59 @@
       <% } else { %>
         <span class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-400">Tiep</span>
       <% } %>
+    </div>
+  </div>
+
+  <div
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 p-4"
+    data-product-image-modal
+    aria-hidden="true"
+  >
+    <div class="relative flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
+      <div class="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-4">
+        <div class="min-w-0">
+          <h2 class="truncate text-xl font-black text-slate-900" data-product-image-modal-code></h2>
+          <p class="mt-1 truncate text-sm text-slate-500" data-product-image-modal-category></p>
+        </div>
+        <button
+          type="button"
+          class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-2xl font-semibold leading-none text-slate-600 transition hover:bg-slate-200"
+          data-product-image-modal-close
+          aria-label="Close preview"
+        >
+          &times;
+        </button>
+      </div>
+
+      <div class="flex min-h-0 flex-1 items-center justify-center bg-slate-100 p-4">
+        <img
+          src=""
+          alt=""
+          class="max-h-[70vh] w-auto max-w-full rounded-2xl object-contain shadow-lg shadow-slate-300/40"
+          data-product-image-modal-img
+          referrerpolicy="no-referrer"
+        />
+        <div class="hidden px-6 py-20 text-center text-sm font-semibold text-slate-400" data-product-image-modal-empty>
+          Chua co anh
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 border-t border-slate-100 px-5 py-4">
+        <button
+          type="button"
+          class="inline-flex rounded-full bg-slate-100 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-200"
+          data-product-image-modal-close
+        >
+          Close
+        </button>
+        <a
+          href="#"
+          class="inline-flex rounded-full bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-700"
+          data-product-image-modal-detail
+        >
+          View product detail
+        </a>
+      </div>
     </div>
   </div>
 </section>
