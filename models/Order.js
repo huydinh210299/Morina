@@ -15,6 +15,11 @@ const orderLineSchema = new mongoose.Schema(
       required: true,
       min: 0
     },
+    amount: {
+      type: Number,
+      default: 1,
+      min: 1
+    },
     useGeneralTimes: {
       type: Boolean,
       default: true

@@ -11,6 +11,7 @@ router.use(requireAuth, allowRoles(USER_ROLES.ADMIN, USER_ROLES.STAFF));
 router.get("/", accessoryController.renderIndex);
 router.get("/new", allowRoles(USER_ROLES.ADMIN), accessoryController.renderCreate);
 router.post("/", allowRoles(USER_ROLES.ADMIN), validate(accessorySchema), accessoryController.create);
+router.get("/:id/rentals", accessoryController.renderRentalSchedule);
 router.get("/:id/edit", allowRoles(USER_ROLES.ADMIN), accessoryController.renderEdit);
 router.put("/:id", allowRoles(USER_ROLES.ADMIN), validate(accessorySchema), accessoryController.update);
 router.delete("/:id", allowRoles(USER_ROLES.ADMIN), accessoryController.remove);

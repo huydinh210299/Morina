@@ -73,7 +73,8 @@ const productSchema = Joi.object({
 const accessorySchema = Joi.object({
   code: Joi.string().trim().required(),
   name: Joi.string().trim().required(),
-  price: Joi.number().min(0).required()
+  price: Joi.number().min(0).required(),
+  amount: Joi.number().integer().min(0).default(0)
 });
 
 const orderItemSchema = Joi.object({
@@ -87,6 +88,7 @@ const orderItemSchema = Joi.object({
 const accessoryItemSchema = Joi.object({
   accessory: Joi.string().trim().required(),
   price: Joi.number().min(0).required(),
+  amount: Joi.number().integer().min(1).default(1),
   useGeneralTimes: Joi.boolean().truthy("on").truthy("true").truthy("1").falsy("off").falsy("false").falsy("0").falsy("").default(true),
   startTime: Joi.date().required(),
   endTime: Joi.date().min(Joi.ref("startTime")).required()

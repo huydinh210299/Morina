@@ -73,6 +73,7 @@
         <% order.accessories.forEach((item) => { %>
           <div class="rounded-3xl border border-slate-200 p-4">
             <p class="font-semibold text-slate-900"><%= item.accessory?.code || "Phụ kiện không xác định" %> <%= item.accessory?.name ? `- ${item.accessory.name}` : "" %></p>
+            <p class="mt-2 text-sm text-slate-600">Số lượng thuê: <%= item.amount ?? 1 %></p>
             <p class="mt-2 text-sm text-slate-600"><%= formatCurrency(item.price) %></p>
             <p class="mt-1 text-sm text-slate-500"><%= new Date(item.startTime).toLocaleString() %> → <%= new Date(item.endTime).toLocaleString() %></p>
           </div>

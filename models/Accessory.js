@@ -18,6 +18,11 @@ const accessorySchema = new mongoose.Schema(
       required: true,
       min: 0
     },
+    amount: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
     createdBy: {
       type: String,
       required: true

@@ -2,7 +2,11 @@ const accessoryService = require("../services/accessoryService");
 const { wrapControllerHandlers } = require("../middleware/asyncMiddleware");
 
 const renderIndex = async (req, res) => {
-  res.render("pages/accessories/index", await accessoryService.getIndexData());
+  res.render("pages/accessories/index", await accessoryService.getIndexData(req.query));
+};
+
+const renderRentalSchedule = async (req, res) => {
+  res.render("pages/accessories/rentals", await accessoryService.getRentalScheduleData(req.params.id, req.query));
 };
 
 const renderCreate = (req, res) => {
@@ -37,6 +41,7 @@ const remove = async (req, res) => {
 
 module.exports = wrapControllerHandlers({
   renderIndex,
+  renderRentalSchedule,
   renderCreate,
   create,
   renderEdit,

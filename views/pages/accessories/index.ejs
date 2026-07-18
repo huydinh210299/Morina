@@ -18,6 +18,7 @@
           <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Mã</th>
           <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Tên</th>
           <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Giá</th>
+          <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Số lượng</th>
           <th class="px-6 py-4 text-right text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Thao tác</th>
         </tr>
       </thead>
@@ -27,8 +28,10 @@
             <td class="px-6 py-4 font-semibold text-slate-900"><%= accessory.code %></td>
             <td class="px-6 py-4 text-slate-600"><%= accessory.name %></td>
             <td class="px-6 py-4 text-slate-600"><%= formatCurrency(accessory.price) %></td>
+            <td class="px-6 py-4 text-slate-600"><%= accessory.amount ?? 0 %></td>
             <td class="px-6 py-4">
               <div class="flex justify-end gap-2">
+                <a href="/accessories/<%= accessory._id %>/rentals" class="rounded-full bg-brand-50 px-4 py-2 text-sm font-semibold text-brand-700">Lịch thuê</a>
                 <% if (currentUser.role === "admin") { %>
                   <a href="/accessories/<%= accessory._id %>/edit" class="rounded-full bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-800">Sửa</a>
                   <form action="/accessories/<%= accessory._id %>?_method=DELETE" method="POST" onsubmit="return confirm('Xóa phụ kiện này?');">
@@ -41,6 +44,18 @@
         <% }) %>
       </tbody>
       </table>
+    </div>
+  </div>
+
+  <div class="flex flex-col gap-3 rounded-3xl bg-white px-6 py-4 text-sm text-slate-600 shadow-lg shadow-slate-200/60 sm:flex-row sm:items-center sm:justify-between">
+    <span>Trang <%= pagination.page %>/<%= pagination.totalPages %> · Tổng <%= pagination.totalItems %> phụ kiện</span>
+    <div class="flex gap-2">
+      <% if (pagination.hasPrev) { %>
+        <a href="/accessories?page=<%= pagination.prevPage %>" class="rounded-full bg-slate-100 px-4 py-2 font-semibold text-slate-700">Trang trước</a>
+      <% } %>
+      <% if (pagination.hasNext) { %>
+        <a href="/accessories?page=<%= pagination.nextPage %>" class="rounded-full bg-brand-50 px-4 py-2 font-semibold text-brand-700">Trang sau</a>
+      <% } %>
     </div>
   </div>
 </section>

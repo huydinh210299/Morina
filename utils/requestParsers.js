@@ -75,25 +75,36 @@ const parseRepeatingRows = (source, mapping) => {
 };
 
 const parseOrderItems = (source, config) => {
-  const rowCount = Math.max(
+  const rowLengths = [
     toArray(source[config.idKey]).length,
     toArray(source[config.priceKey]).length,
     toArray(source[config.startKey]).length,
     toArray(source[config.endKey]).length
-  );
+  ];
+
+  if (config.amountKey) {
+    rowLengths.push(toArray(source[config.amountKey]).length);
+  }
+
+  const rowCount = Math.max(...rowLengths);
+  const mapping = {
+    [config.idKey]: config.idField,
+    [config.priceKey]: "price",
+    [config.useGeneralKey]: "useGeneralTimes",
+    [config.startKey]: "startTime",
+    [config.endKey]: "endTime"
+  };
+
+  if (config.amountKey) {
+    mapping[config.amountKey] = "amount";
+  }
 
   return parseRepeatingRows(
     {
       ...source,
       [config.useGeneralKey]: collapseCheckboxRowValues(source[config.useGeneralKey], rowCount)
     },
-    {
-      [config.idKey]: config.idField,
-      [config.priceKey]: "price",
-      [config.useGeneralKey]: "useGeneralTimes",
-      [config.startKey]: "startTime",
-      [config.endKey]: "endTime"
-    }
+    mapping
   );
 };
 
@@ -111,6 +122,7 @@ const parseOrderPayload = (body) => {
     idKey: "accessoryIds",
     idField: "accessory",
     priceKey: "accessoryPrices",
+    amountKey: "accessoryAmounts",
     useGeneralKey: "accessoryUseGeneralTimes",
     startKey: "accessoryStartTimes",
     endKey: "accessoryEndTimes"
