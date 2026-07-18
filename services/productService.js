@@ -145,7 +145,7 @@ const getImageIndexData = async (query = {}) => {
   if (filters.category) {
     if (!mongoose.Types.ObjectId.isValid(filters.category)) {
       return {
-        title: "Hình anh san pham",
+        title: "Hình ảnh sản phẩm",
         products: [],
         categories: await getCategories(),
         filters,

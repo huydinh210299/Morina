@@ -80,7 +80,7 @@
                 />
               <% } else { %>
                 <div class="flex h-full items-center justify-center px-6 text-center text-sm font-semibold text-slate-400">
-                  Chua co anh
+                  Chưa có ảnh
                 </div>
               <% } %>
             </div>
@@ -92,7 +92,7 @@
               <% if (product.imageUrl) { %>
                 <span class="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">OK</span>
               <% } else { %>
-                <span class="shrink-0 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">Missing</span>
+                <span class="shrink-0 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">Chưa có ảnh</span>
               <% } %>
             </div>
           </button>
@@ -101,25 +101,25 @@
     </div>
   <% } else { %>
     <div class="rounded-3xl bg-white px-6 py-12 text-center text-slate-500 shadow-lg shadow-slate-200/60">
-      Khong co san pham phu hop voi bo loc hien tai.
+      Không có sản phẩm phù hợp với bộ lọc hiện tại.
     </div>
   <% } %>
 
   <div class="flex flex-col gap-3 rounded-3xl bg-white px-6 py-4 shadow-lg shadow-slate-200/60 sm:flex-row sm:items-center sm:justify-between">
-    <p class="text-sm text-slate-500">Hien thi <%= startItem %>-<%= endItem %> / <%= pagination.totalItems %> san pham</p>
+    <p class="text-sm text-slate-500">Hiển thị <%= startItem %>-<%= endItem %> / <%= pagination.totalItems %> sản phẩm</p>
     <div class="flex items-center gap-2">
       <% if (pagination.hasPrev) { %>
-        <a href="<%= buildPageUrl(pagination.prevPage) %>" class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">Truoc</a>
+        <a href="<%= buildPageUrl(pagination.prevPage) %>" class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">Trước</a>
       <% } else { %>
-        <span class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-400">Truoc</span>
+        <span class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-400">Trước</span>
       <% } %>
 
       <span class="rounded-full bg-brand-50 px-4 py-2 text-sm font-semibold text-brand-700">Trang <%= pagination.currentPage %>/<%= pagination.totalPages %></span>
 
       <% if (pagination.hasNext) { %>
-        <a href="<%= buildPageUrl(pagination.nextPage) %>" class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">Tiep</a>
+        <a href="<%= buildPageUrl(pagination.nextPage) %>" class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">Tiếp</a>
       <% } else { %>
-        <span class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-400">Tiep</span>
+        <span class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-400">Tiếp</span>
       <% } %>
     </div>
   </div>
@@ -139,7 +139,7 @@
           type="button"
           class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-2xl font-semibold leading-none text-slate-600 transition hover:bg-slate-200"
           data-product-image-modal-close
-          aria-label="Close preview"
+          aria-label="Đóng bản xem trước"
         >
           &times;
         </button>
@@ -154,7 +154,7 @@
           referrerpolicy="no-referrer"
         />
         <div class="hidden px-6 py-20 text-center text-sm font-semibold text-slate-400" data-product-image-modal-empty>
-          Chua co anh
+          Chưa có ảnh
         </div>
       </div>
 

@@ -589,7 +589,7 @@ const updateOrderNote = async ({ id, body, user }) => {
   await order.save();
 
   return {
-    successMessage: "ÄÃ£ cáº­p nháº­t ghi chÃº Ä‘Æ¡n hÃ ng thÃ nh cÃ´ng.",
+    successMessage: "Đã cập nhật ghi chú đơn hàng thành công.",
     redirectTo: `/orders/${order._id}`
   };
 };

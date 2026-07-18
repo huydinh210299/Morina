@@ -2,8 +2,8 @@ const { getRedirectBackPath } = require("../utils/http");
 
 const notFoundHandler = (req, res) => {
   res.status(404).render("pages/error", {
-    title: "KhÃ´ng tÃ¬m tháº¥y trang",
-    message: "KhÃ´ng thá»ƒ tÃ¬m tháº¥y trang báº¡n yÃªu cáº§u."
+    title: "Không tìm thấy trang",
+    message: "Không thể tìm thấy trang bạn yêu cầu."
   });
 };
 
@@ -12,11 +12,11 @@ const errorHandler = (error, req, res, next) => {
 
   if (error.code === 11000) {
     error.statusCode = 400;
-    error.message = `PhÃ¡t hiá»‡n giÃ¡ trá»‹ trÃ¹ng láº·p cho ${Object.keys(error.keyPattern).join(", ")}.`;
+    error.message = `Phát hiện giá trị trùng lặp cho ${Object.keys(error.keyPattern).join(", ")}.`;
   }
 
   const statusCode = error.statusCode || 500;
-  const message = error.message || "ÄÃ£ xáº£y ra lá»—i khÃ´ng mong muá»‘n.";
+  const message = statusCode >= 500 ? "Đã xảy ra lỗi không mong muốn." : error.message || "Yêu cầu không hợp lệ.";
   const acceptsHtml = req.accepts(["html", "json"]) === "html";
   const redirectBackPath = getRedirectBackPath(req);
 
@@ -30,7 +30,7 @@ const errorHandler = (error, req, res, next) => {
   }
 
   return res.status(statusCode).render("pages/error", {
-    title: "ÄÃ£ xáº£y ra lá»—i",
+    title: "Đã xảy ra lỗi",
     message
   });
 };
