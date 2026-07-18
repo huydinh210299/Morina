@@ -92,6 +92,7 @@ const getRentalScheduleData = async (id, query = {}) => {
 
         entry.amount += rentalAmount;
         entry.rentals.push({
+          orderId: order._id,
           customerName: order.customerName,
           phone: order.phone,
           amount: rentalAmount,
