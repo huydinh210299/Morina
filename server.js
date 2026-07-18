@@ -23,6 +23,7 @@ const accessoryRoutes = require("./routes/accessoryRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const userRoutes = require("./routes/userRoutes");
 const financeRoutes = require("./routes/financeRoutes");
+const noteRoutes = require("./routes/noteRoutes");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -95,6 +96,7 @@ app.use("/products", productRoutes);
 app.use("/accessories", accessoryRoutes);
 app.use("/orders", orderRoutes);
 app.use("/finance", financeRoutes);
+app.use("/notes", noteRoutes);
 app.use("/cash", (req, res) => res.redirect("/users"));
 app.use("/users", userRoutes);
 

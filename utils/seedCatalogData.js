@@ -1,6 +1,7 @@
 const Category = require("../models/Category");
 const Accessory = require("../models/Accessory");
 const Shift = require("../models/Shift");
+const NoteCategory = require("../models/NoteCategory");
 const { seedProductData } = require("./seedProductData");
 
 const DEFAULT_CATEGORIES = [
@@ -32,6 +33,12 @@ const DEFAULT_SHIFTS = [
   { name: "Sáng", hour: 4, salary: 20000, description: "9h đến 13h" },
   { name: "Chiều", hour: 5, salary: 20000, description: "13h đến 18h" },
   { name: "Tối", hour: 4, salary: 20000, description: "18h đến 22h" }
+];
+
+const DEFAULT_NOTE_CATEGORIES = [
+  { categoryCode: "SHOP", displayName: "Note cho shop" },
+  { categoryCode: "STAFF", displayName: "Note cho nhân viên" },
+  { categoryCode: "GOOD", displayName: "Note cho đồ" }
 ];
 
 const seedCategoryData = async (userId) => {
@@ -82,6 +89,12 @@ const seedShiftData = async (userId) => {
   }
 };
 
+const seedNoteCategoryData = async () => {
+  for (const category of DEFAULT_NOTE_CATEGORIES) {
+    await NoteCategory.updateOne({ categoryCode: category.categoryCode }, { $setOnInsert: category }, { upsert: true });
+  }
+};
+
 const seedCatalogData = async (user) => {
   const userId = user?._id?.toString() || "system";
 
@@ -90,6 +103,7 @@ const seedCatalogData = async (user) => {
   await seedProductData(userId, categories);
   await seedAccessoryData(userId);
   await seedShiftData(userId);
+  await seedNoteCategoryData();
 };
 
 module.exports = seedCatalogData;

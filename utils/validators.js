@@ -60,6 +60,12 @@ const categorySchema = Joi.object({
   description: Joi.string().trim().allow("").required()
 });
 
+const noteSchema = Joi.object({
+  title: Joi.string().trim().required(),
+  description: Joi.string().trim().required(),
+  categoryId: Joi.string().trim().required()
+});
+
 const productSchema = Joi.object({
   code: Joi.string().trim().required(),
   fullDayPrice: Joi.number().min(0).required(),
@@ -139,6 +145,7 @@ module.exports = {
   payrollAdjustmentSchema,
   financePaymentSchema,
   categorySchema,
+  noteSchema,
   productSchema,
   accessorySchema,
   orderSchema,
