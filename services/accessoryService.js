@@ -19,29 +19,6 @@ const buildPagination = (requestedPage, totalItems) => {
   };
 };
 
-const formatDateKey = (value) => {
-  const date = new Date(value);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
-
-const getDatesInRange = (startTime, endTime) => {
-  const start = new Date(startTime);
-  const end = new Date(endTime);
-  start.setHours(0, 0, 0, 0);
-  end.setHours(0, 0, 0, 0);
-
-  const dates = [];
-  while (start <= end) {
-    dates.push(formatDateKey(start));
-    start.setDate(start.getDate() + 1);
-  }
-
-  return dates;
-};
-
 const findAccessoryOrFail = async (id) => {
   const accessory = await Accessory.findById(id);
 
@@ -70,55 +47,31 @@ const getIndexData = async (query = {}) => {
 
 const getRentalScheduleData = async (id, query = {}) => {
   const accessory = await findAccessoryOrFail(id);
-  const today = formatDateKey(new Date());
   const orders = await Order.find({ "accessories.accessory": accessory._id })
     .select("customerName phone returned accessories")
     .sort({ generalStartTime: 1 });
-  const rentalsByDate = new Map();
-
-  for (const order of orders) {
-    for (const item of order.accessories) {
-      if (`${item.accessory}` !== `${accessory._id}`) {
-        continue;
-      }
-
-      const rentalAmount = Number(item.amount ?? 1);
-      for (const date of getDatesInRange(item.startTime, item.endTime)) {
-        const entry = rentalsByDate.get(date) || {
-          date,
-          amount: 0,
-          rentals: []
-        };
-
-        entry.amount += rentalAmount;
-        entry.rentals.push({
+  const rentals = orders
+    .flatMap((order) =>
+      order.accessories
+        .filter((item) => `${item.accessory}` === `${accessory._id}`)
+        .map((item) => ({
           orderId: order._id,
           customerName: order.customerName,
           phone: order.phone,
-          amount: rentalAmount,
+          amount: Number(item.amount ?? 1),
           returned: order.returned,
           startTime: item.startTime,
           endTime: item.endTime
-        });
-        rentalsByDate.set(date, entry);
-      }
-    }
-  }
+        }))
+    )
+    .sort((left, right) => new Date(left.startTime) - new Date(right.startTime));
 
-  const rentalDays = [...rentalsByDate.values()]
-    .filter((entry) => entry.date >= today)
-    .map((entry) => ({
-      ...entry,
-      availableAmount: Math.max(0, Number(accessory.amount || 0) - entry.amount)
-    }))
-    .sort((left, right) => left.date.localeCompare(right.date));
-
-  const pagination = buildPagination(query.page, rentalDays.length);
+  const pagination = buildPagination(query.page, rentals.length);
 
   return {
     title: `Lịch thuê phụ kiện ${accessory.code}`,
     accessory,
-    rentalDays: rentalDays.slice((pagination.page - 1) * PAGE_SIZE, pagination.page * PAGE_SIZE),
+    rentals: rentals.slice((pagination.page - 1) * PAGE_SIZE, pagination.page * PAGE_SIZE),
     pagination
   };
 };

@@ -10,47 +10,48 @@
     <a href="/accessories" class="rounded-full bg-slate-100 px-5 py-3 font-semibold text-slate-700">Quay lại</a>
   </div>
 
-  <div class="overflow-hidden rounded-3xl bg-white shadow-lg shadow-slate-200/60">
-    <div class="table-scroll">
-      <table class="min-w-full divide-y divide-slate-200">
-        <thead class="bg-slate-50">
-          <tr>
-            <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Ngày thuê</th>
-            <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Số lượng thuê</th>
-            <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Số lượng còn lại</th>
-            <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Khách hàng</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100">
-          <% if (rentalDays.length === 0) { %>
-            <tr>
-              <td colspan="4" class="px-6 py-10 text-center text-slate-500">Chưa có lịch thuê từ hôm nay cho phụ kiện này.</td>
-            </tr>
-          <% } %>
-          <% rentalDays.forEach((day) => { %>
-            <tr>
-              <td class="px-6 py-4 font-semibold text-slate-900"><%= new Date(`${day.date}T00:00:00`).toLocaleDateString("vi-VN") %></td>
-              <td class="px-6 py-4 text-slate-600"><%= day.amount %></td>
-              <td class="px-6 py-4 text-slate-600"><%= day.availableAmount %></td>
-              <td class="px-6 py-4 text-slate-600">
-                <div class="space-y-1">
-                  <% day.rentals.forEach((rental) => { %>
-                    <p>
-                      <%= rental.customerName %> (<%= rental.phone %>) · <%= rental.amount %> · <%= rental.returned ? "Đã trả" : "Đang thuê" %>
-                      <a href="/orders/<%= rental.orderId %>" class="ml-1 font-semibold text-brand-700 hover:text-brand-800">Xem đơn hàng</a>
-                    </p>
-                  <% }) %>
-                </div>
-              </td>
-            </tr>
-          <% }) %>
-        </tbody>
-      </table>
+  <div class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
+    <div>
+      <h2 class="text-2xl font-black text-slate-900">Tất cả đơn thuê</h2>
+      <p class="mt-1 text-slate-500">Xem từng đơn và khung thời gian thuê để quyết định tình trạng phụ kiện.</p>
     </div>
+
+    <% if (rentals.length === 0) { %>
+      <div class="mt-6 rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center text-slate-500">
+        Chưa có đơn thuê nào cho phụ kiện này.
+      </div>
+    <% } else { %>
+      <div class="mt-6 space-y-4">
+        <% rentals.forEach((rental) => { %>
+          <article class="rounded-3xl border border-slate-200 p-5">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <div class="flex flex-wrap items-center gap-3">
+                  <a href="/orders/<%= rental.orderId %>" class="text-lg font-bold text-slate-900 transition hover:text-brand-700">Xem đơn hàng</a>
+                </div>
+                <p class="mt-2 text-slate-600"><%= rental.customerName %> · <%= rental.phone %></p>
+              </div>
+              <p class="rounded-2xl bg-brand-50 px-4 py-3 text-sm font-semibold text-brand-800">Số lượng: <%= rental.amount %></p>
+            </div>
+
+            <div class="mt-4 grid gap-3 md:grid-cols-2">
+              <div class="rounded-2xl bg-slate-50 px-4 py-3">
+                <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Bắt đầu</p>
+                <p class="mt-2 font-semibold text-slate-900"><%= formatDateTime(rental.startTime) %></p>
+              </div>
+              <div class="rounded-2xl bg-slate-50 px-4 py-3">
+                <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Kết thúc</p>
+                <p class="mt-2 font-semibold text-slate-900"><%= formatDateTime(rental.endTime) %></p>
+              </div>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+    <% } %>
   </div>
 
   <div class="flex flex-col gap-3 rounded-3xl bg-white px-6 py-4 text-sm text-slate-600 shadow-lg shadow-slate-200/60 sm:flex-row sm:items-center sm:justify-between">
-    <span>Trang <%= pagination.page %>/<%= pagination.totalPages %> · Tổng <%= pagination.totalItems %> ngày thuê</span>
+    <span>Trang <%= pagination.page %>/<%= pagination.totalPages %> · Tổng <%= pagination.totalItems %> đơn thuê</span>
     <div class="flex gap-2">
       <% if (pagination.hasPrev) { %>
         <a href="/accessories/<%= accessory._id %>/rentals?page=<%= pagination.prevPage %>" class="rounded-full bg-slate-100 px-4 py-2 font-semibold text-slate-700">Trang trước</a>
