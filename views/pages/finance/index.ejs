@@ -104,7 +104,21 @@
         </div>
         <span class="text-sm text-slate-500">Di chuột vào cột để xem chi tiết. Ngày không có doanh thu hiển thị vạch xám.</span>
       </div>
-      <div class="mt-6 overflow-x-auto">
+      <div class="mt-6 grid gap-3 sm:hidden">
+        <% monthlyRevenue.dailyRevenue.forEach((item) => { %>
+          <div class="rounded-2xl bg-slate-50 px-4 py-3">
+            <div class="flex items-center justify-between gap-4">
+              <span class="text-sm font-semibold text-slate-700">Ngày <%= item.day %></span>
+              <span class="text-sm font-black text-emerald-700"><%= formatCurrency(item.totalRevenue) %></span>
+            </div>
+            <div class="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
+              <div class="h-full rounded-full bg-brand-500" style="width: <%= item.percentage %>%"></div>
+            </div>
+            <p class="mt-2 text-xs text-slate-500"><%= item.orderCount %> đơn hàng</p>
+          </div>
+        <% }) %>
+      </div>
+      <div class="mt-6 hidden overflow-x-auto sm:block">
         <div class="flex min-w-[720px] items-end gap-2 border-b border-slate-200 pb-2" style="height: 17rem">
           <% monthlyRevenue.dailyRevenue.forEach((item) => { %>
             <div class="flex min-w-5 flex-1 self-stretch flex-col items-center gap-2" title="Ngày <%= item.day %>: <%= formatCurrency(item.totalRevenue) %>, <%= item.orderCount %> đơn hàng">
