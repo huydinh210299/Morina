@@ -1,0 +1,3 @@
+display_name: RentalShop Feature
+short_description: Implement RentalShop features using the existing Node.js MVC patterns.
+default_prompt: Implement this RentalShop feature using the existing MVC structure and Vietnamese UI rules.
