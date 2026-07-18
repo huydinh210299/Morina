@@ -102,14 +102,18 @@
           <h2 class="text-2xl font-black text-slate-900">Biểu đồ doanh thu theo ngày</h2>
           <p class="mt-1 text-slate-500">Tháng <%= monthlyRevenue.selectedMonth %></p>
         </div>
-        <span class="text-sm text-slate-500">Di chuột vào cột để xem chi tiết.</span>
+        <span class="text-sm text-slate-500">Di chuột vào cột để xem chi tiết. Ngày không có doanh thu hiển thị vạch xám.</span>
       </div>
       <div class="mt-6 overflow-x-auto">
         <div class="flex min-w-[720px] items-end gap-2 border-b border-slate-200 pb-2" style="height: 17rem">
           <% monthlyRevenue.dailyRevenue.forEach((item) => { %>
             <div class="flex min-w-5 flex-1 self-stretch flex-col items-center gap-2" title="Ngày <%= item.day %>: <%= formatCurrency(item.totalRevenue) %>, <%= item.orderCount %> đơn hàng">
               <div class="flex flex-1 w-full items-end">
-                <div class="w-full rounded-t-md bg-brand-500 transition hover:bg-brand-700" style="height: <%= item.percentage %>%" aria-label="Ngày <%= item.day %>: <%= formatCurrency(item.totalRevenue) %>"></div>
+                <% if (item.totalRevenue > 0) { %>
+                  <div class="w-full rounded-t-md bg-brand-500 transition hover:bg-brand-700" style="height: <%= item.percentage %>%" aria-label="Ngày <%= item.day %>: <%= formatCurrency(item.totalRevenue) %>"></div>
+                <% } else { %>
+                  <div class="h-1 w-full rounded-full bg-slate-300" aria-label="Ngày <%= item.day %>: không có doanh thu"></div>
+                <% } %>
               </div>
               <span class="text-xs text-slate-500"><%= item.day %></span>
             </div>
