@@ -32,6 +32,31 @@ const parseMonthInput = (monthInput) => {
   };
 };
 
+const parseDateInput = (dateInput) => {
+  const fallback = new Date();
+  const match = typeof dateInput === "string" ? dateInput.match(/^(\d{4})-(\d{2})-(\d{2})$/) : null;
+  const year = Number(match?.[1]);
+  const month = Number(match?.[2]);
+  const day = Number(match?.[3]);
+  const requestedDate = match ? new Date(year, month - 1, day) : null;
+  const isValidDate =
+    requestedDate &&
+    requestedDate.getFullYear() === year &&
+    requestedDate.getMonth() === month - 1 &&
+    requestedDate.getDate() === day;
+  const selectedDate = isValidDate ? requestedDate : fallback;
+  selectedDate.setHours(0, 0, 0, 0);
+
+  const end = new Date(selectedDate);
+  end.setDate(end.getDate() + 1);
+
+  return {
+    selectedDay: `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`,
+    start: selectedDate,
+    end
+  };
+};
+
 const normalizePaymentFilters = ({ paymentMonth, paymentYear, page, edit } = {}) => {
   const fallback = new Date();
   const normalizedMonth = Number.parseInt(paymentMonth, 10);
@@ -159,6 +184,74 @@ const getRevenueSummary = async (range) => {
   };
 };
 
+const getDailyRevenueSummary = async (range) => {
+  const revenueData = await Order.aggregate([
+    {
+      $match: {
+        createdAt: {
+          $gte: range.start,
+          $lt: range.end
+        }
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        totalRevenue: { $sum: "$orderAmount" },
+        orderCount: { $sum: 1 }
+      }
+    }
+  ]);
+
+  return {
+    selectedDay: range.selectedDay,
+    totalRevenue: revenueData[0]?.totalRevenue || 0,
+    orderCount: revenueData[0]?.orderCount || 0
+  };
+};
+
+const getMonthlyRevenueChart = async (range) => {
+  const revenueByDay = await Order.aggregate([
+    {
+      $match: {
+        createdAt: {
+          $gte: range.start,
+          $lt: range.end
+        }
+      }
+    },
+    {
+      $group: {
+        _id: { $dayOfMonth: "$createdAt" },
+        totalRevenue: { $sum: "$orderAmount" },
+        orderCount: { $sum: 1 }
+      }
+    }
+  ]);
+
+  const valuesByDay = new Map(revenueByDay.map((item) => [item._id, item]));
+  const daysInMonth = new Date(range.year, range.month, 0).getDate();
+  const dailyRevenue = Array.from({ length: daysInMonth }, (_, index) => {
+    const day = index + 1;
+    const item = valuesByDay.get(day);
+
+    return {
+      day,
+      totalRevenue: item?.totalRevenue || 0,
+      orderCount: item?.orderCount || 0
+    };
+  });
+  const maximumRevenue = Math.max(...dailyRevenue.map((item) => item.totalRevenue), 0);
+
+  return {
+    selectedMonth: range.selectedMonth,
+    dailyRevenue: dailyRevenue.map((item) => ({
+      ...item,
+      percentage: maximumRevenue ? Math.round((item.totalRevenue / maximumRevenue) * 100) : 0
+    }))
+  };
+};
+
 const getPaymentManagementData = async (query = {}) => {
   const normalized = normalizePaymentFilters(query);
   const filter = {
@@ -194,15 +287,20 @@ const getPaymentManagementData = async (query = {}) => {
 const getFinancePageData = async (query = {}) => {
   const activeTab = query.tab === "payments" ? "payments" : "revenue";
   const revenueMonth = parseMonthInput(query.summaryMonth);
-  const [revenueSummary, paymentManagement] = await Promise.all([
+  const revenueDay = parseDateInput(query.summaryDay);
+  const [revenueSummary, dailyRevenueSummary, monthlyRevenueChart, paymentManagement] = await Promise.all([
     getRevenueSummary(revenueMonth),
+    getDailyRevenueSummary(revenueDay),
+    getMonthlyRevenueChart(revenueMonth),
     getPaymentManagementData(query)
   ]);
 
   return {
-    title: "Finance",
+    title: "Tài chính",
     activeTab,
     revenueSummary,
+    dailyRevenueSummary,
+    monthlyRevenueChart,
     paymentManagement
   };
 };
