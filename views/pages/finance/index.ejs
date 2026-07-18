@@ -107,8 +107,10 @@
       <div class="mt-6 overflow-x-auto">
         <div class="flex min-w-[720px] items-end gap-2 border-b border-slate-200 pb-2" style="height: 17rem">
           <% monthlyRevenue.dailyRevenue.forEach((item) => { %>
-            <div class="flex min-w-5 flex-1 flex-col items-center justify-end gap-2" title="Ngày <%= item.day %>: <%= formatCurrency(item.totalRevenue) %>, <%= item.orderCount %> đơn hàng">
-              <div class="w-full rounded-t-md bg-brand-500 transition hover:bg-brand-700" style="height: <%= item.percentage %>%" aria-label="Ngày <%= item.day %>: <%= formatCurrency(item.totalRevenue) %>"></div>
+            <div class="flex min-w-5 flex-1 self-stretch flex-col items-center gap-2" title="Ngày <%= item.day %>: <%= formatCurrency(item.totalRevenue) %>, <%= item.orderCount %> đơn hàng">
+              <div class="flex flex-1 w-full items-end">
+                <div class="w-full rounded-t-md bg-brand-500 transition hover:bg-brand-700" style="height: <%= item.percentage %>%" aria-label="Ngày <%= item.day %>: <%= formatCurrency(item.totalRevenue) %>"></div>
+              </div>
               <span class="text-xs text-slate-500"><%= item.day %></span>
             </div>
           <% }) %>
