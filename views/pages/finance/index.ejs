@@ -104,7 +104,7 @@
         </div>
         <span class="text-sm text-slate-500">Di chuột vào cột để xem chi tiết. Ngày không có doanh thu hiển thị vạch xám.</span>
       </div>
-      <div class="mt-6 grid gap-3 sm:hidden">
+      <div class="mt-6 grid max-h-80 gap-3 overflow-y-auto overscroll-contain pr-1 sm:hidden">
         <% monthlyRevenue.dailyRevenue.forEach((item) => { %>
           <div class="rounded-2xl bg-slate-50 px-4 py-3">
             <div class="flex items-center justify-between gap-4">
