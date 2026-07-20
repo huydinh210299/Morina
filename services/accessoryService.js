@@ -47,23 +47,16 @@ const getIndexData = async (query = {}) => {
 
 const getRentalScheduleData = async (id, query = {}) => {
   const accessory = await findAccessoryOrFail(id);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
   const orders = await Order.find({
     returned: false,
-    accessories: {
-      $elemMatch: {
-        accessory: accessory._id,
-        endTime: { $gte: today }
-      }
-    }
+    "accessories.accessory": accessory._id
   })
     .select("customerName phone returned accessories")
     .sort({ generalStartTime: 1 });
   const rentals = orders
     .flatMap((order) =>
       order.accessories
-        .filter((item) => `${item.accessory}` === `${accessory._id}` && new Date(item.endTime) >= today)
+        .filter((item) => `${item.accessory}` === `${accessory._id}`)
         .map((item) => ({
           orderId: order._id,
           customerName: order.customerName,
