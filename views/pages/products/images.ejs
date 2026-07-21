@@ -66,6 +66,7 @@
             data-product-image-preview
             data-product-code="<%= product.code %>"
             data-product-category="<%= product.category?.code || "-" %>"
+            data-product-size="<%= product.size || "" %>"
             data-product-image-url="<%= product.displayImageUrl || product.imageUrl || "" %>"
             data-product-detail-url="/products/<%= product._id %>"
           >
@@ -88,6 +89,7 @@
               <div class="min-w-0">
                 <h2 class="truncate text-lg font-black text-slate-900"><%= product.code %></h2>
                 <p class="mt-1 truncate text-sm text-slate-500"><%= product.category?.code || "-" %></p>
+                <p class="mt-1 truncate text-sm font-semibold text-slate-700">Kích thước: <%= product.size || "Chưa có" %></p>
               </div>
               <% if (product.imageUrl) { %>
                 <span class="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">OK</span>
@@ -134,6 +136,7 @@
         <div class="min-w-0">
           <h2 class="truncate text-xl font-black text-slate-900" data-product-image-modal-code></h2>
           <p class="mt-1 truncate text-sm text-slate-500" data-product-image-modal-category></p>
+          <p class="mt-1 truncate text-sm font-semibold text-slate-700" data-product-image-modal-size></p>
         </div>
         <button
           type="button"

@@ -42,6 +42,7 @@ const productImageModalImg = productImageModal?.querySelector("[data-product-ima
 const productImageModalEmpty = productImageModal?.querySelector("[data-product-image-modal-empty]");
 const productImageModalCode = productImageModal?.querySelector("[data-product-image-modal-code]");
 const productImageModalCategory = productImageModal?.querySelector("[data-product-image-modal-category]");
+const productImageModalSize = productImageModal?.querySelector("[data-product-image-modal-size]");
 const productImageModalDetail = productImageModal?.querySelector("[data-product-image-modal-detail]");
 
 const closeProductImageModal = () => {
@@ -68,6 +69,7 @@ const openProductImageModal = (trigger) => {
   const imageUrl = trigger.dataset.productImageUrl || "";
   const productCode = trigger.dataset.productCode || "";
   const categoryCode = trigger.dataset.productCategory || "";
+  const productSize = trigger.dataset.productSize || "";
   const detailUrl = trigger.dataset.productDetailUrl || "#";
 
   if (productImageModalCode) {
@@ -76,6 +78,10 @@ const openProductImageModal = (trigger) => {
 
   if (productImageModalCategory) {
     productImageModalCategory.textContent = categoryCode;
+  }
+
+  if (productImageModalSize) {
+    productImageModalSize.textContent = `Kích thước: ${productSize || "Chưa có"}`;
   }
 
   if (productImageModalDetail) {
