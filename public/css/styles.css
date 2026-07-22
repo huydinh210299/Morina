@@ -42,6 +42,12 @@ table {
   white-space: nowrap;
 }
 
+.table-scroll td.table-cell-wrap {
+  max-width: 20rem;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
 .table-scroll::-webkit-scrollbar {
   height: 10px;
 }
