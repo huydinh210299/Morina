@@ -45,7 +45,7 @@ table {
 .table-scroll td.table-cell-wrap {
   max-width: 20rem;
   overflow-wrap: anywhere;
-  white-space: normal;
+  white-space: pre-line;
 }
 
 .table-scroll::-webkit-scrollbar {
