@@ -29,7 +29,18 @@
           <tr>
             <td class="px-6 py-4">
               <% if (accessory.imageUrl) { %>
-                <img src="<%= accessory.imageUrl %>" alt="Hình ảnh phụ kiện <%= accessory.name %>" class="h-28 w-28 rounded-2xl object-cover ring-1 ring-slate-200" loading="lazy" />
+                <button
+                  type="button"
+                  class="block rounded-2xl transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-brand-100"
+                  data-accessory-image-preview
+                  data-accessory-code="<%= accessory.code %>"
+                  data-accessory-name="<%= accessory.name %>"
+                  data-accessory-image-url="<%= accessory.imageUrl %>"
+                  data-accessory-detail-url="/accessories/<%= accessory._id %>"
+                  aria-label="Xem ảnh lớn của phụ kiện <%= accessory.name %>"
+                >
+                  <img src="<%= accessory.imageUrl %>" alt="Hình ảnh phụ kiện <%= accessory.name %>" class="h-28 w-28 rounded-2xl object-cover ring-1 ring-slate-200" loading="lazy" referrerpolicy="no-referrer" />
+                </button>
               <% } else { %>
                 <div class="flex h-28 w-28 items-center justify-center rounded-2xl bg-slate-100 px-3 text-center text-xs font-semibold text-slate-500">Chưa có ảnh</div>
               <% } %>
@@ -70,6 +81,56 @@
       <% if (pagination.hasNext) { %>
         <a href="/accessories?page=<%= pagination.nextPage %>" class="rounded-full bg-brand-50 px-4 py-2 font-semibold text-brand-700">Trang sau</a>
       <% } %>
+    </div>
+  </div>
+
+  <div
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 p-4"
+    data-accessory-image-modal
+    aria-hidden="true"
+  >
+    <div class="relative flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
+      <div class="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-4">
+        <div class="min-w-0">
+          <h2 class="truncate text-xl font-black text-slate-900" data-accessory-image-modal-title></h2>
+          <p class="mt-1 truncate text-sm text-slate-500">Ảnh phụ kiện</p>
+        </div>
+        <button
+          type="button"
+          class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-2xl font-semibold leading-none text-slate-600 transition hover:bg-slate-200"
+          data-accessory-image-modal-close
+          aria-label="Đóng bản xem trước"
+        >
+          &times;
+        </button>
+      </div>
+
+      <div class="flex min-h-0 flex-1 items-center justify-center bg-slate-100 p-4">
+        <img
+          src=""
+          alt=""
+          class="max-h-[70vh] w-auto max-w-full rounded-2xl object-contain shadow-lg shadow-slate-300/40"
+          data-accessory-image-modal-img
+          referrerpolicy="no-referrer"
+        />
+      </div>
+
+      <div class="flex justify-end gap-3 border-t border-slate-100 px-5 py-4">
+        <button
+          type="button"
+          class="inline-flex rounded-full bg-slate-100 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-200"
+          data-accessory-image-modal-close
+        >
+          Đóng
+        </button>
+        <a
+          href="#"
+          class="inline-flex rounded-full bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-700"
+          data-accessory-image-modal-detail
+        >
+          Xem chi tiết phụ kiện
+        </a>
+      </div>
     </div>
   </div>
 </section>
