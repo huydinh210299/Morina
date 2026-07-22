@@ -18,6 +18,7 @@
           <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Hình ảnh</th>
           <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Mã</th>
           <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Tên</th>
+          <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Ghi chú</th>
           <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Giá</th>
           <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Số lượng</th>
           <th class="px-6 py-4 text-right text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Thao tác</th>
@@ -28,9 +29,9 @@
           <tr>
             <td class="px-6 py-4">
               <% if (accessory.imageUrl) { %>
-                <img src="<%= accessory.imageUrl %>" alt="Hình ảnh phụ kiện <%= accessory.name %>" class="h-16 w-16 rounded-2xl object-cover ring-1 ring-slate-200" loading="lazy" />
+                <img src="<%= accessory.imageUrl %>" alt="Hình ảnh phụ kiện <%= accessory.name %>" class="h-28 w-28 rounded-2xl object-cover ring-1 ring-slate-200" loading="lazy" />
               <% } else { %>
-                <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-xs font-semibold text-slate-500">Chưa có ảnh</div>
+                <div class="flex h-28 w-28 items-center justify-center rounded-2xl bg-slate-100 px-3 text-center text-xs font-semibold text-slate-500">Chưa có ảnh</div>
               <% } %>
             </td>
             <td class="px-6 py-4 font-semibold text-slate-900">
@@ -39,6 +40,7 @@
             <td class="px-6 py-4 text-slate-600">
               <a href="/accessories/<%= accessory._id %>" class="transition hover:text-brand-700"><%= accessory.name %></a>
             </td>
+            <td class="max-w-xs px-6 py-4 text-slate-600"><%= accessory.note || "-" %></td>
             <td class="px-6 py-4 text-slate-600"><%= formatCurrency(accessory.price) %></td>
             <td class="px-6 py-4 text-slate-600"><%= accessory.amount ?? 0 %></td>
             <td class="px-6 py-4">
