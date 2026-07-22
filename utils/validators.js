@@ -80,7 +80,9 @@ const accessorySchema = Joi.object({
   code: Joi.string().trim().required(),
   name: Joi.string().trim().required(),
   price: Joi.number().min(0).required(),
-  amount: Joi.number().integer().min(0).default(0)
+  amount: Joi.number().integer().min(0).default(0),
+  note: Joi.string().trim().allow("").default(""),
+  imageUrl: Joi.string().trim().uri().allow("")
 });
 
 const orderItemSchema = Joi.object({

@@ -9,6 +9,10 @@ const renderRentalSchedule = async (req, res) => {
   res.render("pages/accessories/rentals", await accessoryService.getRentalScheduleData(req.params.id, req.query));
 };
 
+const renderShow = async (req, res) => {
+  res.render("pages/accessories/show", await accessoryService.getShowData(req.params.id));
+};
+
 const renderCreate = (req, res) => {
   res.render("pages/accessories/form", accessoryService.getCreateData());
 };
@@ -42,6 +46,7 @@ const remove = async (req, res) => {
 module.exports = wrapControllerHandlers({
   renderIndex,
   renderRentalSchedule,
+  renderShow,
   renderCreate,
   create,
   renderEdit,

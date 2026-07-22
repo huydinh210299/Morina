@@ -13,6 +13,7 @@ router.get("/new", allowRoles(USER_ROLES.ADMIN), accessoryController.renderCreat
 router.post("/", allowRoles(USER_ROLES.ADMIN), validate(accessorySchema), accessoryController.create);
 router.get("/:id/rentals", accessoryController.renderRentalSchedule);
 router.get("/:id/edit", allowRoles(USER_ROLES.ADMIN), accessoryController.renderEdit);
+router.get("/:id", accessoryController.renderShow);
 router.put("/:id", allowRoles(USER_ROLES.ADMIN), validate(accessorySchema), accessoryController.update);
 router.delete("/:id", allowRoles(USER_ROLES.ADMIN), accessoryController.remove);
 

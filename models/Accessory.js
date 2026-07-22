@@ -23,6 +23,15 @@ const accessorySchema = new mongoose.Schema(
       default: 0,
       min: 0
     },
+    note: {
+      type: String,
+      default: ""
+    },
+    imageUrl: {
+      type: String,
+      default: "",
+      trim: true
+    },
     createdBy: {
       type: String,
       required: true

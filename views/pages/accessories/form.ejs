@@ -25,6 +25,16 @@
         <input name="amount" type="number" min="0" step="1" required value="<%= accessory?.amount ?? 0 %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
       </div>
 
+      <div class="md:col-span-2">
+        <label class="mb-2 block text-sm font-semibold text-slate-700">URL hình ảnh</label>
+        <input name="imageUrl" type="url" value="<%= accessory?.imageUrl || '' %>" placeholder="Nhập liên kết hình ảnh phụ kiện" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="mb-2 block text-sm font-semibold text-slate-700">Ghi chú</label>
+        <textarea name="note" rows="4" placeholder="Nhập ghi chú cho phụ kiện" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"><%= accessory?.note || '' %></textarea>
+      </div>
+
       <div class="md:col-span-2 flex gap-3">
         <button type="submit" class="rounded-full bg-brand-500 px-6 py-3 font-semibold text-white transition hover:bg-brand-700">Lưu phụ kiện</button>
         <a href="/accessories" class="rounded-full bg-slate-100 px-6 py-3 font-semibold text-slate-700">Hủy</a>

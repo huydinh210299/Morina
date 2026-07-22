@@ -79,6 +79,15 @@ const getRentalScheduleData = async (id, query = {}) => {
   };
 };
 
+const getShowData = async (id) => {
+  const accessory = await findAccessoryOrFail(id);
+
+  return {
+    title: `Chi tiết phụ kiện ${accessory.code}`,
+    accessory
+  };
+};
+
 const getCreateData = () => ({
   title: "Tạo phụ kiện",
   accessory: null,
@@ -131,6 +140,7 @@ const deleteAccessory = async (id) => {
 module.exports = {
   getIndexData,
   getRentalScheduleData,
+  getShowData,
   getCreateData,
   createAccessory,
   getEditData,

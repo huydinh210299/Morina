@@ -1,0 +1,72 @@
+<section class="space-y-6">
+  <%- include("../../partials/product-management-tabs", { activeProductManagementTab: "accessories" }) %>
+
+  <div class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
+    <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-[0.35em] text-brand-700">Chi tiết phụ kiện</p>
+        <h1 class="mt-3 text-3xl font-black text-slate-900"><%= accessory.code %> - <%= accessory.name %></h1>
+        <p class="mt-3 text-slate-600">Tổng số lượng: <span class="font-semibold"><%= accessory.amount ?? 0 %></span></p>
+      </div>
+
+      <div class="overflow-hidden rounded-3xl bg-slate-100 ring-1 ring-slate-200">
+        <% if (accessory.imageUrl) { %>
+          <img src="<%= accessory.imageUrl %>" alt="Hình ảnh phụ kiện <%= accessory.name %>" class="aspect-square w-full object-cover" />
+        <% } else { %>
+          <div class="flex aspect-square w-full items-center justify-center px-6 text-center font-semibold text-slate-500">Chưa có hình ảnh</div>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="mt-8 grid gap-6 md:grid-cols-3">
+      <div class="rounded-3xl bg-slate-50 p-5">
+        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Mã</p>
+        <p class="mt-3 text-xl font-bold text-slate-900"><%= accessory.code %></p>
+      </div>
+      <div class="rounded-3xl bg-slate-50 p-5">
+        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Giá</p>
+        <p class="mt-3 text-xl font-bold text-slate-900"><%= formatCurrency(accessory.price) %></p>
+      </div>
+      <div class="rounded-3xl bg-slate-50 p-5">
+        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Số lượng</p>
+        <p class="mt-3 text-xl font-bold text-slate-900"><%= accessory.amount ?? 0 %></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+    <div class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
+      <h2 class="text-2xl font-black text-slate-900">Thông tin thêm</h2>
+      <dl class="mt-6 grid gap-6">
+        <div class="rounded-3xl border border-slate-200 p-5">
+          <dt class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Ghi chú</dt>
+          <dd class="mt-3 text-slate-700"><%= accessory.note || "Không có ghi chú." %></dd>
+        </div>
+        <div class="rounded-3xl border border-slate-200 p-5">
+          <dt class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Ngày tạo</dt>
+          <dd class="mt-3 text-lg font-semibold text-slate-900"><%= formatDateTime(accessory.createdAt) %></dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
+      <h2 class="text-2xl font-black text-slate-900">Tác vụ nhanh</h2>
+      <div class="mt-6 space-y-4">
+        <a href="/accessories/<%= accessory._id %>/rentals" class="block rounded-3xl border border-brand-200 bg-brand-50/70 p-5 transition hover:border-brand-300 hover:bg-brand-50">
+          <p class="text-lg font-bold text-slate-900">Xem lịch thuê</p>
+          <p class="mt-2 text-sm text-slate-600">Mở danh sách các đơn thuê đang dùng phụ kiện này.</p>
+        </a>
+        <% if (currentUser.role === "admin") { %>
+          <a href="/accessories/<%= accessory._id %>/edit" class="block rounded-3xl border border-amber-200 bg-amber-50/70 p-5 transition hover:border-amber-300 hover:bg-amber-50">
+            <p class="text-lg font-bold text-slate-900">Cập nhật phụ kiện</p>
+            <p class="mt-2 text-sm text-slate-600">Sửa giá thuê, số lượng, hình ảnh hoặc ghi chú.</p>
+          </a>
+        <% } %>
+        <a href="/accessories" class="block rounded-3xl border border-slate-200 bg-slate-50 p-5 transition hover:border-slate-300">
+          <p class="text-lg font-bold text-slate-900">Quay lại</p>
+          <p class="mt-2 text-sm text-slate-600">Trở về danh sách phụ kiện.</p>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

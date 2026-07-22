@@ -1,11 +1,20 @@
 <section class="mx-auto max-w-6xl space-y-6">
   <%- include("../../partials/product-management-tabs", { activeProductManagementTab: "accessories" }) %>
 
-  <div class="flex flex-col gap-4 rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60 sm:flex-row sm:items-start sm:justify-between">
-    <div>
-      <p class="text-sm font-semibold uppercase tracking-[0.25em] text-brand-700">Lịch thuê phụ kiện</p>
-      <h1 class="mt-2 text-3xl font-black text-slate-900"><%= accessory.code %> - <%= accessory.name %></h1>
-      <p class="mt-3 text-slate-600">Tổng số lượng: <span class="font-semibold"><%= accessory.amount ?? 0 %></span></p>
+  <div class="flex flex-col gap-6 rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60 sm:flex-row sm:items-start sm:justify-between">
+    <div class="flex flex-col gap-5 sm:flex-row sm:items-start">
+      <div class="overflow-hidden rounded-3xl bg-slate-100 ring-1 ring-slate-200">
+        <% if (accessory.imageUrl) { %>
+          <img src="<%= accessory.imageUrl %>" alt="Hình ảnh phụ kiện <%= accessory.name %>" class="h-28 w-28 object-cover" />
+        <% } else { %>
+          <div class="flex h-28 w-28 items-center justify-center px-4 text-center text-sm font-semibold text-slate-500">Chưa có hình ảnh</div>
+        <% } %>
+      </div>
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-brand-700">Lịch thuê phụ kiện</p>
+        <h1 class="mt-2 text-3xl font-black text-slate-900"><%= accessory.code %> - <%= accessory.name %></h1>
+        <p class="mt-3 text-slate-600">Tổng số lượng: <span class="font-semibold"><%= accessory.amount ?? 0 %></span></p>
+      </div>
     </div>
     <a href="/accessories" class="rounded-full bg-slate-100 px-5 py-3 font-semibold text-slate-700">Quay lại</a>
   </div>
