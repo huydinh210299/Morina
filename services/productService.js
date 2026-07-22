@@ -237,30 +237,7 @@ const getEditData = async (id) => {
   };
 };
 
-const getShowData = async (id) => {
-  const product = await Product.findById(id).populate("category");
-
-  if (!product || product.isDeleted) {
-    const error = new Error("Không tìm thấy sản phẩm.");
-    error.statusCode = 404;
-    throw error;
-  }
-
-  return {
-    title: `Sản phẩm ${product.code}`,
-    product
-  };
-};
-
-const getScheduleData = async (id) => {
-  const product = await Product.findById(id).populate("category");
-
-  if (!product || product.isDeleted) {
-    const error = new Error("Không tìm thấy sản phẩm.");
-    error.statusCode = 404;
-    throw error;
-  }
-
+const getProductRentSchedule = async (product) => {
   const orders = await Order.find({
     returned: false,
     "products.product": product._id
@@ -268,7 +245,7 @@ const getScheduleData = async (id) => {
     .sort({ generalStartTime: 1 })
     .select("customerName phone generalStartTime generalEndTime products");
 
-  const rentSchedule = orders
+  return orders
     .flatMap((order) =>
       order.products
         .filter((item) => item.product && item.product.toString() === product._id.toString())
@@ -284,15 +261,54 @@ const getScheduleData = async (id) => {
         }))
     )
     .sort((left, right) => new Date(left.startTime) - new Date(right.startTime));
+};
 
+const getRentScheduleStats = (rentSchedule) => {
   const now = new Date();
-  const currentRentCount = rentSchedule.filter(
-    (item) => new Date(item.startTime) <= now && new Date(item.endTime) >= now
-  ).length;
-  const upcomingRentCount = rentSchedule.filter((item) => new Date(item.startTime) > now).length;
 
   return {
-    title: `Lich thue ${product.code}`,
+    currentRentCount: rentSchedule.filter(
+      (item) => new Date(item.startTime) <= now && new Date(item.endTime) >= now
+    ).length,
+    upcomingRentCount: rentSchedule.filter((item) => new Date(item.startTime) > now).length
+  };
+};
+
+const getShowData = async (id) => {
+  const product = await Product.findById(id).populate("category");
+
+  if (!product || product.isDeleted) {
+    const error = new Error("Không tìm thấy sản phẩm.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const rentSchedule = await getProductRentSchedule(product);
+  const { currentRentCount, upcomingRentCount } = getRentScheduleStats(rentSchedule);
+
+  return {
+    title: `Sản phẩm ${product.code}`,
+    product,
+    rentSchedule,
+    currentRentCount,
+    upcomingRentCount
+  };
+};
+
+const getScheduleData = async (id) => {
+  const product = await Product.findById(id).populate("category");
+
+  if (!product || product.isDeleted) {
+    const error = new Error("Không tìm thấy sản phẩm.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const rentSchedule = await getProductRentSchedule(product);
+  const { currentRentCount, upcomingRentCount } = getRentScheduleStats(rentSchedule);
+
+  return {
+    title: `Lịch thuê ${product.code}`,
     product,
     rentSchedule,
     currentRentCount,
