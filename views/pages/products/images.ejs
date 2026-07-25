@@ -90,7 +90,8 @@
                 <h2 class="truncate text-lg font-black text-slate-900"><%= product.code %></h2>
                 <p class="mt-1 truncate text-sm text-slate-500"><%= product.category?.code || "-" %></p>
                 <p class="mt-1 truncate text-sm font-semibold text-slate-700">Kích thước: <%= product.size || "Chưa có" %></p>
-                <p class="mt-1 truncate text-sm font-semibold text-slate-700">Giá: <%= formatCurrency(product.fullDayPrice) %></p>
+                <p class="mt-1 truncate text-sm font-semibold text-slate-700">Giá 1 ngày: <%= formatCurrency(product.fullDayPrice) %></p>
+                <p class="mt-1 truncate text-sm font-semibold text-slate-700">Giá 8 giờ: <%= formatCurrency(product.eightHPrice) %></p>
               </div>
               <% if (product.imageUrl) { %>
                 <span class="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">OK</span>
