@@ -111,6 +111,7 @@ const getIndexData = async (query = {}) => {
   );
   const productsWithRentCount = products.map((product) => ({
     ...product,
+    displayImageUrl: getDisplayImageUrl(product.imageUrl),
     rentCount: rentCountByProductId.get(product._id.toString()) || 0
   }));
 

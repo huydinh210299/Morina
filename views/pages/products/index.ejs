@@ -64,6 +64,7 @@
       <table class="min-w-full divide-y divide-slate-200">
       <thead class="bg-slate-50">
         <tr>
+          <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Hình ảnh</th>
           <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Mã</th>
           <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Danh mục</th>
           <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Giá</th>
@@ -76,6 +77,25 @@
         <% if (products.length) { %>
           <% products.forEach((product) => { %>
             <tr>
+              <td class="px-6 py-4">
+                <% if (product.displayImageUrl || product.imageUrl) { %>
+                  <button
+                    type="button"
+                    class="block rounded-2xl transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-brand-100"
+                    data-product-image-preview
+                    data-product-code="<%= product.code %>"
+                    data-product-category="<%= product.category?.code || "-" %>"
+                    data-product-size="<%= product.size || "" %>"
+                    data-product-image-url="<%= product.displayImageUrl || product.imageUrl %>"
+                    data-product-detail-url="/products/<%= product._id %>"
+                    aria-label="Xem ảnh lớn của sản phẩm <%= product.code %>"
+                  >
+                    <img src="<%= product.displayImageUrl || product.imageUrl %>" alt="Hình ảnh sản phẩm <%= product.code %>" class="h-20 w-20 rounded-2xl object-cover ring-1 ring-slate-200" loading="lazy" referrerpolicy="no-referrer" />
+                  </button>
+                <% } else { %>
+                  <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-100 px-3 text-center text-xs font-semibold text-slate-500">Chưa có ảnh</div>
+                <% } %>
+              </td>
               <td class="px-6 py-4 font-semibold text-slate-900">
                 <a href="/products/<%= product._id %>" class="transition hover:text-brand-700"><%= product.code %></a>
               </td>
@@ -99,11 +119,65 @@
           <% }) %>
         <% } else { %>
           <tr>
-            <td colspan="6" class="px-6 py-12 text-center text-slate-500">Không có sản phẩm phù hợp với bộ lọc hiện tại.</td>
+            <td colspan="7" class="px-6 py-12 text-center text-slate-500">Không có sản phẩm phù hợp với bộ lọc hiện tại.</td>
           </tr>
         <% } %>
       </tbody>
       </table>
+    </div>
+  </div>
+
+  <div
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 p-4"
+    data-product-image-modal
+    aria-hidden="true"
+  >
+    <div class="relative flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
+      <div class="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-4">
+        <div class="min-w-0">
+          <h2 class="truncate text-xl font-black text-slate-900" data-product-image-modal-code></h2>
+          <p class="mt-1 truncate text-sm text-slate-500" data-product-image-modal-category></p>
+          <p class="mt-1 truncate text-sm font-semibold text-slate-700" data-product-image-modal-size></p>
+        </div>
+        <button
+          type="button"
+          class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-2xl font-semibold leading-none text-slate-600 transition hover:bg-slate-200"
+          data-product-image-modal-close
+          aria-label="Đóng bản xem trước"
+        >
+          &times;
+        </button>
+      </div>
+
+      <div class="flex min-h-0 flex-1 items-center justify-center bg-slate-100 p-4">
+        <img
+          src=""
+          alt=""
+          class="max-h-[70vh] w-auto max-w-full rounded-2xl object-contain shadow-lg shadow-slate-300/40"
+          data-product-image-modal-img
+          referrerpolicy="no-referrer"
+        />
+        <div class="hidden px-6 py-20 text-center text-sm font-semibold text-slate-400" data-product-image-modal-empty>
+          Chưa có ảnh
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 border-t border-slate-100 px-5 py-4">
+        <button
+          type="button"
+          class="inline-flex rounded-full bg-slate-100 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-200"
+          data-product-image-modal-close
+        >
+          Đóng
+        </button>
+        <a
+          href="#"
+          class="inline-flex rounded-full bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-700"
+          data-product-image-modal-detail
+        >
+          Xem chi tiết sản phẩm
+        </a>
+      </div>
     </div>
   </div>
 

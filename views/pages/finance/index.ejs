@@ -235,7 +235,6 @@
         <table class="min-w-full divide-y divide-slate-200">
           <thead class="bg-slate-50">
             <tr>
-              <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Mã khoản chi</th>
               <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Số tiền</th>
               <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Mô tả</th>
               <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Ngày tạo</th>
@@ -245,12 +244,11 @@
           <tbody class="divide-y divide-slate-100">
             <% if (payments.length === 0) { %>
               <tr>
-                <td colspan="5" class="px-6 py-10 text-center text-slate-500">Không có khoản chi nào trong bộ lọc hiện tại.</td>
+                <td colspan="4" class="px-6 py-10 text-center text-slate-500">Không có khoản chi nào trong bộ lọc hiện tại.</td>
               </tr>
             <% } %>
             <% payments.forEach((payment) => { %>
               <tr>
-                <td class="px-6 py-4 text-slate-600"><span class="font-semibold text-slate-900"><%= payment._id %></span></td>
                 <td class="px-6 py-4 text-slate-700"><%= formatCurrency(payment.amount) %></td>
                 <td class="px-6 py-4 text-slate-600"><%= payment.description || '-' %></td>
                 <td class="px-6 py-4 text-slate-600"><%= formatDateTime(payment.createdAt) %></td>
