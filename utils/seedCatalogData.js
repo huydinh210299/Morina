@@ -12,6 +12,8 @@ const DEFAULT_CATEGORIES = [
   { code: "H", description: "Hoa" },
   { code: "HN", description: "Hoa nhí" },
   { code: "M", description: "Mũ" },
+  { code: "N", description: "Nón" },
+  { code: "Q", description: "Quần" },
   { code: "T", description: "Túi" },
   { code: "V", description: "Voan" },
   { code: "VD", description: "Váy dài" },
