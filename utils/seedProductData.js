@@ -219,8 +219,15 @@ const seedProductData = async (userId, categories) => {
     await Product.updateOne({ code: product.code }, update, { upsert: true });
   }
 
-  for (const [productCode, imageUrl] of imageUrlByProductCode) {
-    await Product.updateOne({ code: productCode }, { $set: { imageUrl } });
+  const imageUpdateOperations = [...imageUrlByProductCode].map(([productCode, imageUrl]) => ({
+    updateOne: {
+      filter: { code: productCode },
+      update: { $set: { imageUrl } }
+    }
+  }));
+
+  if (imageUpdateOperations.length) {
+    await Product.bulkWrite(imageUpdateOperations, { ordered: false });
   }
 };
 
