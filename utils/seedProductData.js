@@ -177,15 +177,22 @@ const seedProductData = async (userId, categories) => {
       throw new Error(`Không tìm thấy danh mục ${product.categoryCode} cho sản phẩm ${product.code}.`);
     }
 
+    const insertFields = {
+      code: product.code,
+      category,
+      fullDayPrice: product.fullDayPrice,
+      eightHPrice: product.eightHPrice,
+      createdBy: userId,
+      updatedBy: userId
+    };
+
+    if (product.categoryCode === "N") {
+      delete insertFields.fullDayPrice;
+      delete insertFields.eightHPrice;
+    }
+
     const update = {
-      $setOnInsert: {
-        code: product.code,
-        category,
-        fullDayPrice: product.fullDayPrice,
-        eightHPrice: product.eightHPrice,
-        createdBy: userId,
-        updatedBy: userId
-      }
+      $setOnInsert: insertFields
     };
     const imageUrl = imageUrlByProductCode.get(product.code);
 
