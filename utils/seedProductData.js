@@ -157,6 +157,7 @@ const DEFAULT_PRODUCTS = [
   ...buildProducts("G", "G", Array(25).fill(30)),
   ...buildProducts("M", "M", [25, 30, 25, 25, 25, 25]),
   ...buildProducts("N", "N", Array(7).fill(30), Array(7).fill(20)),
+  ...buildProducts("Q", "Q", Array(32).fill(0)),
   ...buildProducts("H", "H", [35, 35, 40])
 ];
 
