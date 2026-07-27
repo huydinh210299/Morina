@@ -110,6 +110,11 @@ jobs:
           # PM2 reload keeps the previous release's cwd when the same app name
           # already exists. Recreate the process so it serves this release.
           pm2 delete rental-shop || true
+          if command -v fuser >/dev/null 2>&1; then
+            fuser -k 3000/tcp || true
+          else
+            lsof -ti:3000 | xargs -r kill || true
+          fi
           pm2 start ecosystem.config.js --env production
           pm2 save
 
