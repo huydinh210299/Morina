@@ -23,6 +23,17 @@ const normalizeSearch = (value) => `${value || ""}`.trim().toLowerCase();
 const getSearchItems = (type) => (type === "product" ? orderFormData.products : orderFormData.accessories);
 const getSearchItemById = (type, id) => (type === "product" ? productById.get(id) : accessoryById.get(id));
 const getSearchItemPrice = (type, item) => (type === "product" ? item?.fullDayPrice : item?.price);
+const formatSearchItemPrices = (type, item) => {
+  if (type !== "product") {
+    return currencyFormatter.format(getSearchItemPrice(type, item) || 0);
+  }
+
+  return [
+    `24h: ${currencyFormatter.format(item?.fullDayPrice || 0)}`,
+    `8h: ${currencyFormatter.format(item?.eightHPrice || 0)}`,
+    `5h: ${currencyFormatter.format(item?.fiveHPrice || 0)}`
+  ].join(" | ");
+};
 const findExactSearchItem = (type, value) => {
   const normalizedValue = normalizeSearch(value);
   return getSearchItems(type).find(
@@ -222,7 +233,7 @@ const renderSearchOptions = (wrapper, query = "") => {
             data-id="${item.id}"
           >
             <span class="block text-sm font-semibold text-slate-700">${escapeHtml(item.label)}</span>
-            <span class="ml-3 text-xs text-slate-400">${currencyFormatter.format(getSearchItemPrice(type, item) || 0)}</span>
+            <span class="ml-3 shrink-0 text-xs text-slate-400">${formatSearchItemPrices(type, item)}</span>
           </button>
         `
       )

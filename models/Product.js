@@ -18,6 +18,11 @@ const productSchema = new mongoose.Schema(
       required: true,
       min: 0
     },
+    fiveHPrice: {
+      type: Number,
+      required: true,
+      min: 0
+    },
     note: {
       type: String,
       default: ""

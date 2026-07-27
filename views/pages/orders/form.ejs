@@ -34,7 +34,9 @@
     note: product.note || "",
     label: buildProductLabel(product),
     searchText: [product.code, product.size, product.note].filter(Boolean).join(" ").toLowerCase(),
-    fullDayPrice: product.fullDayPrice
+    fullDayPrice: product.fullDayPrice,
+    eightHPrice: product.eightHPrice,
+    fiveHPrice: product.fiveHPrice
   }));
   const accessoryLookup = accessories.map((accessory) => ({
     id: String(accessory._id),
@@ -155,7 +157,7 @@
               </div>
               <div>
                 <label class="mb-2 block text-sm font-semibold text-slate-700">Giá thuê</label>
-                <input name="productPrices" data-line-price type="number" min="0" step="0.01" placeholder="Giá 1 ngày" value="<%= item.price ?? '' %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none" />
+                <input name="productPrices" data-line-price type="number" min="0" step="0.01" placeholder="Giá thuê" value="<%= item.price ?? '' %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none" />
               </div>
               <div class="flex items-end">
                 <button type="button" data-remove-row class="w-full rounded-full bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">Xóa</button>
@@ -272,7 +274,7 @@
       </div>
       <div>
         <label class="mb-2 block text-sm font-semibold text-slate-700">Giá thuê</label>
-        <input name="productPrices" data-line-price type="number" min="0" step="0.01" placeholder="Giá 1 ngày" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none" />
+        <input name="productPrices" data-line-price type="number" min="0" step="0.01" placeholder="Giá thuê" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none" />
       </div>
       <div class="flex items-end">
         <button type="button" data-remove-row class="w-full rounded-full bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">Xóa</button>
