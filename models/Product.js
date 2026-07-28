@@ -13,12 +13,7 @@ const productSchema = new mongoose.Schema(
       required: true,
       min: 0
     },
-    eightHPrice: {
-      type: Number,
-      required: true,
-      min: 0
-    },
-    fiveHPrice: {
+    sixHPrice: {
       type: Number,
       required: true,
       min: 0

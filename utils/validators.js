@@ -69,8 +69,7 @@ const noteSchema = Joi.object({
 const productSchema = Joi.object({
   code: Joi.string().trim().required(),
   fullDayPrice: Joi.number().min(0).required(),
-  eightHPrice: Joi.number().min(0).required(),
-  fiveHPrice: Joi.number().min(0).required(),
+  sixHPrice: Joi.number().min(0).required(),
   note: Joi.string().trim().allow(""),
   size: Joi.string().trim().allow(""),
   imageUrl: Joi.string().trim().uri().allow(""),

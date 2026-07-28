@@ -29,9 +29,8 @@ const formatSearchItemPrices = (type, item) => {
   }
 
   return [
-    `24h: ${currencyFormatter.format(item?.fullDayPrice || 0)}`,
-    `8h: ${currencyFormatter.format(item?.eightHPrice || 0)}`,
-    `5h: ${currencyFormatter.format(item?.fiveHPrice || 0)}`
+    `Cả ngày: ${currencyFormatter.format(item?.fullDayPrice || 0)}`,
+    `6h: ${currencyFormatter.format(item?.sixHPrice || 0)}`
   ].join(" | ");
 };
 const findExactSearchItem = (type, value) => {

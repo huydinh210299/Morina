@@ -100,7 +100,7 @@
                 <a href="/products/<%= product._id %>" class="transition hover:text-brand-700"><%= product.code %></a>
               </td>
               <td class="px-6 py-4 text-slate-600"><%= product.category?.code || "-" %></td>
-              <td class="px-6 py-4 text-slate-600">Cả ngày: <%= formatCurrency(product.fullDayPrice) %><br />8 giờ: <%= formatCurrency(product.eightHPrice) %><br />5 giờ: <%= formatCurrency(product.fiveHPrice) %></td>
+              <td class="px-6 py-4 text-slate-600">Cả ngày: <%= formatCurrency(product.fullDayPrice) %><br />6 giờ: <%= formatCurrency(product.sixHPrice) %></td>
               <td class="px-6 py-4 font-semibold text-slate-900"><%= product.rentCount || 0 %></td>
               <td class="px-6 py-4 text-slate-600">Kích cỡ: <%= product.size || "-" %><br />Ghi chú: <%= product.note || "-" %></td>
               <td class="px-6 py-4">

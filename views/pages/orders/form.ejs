@@ -35,8 +35,7 @@
     label: buildProductLabel(product),
     searchText: [product.code, product.size, product.note].filter(Boolean).join(" ").toLowerCase(),
     fullDayPrice: product.fullDayPrice,
-    eightHPrice: product.eightHPrice,
-    fiveHPrice: product.fiveHPrice
+    sixHPrice: product.sixHPrice
   }));
   const accessoryLookup = accessories.map((accessory) => ({
     id: String(accessory._id),
