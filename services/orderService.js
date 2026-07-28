@@ -210,18 +210,6 @@ const parseStatusFilter = (value) => {
 
 const escapeRegex = (value = "") => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-const clampDate = (date, minDate, maxDate) => {
-  if (date < minDate) {
-    return new Date(minDate);
-  }
-
-  if (date > maxDate) {
-    return new Date(maxDate);
-  }
-
-  return new Date(date);
-};
-
 const getDayRange = (date) => {
   const start = new Date(date);
   start.setHours(0, 0, 0, 0);
@@ -263,10 +251,10 @@ const buildOrderFilters = (query = {}) => {
   const endDate = new Date(filters.rentEndDate);
 
   if (!Number.isNaN(startDate.getTime()) && !Number.isNaN(endDate.getTime())) {
-    const normalizedStart = clampDate(startDate, start, defaultEndDate);
+    const normalizedStart = new Date(startDate);
     normalizedStart.setHours(0, 0, 0, 0);
 
-    const normalizedEnd = clampDate(endDate, start, defaultEndDate);
+    const normalizedEnd = new Date(endDate);
     normalizedEnd.setHours(23, 59, 59, 999);
 
     if (normalizedStart <= normalizedEnd) {
@@ -384,11 +372,7 @@ const buildOrderFilters = (query = {}) => {
 
   return {
     filters,
-    mongoFilter,
-    monthBounds: {
-      min: formatDateInput(start),
-      max: formatDateInput(defaultEndDate)
-    }
+    mongoFilter
   };
 };
 
@@ -420,7 +404,7 @@ const resolveOrderAmount = (payload) => {
 
 const getIndexData = async (query) => {
   const requestedPage = Number.parseInt(query.page, 10);
-  const { filters, mongoFilter, monthBounds } = buildOrderFilters(query);
+  const { filters, mongoFilter } = buildOrderFilters(query);
 
   const totalItems = await Order.countDocuments(mongoFilter);
   const pagination = buildPagination(Number.isNaN(requestedPage) ? 1 : requestedPage, totalItems);
@@ -435,8 +419,7 @@ const getIndexData = async (query) => {
     title: "Đơn hàng",
     orders,
     filters,
-    pagination,
-    monthBounds
+    pagination
   };
 };
 
