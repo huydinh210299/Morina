@@ -107,20 +107,34 @@ jobs:
           cd "$release_dir"
           npm ci --omit=dev
           node -e 'require("dotenv").config(); const uri = process.env.MONGODB_URI || ""; if (!/^mongodb(\+srv)?:\/\//.test(uri)) { console.error("MONGODB_URI must start with mongodb:// or mongodb+srv://"); process.exit(1); }'
-          # PM2 reload keeps the previous release's cwd when the same app name
-          # already exists. Recreate the process so it serves this release.
+          # Recreate the PM2 process for the new release.
           pm2 delete rental-shop || true
-          if command -v fuser >/dev/null 2>&1; then
-            fuser -k 3000/tcp || true
-          else
-            lsof -ti:3000 | xargs -r kill || true
+          for attempt in $(seq 1 10); do
+            if ! ss -ltn 'sport = :3000' | grep -q ':3000'; then
+              break
+            fi
+            sleep 1
+          done
+
+          if ss -ltn 'sport = :3000' | grep -q ':3000'; then
+            echo "Port 3000 is still occupied after stopping the managed PM2 process."
+            echo "Refusing to continue because another process could serve an old release."
+            ss -ltnp 'sport = :3000' || true
+            exit 1
           fi
+
           pm2 start ecosystem.config.js --env production
           pm2 save
 
           healthy=false
           for attempt in $(seq 1 18); do
-            if curl --fail --silent http://127.0.0.1:3000/health >/dev/null; then
+            app_pid="$(pm2 pid rental-shop | tr -d '[:space:]')"
+            app_cwd=""
+            if [ -n "$app_pid" ] && [ -d "/proc/$app_pid" ]; then
+              app_cwd="$(readlink -f "/proc/$app_pid/cwd")"
+            fi
+
+            if [ "$app_cwd" = "$release_dir" ] && curl --fail --silent http://127.0.0.1:3000/health >/dev/null; then
               healthy=true
               break
             fi
@@ -128,6 +142,8 @@ jobs:
           done
 
           if [ "$healthy" != true ]; then
+            echo "The new PM2 process did not become healthy from the expected release directory."
+            pm2 status
             pm2 logs rental-shop --lines 100 --nostream
             exit 1
           fi
