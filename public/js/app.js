@@ -58,6 +58,56 @@ const accessoryImageModal = document.querySelector("[data-accessory-image-modal]
 const accessoryImageModalImg = accessoryImageModal?.querySelector("[data-accessory-image-modal-img]");
 const accessoryImageModalTitle = accessoryImageModal?.querySelector("[data-accessory-image-modal-title]");
 const accessoryImageModalDetail = accessoryImageModal?.querySelector("[data-accessory-image-modal-detail]");
+const addOrderProductModal = document.querySelector("[data-add-order-product-modal]");
+const addOrderProductForm = document.querySelector("[data-add-order-product-form]");
+
+const resetAddOrderProductForm = () => {
+  if (!addOrderProductForm) {
+    return;
+  }
+
+  addOrderProductForm.reset();
+  const totalInput = addOrderProductForm.querySelector("[data-add-order-product-total]");
+
+  if (totalInput) {
+    totalInput.value = "";
+    totalInput.dataset.autoCalculated = "true";
+  }
+};
+
+const updateAddOrderProductTotal = ({ force = false } = {}) => {
+  if (!addOrderProductForm) {
+    return;
+  }
+
+  const totalInput = addOrderProductForm.querySelector("[data-add-order-product-total]");
+  const priceInput = addOrderProductForm.querySelector("[data-add-order-product-price]");
+  const currentAmount = toNumber(addOrderProductForm.dataset.currentOrderAmount);
+  const price = toNumber(priceInput?.value);
+
+  if (!totalInput || (!force && totalInput.dataset.autoCalculated === "false")) {
+    return;
+  }
+
+  totalInput.value = price > 0 ? currentAmount + price : "";
+  totalInput.dataset.autoCalculated = "true";
+};
+
+const closeAddOrderProductModal = () => {
+  if (addOrderProductModal?.open) {
+    addOrderProductModal.close();
+  }
+};
+
+const openAddOrderProductModal = () => {
+  if (addOrderProductModal && !addOrderProductModal.open) {
+    resetAddOrderProductForm();
+    addOrderProductModal.showModal();
+    addOrderProductForm?.querySelector("[data-add-order-product-code]")?.focus();
+  }
+};
+
+addOrderProductModal?.addEventListener("close", resetAddOrderProductForm);
 
 const closeProductImageModal = () => {
   if (!productImageModal) {
@@ -540,6 +590,16 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  if (event.target.closest("[data-add-order-product-open]")) {
+    openAddOrderProductModal();
+    return;
+  }
+
+  if (event.target.closest("[data-add-order-product-close]") || event.target === addOrderProductModal) {
+    closeAddOrderProductModal();
+    return;
+  }
+
   const addType = event.target.getAttribute("data-add-row");
 
   if (addType === "products") {
@@ -592,11 +652,35 @@ document.addEventListener("click", (event) => {
 });
 
 document.addEventListener("input", (event) => {
+  if (event.target.matches("[data-greater-than-current-message]")) {
+    event.target.setCustomValidity("");
+  }
+
   if (orderForm && orderForm.contains(event.target) && !event.target.matches("[data-conflict-override]")) {
     resetConflictOverride();
   }
 
   const row = event.target.closest("[data-line-row]");
+
+  if (event.target.matches("[data-add-order-product-code]")) {
+    const option = Array.from(document.querySelectorAll("#available-order-products option")).find(
+      (item) => item.value === event.target.value.trim()
+    );
+    const priceInput = document.querySelector("[data-add-order-product-price]");
+
+    if (option && priceInput) {
+      priceInput.value = option.dataset.fullDayPrice || "";
+      updateAddOrderProductTotal({ force: true });
+    }
+  }
+
+  if (event.target.matches("[data-add-order-product-price]")) {
+    updateAddOrderProductTotal();
+  }
+
+  if (event.target.matches("[data-add-order-product-total]")) {
+    event.target.dataset.autoCalculated = "false";
+  }
 
   if (event.target.matches("[data-product-code-input]") && row) {
     autofillProductRow(row);
@@ -666,3 +750,13 @@ document.addEventListener("keydown", (event) => {
     closeAccessoryImageModal();
   }
 });
+
+document.addEventListener(
+  "invalid",
+  (event) => {
+    if (event.target.matches("[data-greater-than-current-message]") && event.target.validity.rangeUnderflow) {
+      event.target.setCustomValidity(event.target.dataset.greaterThanCurrentMessage);
+    }
+  },
+  true
+);

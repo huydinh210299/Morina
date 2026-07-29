@@ -107,6 +107,16 @@ const paymentSchema = Joi.object({
   type: Joi.number().valid(0, 1).required()
 });
 
+const orderProductAdditionSchema = Joi.object({
+  productCode: Joi.string().trim().required(),
+  price: Joi.number().min(0).required(),
+  orderAmount: Joi.number().min(0).required()
+});
+
+const orderDepositUpdateSchema = Joi.object({
+  deposit: Joi.number().min(0).required()
+});
+
 const orderStatusSchema = Joi.object({
   alreadyPickup: Joi.boolean().truthy("on").falsy("off").falsy("").default(false),
   returned: Joi.boolean().truthy("on").falsy("off").falsy("").default(false),
@@ -152,6 +162,8 @@ module.exports = {
   accessorySchema,
   orderSchema,
   paymentSchema,
+  orderProductAdditionSchema,
+  orderDepositUpdateSchema,
   orderStatusSchema,
   orderNoteSchema
 };

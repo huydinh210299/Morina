@@ -3,7 +3,14 @@ const Product = require("../models/Product");
 const Accessory = require("../models/Accessory");
 const User = require("../models/User");
 const { parseOrderPayload } = require("../utils/requestParsers");
-const { orderSchema, paymentSchema, orderStatusSchema, orderNoteSchema } = require("../utils/validators");
+const {
+  orderSchema,
+  paymentSchema,
+  orderProductAdditionSchema,
+  orderDepositUpdateSchema,
+  orderStatusSchema,
+  orderNoteSchema
+} = require("../utils/validators");
 const { setCreateAuditFields, setUpdateAuditFields } = require("../utils/audit");
 const { USER_ROLES } = require("../utils/constants");
 const validationOptions = require("../utils/validationOptions");
@@ -515,12 +522,21 @@ const deleteOrder = async (id) => {
 };
 
 const getShowData = async (id) => {
-  await findOrderOrFail(id);
-  const order = await Order.findById(id).populate("products.product").populate("accessories.accessory");
+  const [order, availableProducts] = await Promise.all([
+    Order.findById(id).populate("products.product").populate("accessories.accessory"),
+    Product.find({ isDeleted: false }).sort({ code: 1 }).select("code size note fullDayPrice sixHPrice")
+  ]);
+
+  if (!order) {
+    const error = new Error("Không tìm thấy đơn hàng.");
+    error.statusCode = 404;
+    throw error;
+  }
 
   return {
     title: `Đơn hàng ${order._id}`,
-    order
+    order,
+    availableProducts
   };
 };
 
@@ -537,6 +553,98 @@ const addOrderPayment = async ({ id, body, user }) => {
 
   return {
     successMessage: "Đã thêm thanh toán thành công.",
+    redirectTo: `/orders/${order._id}`
+  };
+};
+
+const updateOrderPayment = async ({ id, paymentIndex, body, user }) => {
+  const order = await findOrderOrFail(id);
+  const index = /^\d+$/.test(paymentIndex) ? Number(paymentIndex) : Number.NaN;
+
+  if (!Number.isInteger(index) || index < 0 || index >= order.payments.length) {
+    const error = new Error("Không tìm thấy khoản thanh toán.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const payment = validatePayload(paymentSchema, {
+    amount: body.amount,
+    type: body.type
+  });
+
+  order.payments[index] = payment;
+  Object.assign(order, setUpdateAuditFields({}, user));
+  await order.save();
+
+  return {
+    successMessage: "Đã cập nhật thanh toán thành công.",
+    redirectTo: `/orders/${order._id}`
+  };
+};
+
+const addOrderProduct = async ({ id, body, user }) => {
+  const order = await findOrderOrFail(id);
+  const payload = validatePayload(orderProductAdditionSchema, body);
+  const product = await Product.findOne({ code: payload.productCode, isDeleted: false });
+
+  if (!product) {
+    const error = new Error("Không tìm thấy sản phẩm đang hoạt động.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (payload.orderAmount <= Number(order.orderAmount)) {
+    const error = new Error("Tổng tiền đơn mới phải lớn hơn tổng tiền đơn hiện tại.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const productLine = {
+    product: product._id,
+    price: payload.price,
+    useGeneralTimes: true,
+    startTime: order.generalStartTime,
+    endTime: order.generalEndTime
+  };
+  const conflicts = await findConflictingProductLines({
+    payload: { products: [productLine] },
+    excludeOrderId: id
+  });
+
+  if (conflicts.length) {
+    const error = new Error(buildConflictMessage(conflicts));
+    error.statusCode = 409;
+    throw error;
+  }
+
+  order.products.push(productLine);
+  order.orderAmount = payload.orderAmount;
+  Object.assign(order, setUpdateAuditFields({}, user));
+  await order.save();
+  await Product.findByIdAndUpdate(product._id, { $inc: { orderCount: 1 } }, { runValidators: true });
+
+  return {
+    successMessage: "Đã thêm sản phẩm vào đơn hàng và cập nhật tổng tiền.",
+    redirectTo: `/orders/${order._id}`
+  };
+};
+
+const updateOrderDeposit = async ({ id, body, user }) => {
+  const order = await findOrderOrFail(id);
+  const payload = validatePayload(orderDepositUpdateSchema, body);
+
+  if (payload.deposit <= Number(order.deposit)) {
+    const error = new Error("Tiền cọc mới phải lớn hơn tiền cọc hiện tại.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  order.deposit = payload.deposit;
+  Object.assign(order, setUpdateAuditFields({}, user));
+  await order.save();
+
+  return {
+    successMessage: "Đã cập nhật tiền cọc thành công.",
     redirectTo: `/orders/${order._id}`
   };
 };
@@ -602,6 +710,9 @@ module.exports = {
   deleteOrder,
   getShowData,
   addOrderPayment,
+  updateOrderPayment,
+  addOrderProduct,
+  updateOrderDeposit,
   updateOrderStatus,
   updateOrderNote,
   checkOrderConflicts
