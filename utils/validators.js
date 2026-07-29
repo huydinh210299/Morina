@@ -107,9 +107,13 @@ const paymentSchema = Joi.object({
   type: Joi.number().valid(0, 1).required()
 });
 
-const orderProductAdditionSchema = Joi.object({
+const orderProductAdditionItemSchema = Joi.object({
   productCode: Joi.string().trim().required(),
-  price: Joi.number().min(0).required(),
+  price: Joi.number().min(0).required()
+});
+
+const orderProductAdditionSchema = Joi.object({
+  products: Joi.array().items(orderProductAdditionItemSchema).min(1).required(),
   orderAmount: Joi.number().min(0).required()
 });
 

@@ -584,14 +584,15 @@ const updateOrderPayment = async ({ id, paymentIndex, body, user }) => {
 
 const addOrderProduct = async ({ id, body, user }) => {
   const order = await findOrderOrFail(id);
-  const payload = validatePayload(orderProductAdditionSchema, body);
-  const product = await Product.findOne({ code: payload.productCode, isDeleted: false });
-
-  if (!product) {
-    const error = new Error("Không tìm thấy sản phẩm đang hoạt động.");
-    error.statusCode = 404;
-    throw error;
-  }
+  const productCodes = Array.isArray(body.productCodes) ? body.productCodes : [body.productCodes];
+  const productPrices = Array.isArray(body.productPrices) ? body.productPrices : [body.productPrices];
+  const payload = validatePayload(orderProductAdditionSchema, {
+    products: productCodes.map((productCode, index) => ({
+      productCode,
+      price: productPrices[index]
+    })),
+    orderAmount: body.orderAmount
+  });
 
   if (payload.orderAmount <= Number(order.orderAmount)) {
     const error = new Error("Tổng tiền đơn mới phải lớn hơn tổng tiền đơn hiện tại.");
@@ -599,15 +600,28 @@ const addOrderProduct = async ({ id, body, user }) => {
     throw error;
   }
 
-  const productLine = {
-    product: product._id,
-    price: payload.price,
+  const products = await Product.find({
+    code: { $in: payload.products.map((item) => item.productCode) },
+    isDeleted: false
+  });
+  const productByCode = new Map(products.map((product) => [product.code, product]));
+  const missingProduct = payload.products.find((item) => !productByCode.has(item.productCode));
+
+  if (missingProduct) {
+    const error = new Error(`Không tìm thấy sản phẩm đang hoạt động: ${missingProduct.productCode}.`);
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const productLines = payload.products.map((item) => ({
+    product: productByCode.get(item.productCode)._id,
+    price: item.price,
     useGeneralTimes: true,
     startTime: order.generalStartTime,
     endTime: order.generalEndTime
-  };
+  }));
   const conflicts = await findConflictingProductLines({
-    payload: { products: [productLine] },
+    payload: { products: productLines },
     excludeOrderId: id
   });
 
@@ -617,11 +631,15 @@ const addOrderProduct = async ({ id, body, user }) => {
     throw error;
   }
 
-  order.products.push(productLine);
+  order.products.push(...productLines);
   order.orderAmount = payload.orderAmount;
   Object.assign(order, setUpdateAuditFields({}, user));
   await order.save();
-  await Product.findByIdAndUpdate(product._id, { $inc: { orderCount: 1 } }, { runValidators: true });
+  await Promise.all(
+    productLines.map((productLine) =>
+      Product.findByIdAndUpdate(productLine.product, { $inc: { orderCount: 1 } }, { runValidators: true })
+    )
+  );
 
   return {
     successMessage: "Đã thêm sản phẩm vào đơn hàng và cập nhật tổng tiền.",

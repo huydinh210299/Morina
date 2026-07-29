@@ -60,6 +60,16 @@ const accessoryImageModalTitle = accessoryImageModal?.querySelector("[data-acces
 const accessoryImageModalDetail = accessoryImageModal?.querySelector("[data-accessory-image-modal-detail]");
 const addOrderProductModal = document.querySelector("[data-add-order-product-modal]");
 const addOrderProductForm = document.querySelector("[data-add-order-product-form]");
+const addOrderProductsContainer = document.getElementById("add-order-products-container");
+const addOrderProductRowTemplate = document.getElementById("add-order-product-row-template");
+
+const addOrderProductRow = () => {
+  if (!addOrderProductsContainer || !addOrderProductRowTemplate) {
+    return;
+  }
+
+  addOrderProductsContainer.insertAdjacentHTML("beforeend", addOrderProductRowTemplate.innerHTML.trim());
+};
 
 const resetAddOrderProductForm = () => {
   if (!addOrderProductForm) {
@@ -67,6 +77,10 @@ const resetAddOrderProductForm = () => {
   }
 
   addOrderProductForm.reset();
+  if (addOrderProductsContainer) {
+    addOrderProductsContainer.innerHTML = "";
+    addOrderProductRow();
+  }
   const totalInput = addOrderProductForm.querySelector("[data-add-order-product-total]");
 
   if (totalInput) {
@@ -81,15 +95,17 @@ const updateAddOrderProductTotal = ({ force = false } = {}) => {
   }
 
   const totalInput = addOrderProductForm.querySelector("[data-add-order-product-total]");
-  const priceInput = addOrderProductForm.querySelector("[data-add-order-product-price]");
   const currentAmount = toNumber(addOrderProductForm.dataset.currentOrderAmount);
-  const price = toNumber(priceInput?.value);
+  const addedAmount = Array.from(addOrderProductForm.querySelectorAll("[data-add-order-product-price]")).reduce(
+    (sum, input) => sum + toNumber(input.value),
+    0
+  );
 
   if (!totalInput || (!force && totalInput.dataset.autoCalculated === "false")) {
     return;
   }
 
-  totalInput.value = price > 0 ? currentAmount + price : "";
+  totalInput.value = addedAmount > 0 ? currentAmount + addedAmount : "";
   totalInput.dataset.autoCalculated = "true";
 };
 
@@ -600,6 +616,21 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  if (event.target.closest("[data-add-order-product-row]")) {
+    addOrderProductRow();
+    return;
+  }
+
+  if (event.target.closest("[data-remove-order-product-row]")) {
+    const productRow = event.target.closest("[data-add-order-product-entry]");
+
+    if (productRow && addOrderProductsContainer?.querySelectorAll("[data-add-order-product-entry]").length > 1) {
+      productRow.remove();
+      updateAddOrderProductTotal();
+    }
+    return;
+  }
+
   const addType = event.target.getAttribute("data-add-row");
 
   if (addType === "products") {
@@ -666,7 +697,7 @@ document.addEventListener("input", (event) => {
     const option = Array.from(document.querySelectorAll("#available-order-products option")).find(
       (item) => item.value === event.target.value.trim()
     );
-    const priceInput = document.querySelector("[data-add-order-product-price]");
+    const priceInput = event.target.closest("[data-add-order-product-entry]")?.querySelector("[data-add-order-product-price]");
 
     if (option && priceInput) {
       priceInput.value = option.dataset.fullDayPrice || "";
