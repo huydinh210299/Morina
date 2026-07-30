@@ -62,6 +62,10 @@ const addOrderProductModal = document.querySelector("[data-add-order-product-mod
 const addOrderProductForm = document.querySelector("[data-add-order-product-form]");
 const addOrderProductsContainer = document.getElementById("add-order-products-container");
 const addOrderProductRowTemplate = document.getElementById("add-order-product-row-template");
+const addOrderAccessoryModal = document.querySelector("[data-add-order-accessory-modal]");
+const addOrderAccessoryForm = document.querySelector("[data-add-order-accessory-form]");
+const addOrderAccessoriesContainer = document.getElementById("add-order-accessories-container");
+const addOrderAccessoryRowTemplate = document.getElementById("add-order-accessory-row-template");
 
 const addOrderProductRow = () => {
   if (!addOrderProductsContainer || !addOrderProductRowTemplate) {
@@ -124,6 +128,67 @@ const openAddOrderProductModal = () => {
 };
 
 addOrderProductModal?.addEventListener("close", resetAddOrderProductForm);
+
+const addOrderAccessoryRow = () => {
+  if (!addOrderAccessoriesContainer || !addOrderAccessoryRowTemplate) {
+    return;
+  }
+
+  addOrderAccessoriesContainer.insertAdjacentHTML("beforeend", addOrderAccessoryRowTemplate.innerHTML.trim());
+};
+
+const resetAddOrderAccessoryForm = () => {
+  if (!addOrderAccessoryForm) {
+    return;
+  }
+
+  addOrderAccessoryForm.reset();
+  if (addOrderAccessoriesContainer) {
+    addOrderAccessoriesContainer.innerHTML = "";
+    addOrderAccessoryRow();
+  }
+  const totalInput = addOrderAccessoryForm.querySelector("[data-add-order-accessory-total]");
+
+  if (totalInput) {
+    totalInput.value = "";
+    totalInput.dataset.autoCalculated = "true";
+  }
+};
+
+const updateAddOrderAccessoryTotal = ({ force = false } = {}) => {
+  if (!addOrderAccessoryForm) {
+    return;
+  }
+
+  const totalInput = addOrderAccessoryForm.querySelector("[data-add-order-accessory-total]");
+  const currentAmount = toNumber(addOrderAccessoryForm.dataset.currentOrderAmount);
+  const addedAmount = Array.from(addOrderAccessoryForm.querySelectorAll("[data-add-order-accessory-price]")).reduce(
+    (sum, input) => sum + toNumber(input.value),
+    0
+  );
+
+  if (!totalInput || (!force && totalInput.dataset.autoCalculated === "false")) {
+    return;
+  }
+
+  totalInput.value = currentAmount + addedAmount;
+};
+
+const closeAddOrderAccessoryModal = () => {
+  if (addOrderAccessoryModal?.open) {
+    addOrderAccessoryModal.close();
+  }
+};
+
+const openAddOrderAccessoryModal = () => {
+  if (addOrderAccessoryModal && !addOrderAccessoryModal.open) {
+    resetAddOrderAccessoryForm();
+    addOrderAccessoryModal.showModal();
+    addOrderAccessoryForm?.querySelector("[data-add-order-accessory-code]")?.focus();
+  }
+};
+
+addOrderAccessoryModal?.addEventListener("close", resetAddOrderAccessoryForm);
 
 const closeProductImageModal = () => {
   if (!productImageModal) {
@@ -611,6 +676,16 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  if (event.target.closest("[data-add-order-accessory-open]")) {
+    openAddOrderAccessoryModal();
+    return;
+  }
+
+  if (event.target.closest("[data-add-order-accessory-close]") || event.target === addOrderAccessoryModal) {
+    closeAddOrderAccessoryModal();
+    return;
+  }
+
   if (event.target.closest("[data-add-order-product-close]") || event.target === addOrderProductModal) {
     closeAddOrderProductModal();
     return;
@@ -621,12 +696,27 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  if (event.target.closest("[data-add-order-accessory-row]")) {
+    addOrderAccessoryRow();
+    return;
+  }
+
   if (event.target.closest("[data-remove-order-product-row]")) {
     const productRow = event.target.closest("[data-add-order-product-entry]");
 
     if (productRow && addOrderProductsContainer?.querySelectorAll("[data-add-order-product-entry]").length > 1) {
       productRow.remove();
       updateAddOrderProductTotal();
+    }
+    return;
+  }
+
+  if (event.target.closest("[data-remove-order-accessory-row]")) {
+    const accessoryRow = event.target.closest("[data-add-order-accessory-entry]");
+
+    if (accessoryRow && addOrderAccessoriesContainer?.querySelectorAll("[data-add-order-accessory-entry]").length > 1) {
+      accessoryRow.remove();
+      updateAddOrderAccessoryTotal();
     }
     return;
   }
@@ -709,7 +799,27 @@ document.addEventListener("input", (event) => {
     updateAddOrderProductTotal();
   }
 
+  if (event.target.matches("[data-add-order-accessory-code]")) {
+    const option = Array.from(document.querySelectorAll("#available-order-accessories option")).find(
+      (item) => item.value === event.target.value.trim()
+    );
+    const priceInput = event.target.closest("[data-add-order-accessory-entry]")?.querySelector("[data-add-order-accessory-price]");
+
+    if (option && priceInput) {
+      priceInput.value = option.dataset.price || "";
+      updateAddOrderAccessoryTotal({ force: true });
+    }
+  }
+
+  if (event.target.matches("[data-add-order-accessory-price]")) {
+    updateAddOrderAccessoryTotal();
+  }
+
   if (event.target.matches("[data-add-order-product-total]")) {
+    event.target.dataset.autoCalculated = "false";
+  }
+
+  if (event.target.matches("[data-add-order-accessory-total]")) {
     event.target.dataset.autoCalculated = "false";
   }
 

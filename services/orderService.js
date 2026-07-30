@@ -7,6 +7,7 @@ const {
   orderSchema,
   paymentSchema,
   orderProductAdditionSchema,
+  orderAccessoryAdditionSchema,
   orderDepositUpdateSchema,
   orderStatusSchema,
   orderNoteSchema
@@ -522,9 +523,10 @@ const deleteOrder = async (id) => {
 };
 
 const getShowData = async (id) => {
-  const [order, availableProducts] = await Promise.all([
+  const [order, availableProducts, availableAccessories] = await Promise.all([
     Order.findById(id).populate("products.product").populate("accessories.accessory"),
-    Product.find({ isDeleted: false }).sort({ code: 1 }).select("code size note fullDayPrice sixHPrice")
+    Product.find({ isDeleted: false }).sort({ code: 1 }).select("code size note fullDayPrice sixHPrice"),
+    Accessory.find().sort({ code: 1 }).select("code name price amount")
   ]);
 
   if (!order) {
@@ -536,7 +538,8 @@ const getShowData = async (id) => {
   return {
     title: `Đơn hàng ${order._id}`,
     order,
-    availableProducts
+    availableProducts,
+    availableAccessories
   };
 };
 
@@ -647,6 +650,58 @@ const addOrderProduct = async ({ id, body, user }) => {
   };
 };
 
+const addOrderAccessory = async ({ id, body, user }) => {
+  const order = await findOrderOrFail(id);
+  const accessoryCodes = Array.isArray(body.accessoryCodes) ? body.accessoryCodes : [body.accessoryCodes];
+  const accessoryPrices = Array.isArray(body.accessoryPrices) ? body.accessoryPrices : [body.accessoryPrices];
+  const accessoryAmounts = Array.isArray(body.accessoryAmounts) ? body.accessoryAmounts : [body.accessoryAmounts];
+  const payload = validatePayload(orderAccessoryAdditionSchema, {
+    accessories: accessoryCodes.map((accessoryCode, index) => ({
+      accessoryCode,
+      price: accessoryPrices[index],
+      amount: accessoryAmounts[index]
+    })),
+    orderAmount: body.orderAmount
+  });
+
+  if (payload.orderAmount <= Number(order.orderAmount)) {
+    const error = new Error("Tổng tiền đơn mới phải lớn hơn tổng tiền đơn hiện tại.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const accessories = await Accessory.find({
+    code: { $in: payload.accessories.map((item) => item.accessoryCode) }
+  });
+  const accessoryByCode = new Map(accessories.map((accessory) => [accessory.code, accessory]));
+  const missingAccessory = payload.accessories.find((item) => !accessoryByCode.has(item.accessoryCode));
+
+  if (missingAccessory) {
+    const error = new Error(`Không tìm thấy phụ kiện: ${missingAccessory.accessoryCode}.`);
+    error.statusCode = 404;
+    throw error;
+  }
+
+  order.accessories.push(
+    ...payload.accessories.map((item) => ({
+      accessory: accessoryByCode.get(item.accessoryCode)._id,
+      price: item.price,
+      amount: item.amount,
+      useGeneralTimes: true,
+      startTime: order.generalStartTime,
+      endTime: order.generalEndTime
+    }))
+  );
+  order.orderAmount = payload.orderAmount;
+  Object.assign(order, setUpdateAuditFields({}, user));
+  await order.save();
+
+  return {
+    successMessage: "Đã thêm phụ kiện vào đơn hàng và cập nhật tổng tiền.",
+    redirectTo: `/orders/${order._id}`
+  };
+};
+
 const updateOrderDeposit = async ({ id, body, user }) => {
   const order = await findOrderOrFail(id);
   const payload = validatePayload(orderDepositUpdateSchema, body);
@@ -730,6 +785,7 @@ module.exports = {
   addOrderPayment,
   updateOrderPayment,
   addOrderProduct,
+  addOrderAccessory,
   updateOrderDeposit,
   updateOrderStatus,
   updateOrderNote,

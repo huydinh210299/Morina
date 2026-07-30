@@ -117,6 +117,17 @@ const orderProductAdditionSchema = Joi.object({
   orderAmount: Joi.number().min(0).required()
 });
 
+const orderAccessoryAdditionItemSchema = Joi.object({
+  accessoryCode: Joi.string().trim().required(),
+  price: Joi.number().min(0).required(),
+  amount: Joi.number().integer().min(1).required()
+});
+
+const orderAccessoryAdditionSchema = Joi.object({
+  accessories: Joi.array().items(orderAccessoryAdditionItemSchema).min(1).required(),
+  orderAmount: Joi.number().min(0).required()
+});
+
 const orderDepositUpdateSchema = Joi.object({
   deposit: Joi.number().min(0).required()
 });
@@ -167,6 +178,7 @@ module.exports = {
   orderSchema,
   paymentSchema,
   orderProductAdditionSchema,
+  orderAccessoryAdditionSchema,
   orderDepositUpdateSchema,
   orderStatusSchema,
   orderNoteSchema

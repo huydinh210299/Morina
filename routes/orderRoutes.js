@@ -13,6 +13,7 @@ router.post("/", orderController.create);
 router.post("/:id/payments", orderController.addPayment);
 router.put("/:id/payments/:paymentIndex", orderController.updatePayment);
 router.post("/:id/products", orderController.addProduct);
+router.post("/:id/accessories", orderController.addAccessory);
 router.put("/:id/deposit", orderController.updateDeposit);
 router.post("/:id/status", orderController.updateStatus);
 router.post("/:id/note", orderController.updateNote);

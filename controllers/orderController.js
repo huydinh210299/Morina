@@ -114,6 +114,21 @@ const addProduct = async (req, res) => {
   res.redirect(`/orders/${req.params.id}`);
 };
 
+const addAccessory = async (req, res) => {
+  try {
+    const result = await orderService.addOrderAccessory({
+      id: req.params.id,
+      body: req.body,
+      user: req.user
+    });
+    req.session.success = result.successMessage;
+  } catch (error) {
+    req.session.error = error.message;
+  }
+
+  res.redirect(`/orders/${req.params.id}`);
+};
+
 const updateDeposit = async (req, res) => {
   try {
     const result = await orderService.updateOrderDeposit({
@@ -161,6 +176,7 @@ module.exports = wrapControllerHandlers({
   addPayment,
   updatePayment,
   addProduct,
+  addAccessory,
   updateDeposit,
   updateStatus,
   updateNote
