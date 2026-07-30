@@ -15,7 +15,6 @@ const DEFAULT_CATEGORIES = [
   { code: "N", description: "Nón" },
   { code: "Q", description: "Quần" },
   { code: "T", description: "Túi" },
-  { code: "V", description: "Voan" },
   { code: "VD", description: "Váy dài" },
   { code: "VN", description: "Váy ngắn" },
   { code: "ĐN", description: "Váy đen ngắn" }
