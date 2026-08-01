@@ -410,8 +410,10 @@ const resolveOrderAmount = (payload) => {
   return Number(payload.orderAmount);
 };
 
+const calculateTotalOrderAmount = (order) => Number(order.orderAmount || 0) + Number(order.surcharge || 0);
+
 const calculateRemainingAmount = (order) => {
-  const totalDue = Number(order.orderAmount || 0) + Number(order.surcharge || 0) + Number(order.deposit || 0);
+  const totalDue = calculateTotalOrderAmount(order) + Number(order.deposit || 0);
   const totalPaid = (order.payments || []).reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
 
   return Math.max(0, totalDue - totalPaid);
@@ -432,6 +434,7 @@ const getIndexData = async (query) => {
 
   const orders = orderDocuments.map((order) => ({
     ...order.toObject(),
+    totalOrderAmount: calculateTotalOrderAmount(order),
     remainingAmount: calculateRemainingAmount(order)
   }));
 
