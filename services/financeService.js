@@ -117,7 +117,7 @@ const getRevenueSummary = async (range) => {
     Order.aggregate([
       {
         $match: {
-          paymentDate: {
+          createdAt: {
             $gte: range.start,
             $lt: range.end
           }
