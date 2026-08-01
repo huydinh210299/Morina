@@ -12,6 +12,11 @@ const paymentSchema = new mongoose.Schema(
       trim: true,
       default: ""
     },
+    paymentDate: {
+      type: Date,
+      required: true,
+      index: true
+    },
     createdBy: {
       type: String,
       required: true

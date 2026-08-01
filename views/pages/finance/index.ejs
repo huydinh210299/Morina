@@ -7,6 +7,15 @@
   const payments = paymentSection.payments || [];
   const pagination = paymentSection.pagination || {};
   const editingPayment = paymentSection.editingPayment || null;
+  const formatDateInput = (value) => {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
 
   const paymentParams = new URLSearchParams();
   paymentParams.set("tab", "payments");
@@ -192,6 +201,10 @@
             <input name="amount" type="number" min="0" step="1" required value="<%= editingPayment?.amount ?? '' %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
           </div>
           <div>
+            <label class="mb-2 block text-sm font-semibold text-slate-700">Ngày thanh toán</label>
+            <input name="paymentDate" type="date" required value="<%= formatDateInput(editingPayment?.paymentDate || new Date()) %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+          </div>
+          <div>
             <label class="mb-2 block text-sm font-semibold text-slate-700">Mô tả</label>
             <textarea name="description" rows="5" placeholder="Nhập nội dung khoản chi" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"><%= editingPayment?.description || '' %></textarea>
           </div>
@@ -237,7 +250,7 @@
             <tr>
               <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Số tiền</th>
               <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Mô tả</th>
-              <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Ngày tạo</th>
+              <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Ngày thanh toán</th>
               <th class="px-6 py-4 text-right text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Thao tác</th>
             </tr>
           </thead>
@@ -251,7 +264,7 @@
               <tr>
                 <td class="px-6 py-4 text-slate-700"><%= formatCurrency(payment.amount) %></td>
                 <td class="px-6 py-4 text-slate-600"><%= payment.description || '-' %></td>
-                <td class="px-6 py-4 text-slate-600"><%= formatDateTime(payment.createdAt) %></td>
+                <td class="px-6 py-4 text-slate-600"><%= formatDateInput(payment.paymentDate) %></td>
                 <td class="px-6 py-4">
                   <div class="flex justify-end gap-2">
                     <a href="<%= buildPaymentEditUrl(payment._id) %>" class="rounded-full bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-800">Sửa</a>

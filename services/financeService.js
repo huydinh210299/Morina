@@ -117,7 +117,7 @@ const getRevenueSummary = async (range) => {
     Order.aggregate([
       {
         $match: {
-          createdAt: {
+          paymentDate: {
             $gte: range.start,
             $lt: range.end
           }
@@ -134,7 +134,7 @@ const getRevenueSummary = async (range) => {
     Payment.aggregate([
       {
         $match: {
-          createdAt: {
+          paymentDate: {
             $gte: range.start,
             $lt: range.end
           }
@@ -255,7 +255,7 @@ const getMonthlyRevenueChart = async (range) => {
 const getPaymentManagementData = async (query = {}) => {
   const normalized = normalizePaymentFilters(query);
   const filter = {
-    createdAt: {
+    paymentDate: {
       $gte: normalized.start,
       $lt: normalized.end
     }
@@ -264,7 +264,7 @@ const getPaymentManagementData = async (query = {}) => {
   const totalItems = await Payment.countDocuments(filter);
   const pagination = buildPagination(normalized.page, totalItems);
   const payments = await Payment.find(filter)
-    .sort({ createdAt: -1 })
+    .sort({ paymentDate: -1, createdAt: -1 })
     .skip((pagination.page - 1) * pagination.pageSize)
     .limit(pagination.pageSize);
 
@@ -312,7 +312,8 @@ const createPayment = async ({ validatedBody, user, query }) => {
     setCreateAuditFields(
       {
         amount: validatedBody.amount,
-        description: validatedBody.description
+        description: validatedBody.description,
+        paymentDate: validatedBody.paymentDate
       },
       user
     )
@@ -333,7 +334,8 @@ const updatePayment = async ({ id, validatedBody, user, query }) => {
     setUpdateAuditFields(
       {
         amount: validatedBody.amount,
-        description: validatedBody.description
+        description: validatedBody.description,
+        paymentDate: validatedBody.paymentDate
       },
       user
     ),

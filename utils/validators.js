@@ -52,7 +52,8 @@ const payrollAdjustmentSchema = Joi.object({
 
 const financePaymentSchema = Joi.object({
   amount: Joi.number().min(0).required(),
-  description: Joi.string().trim().allow("").default("")
+  description: Joi.string().trim().allow("").default(""),
+  paymentDate: Joi.date().required()
 });
 
 const categorySchema = Joi.object({
