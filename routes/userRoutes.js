@@ -9,6 +9,7 @@ const {
   timekeepingCreateSchema,
   settingValueSchema,
   payrollPaymentSchema,
+  payrollSalaryUpdateSchema,
   payrollAdjustmentSchema
 } = require("../utils/validators");
 const { USER_ROLES } = require("../utils/constants");
@@ -102,6 +103,12 @@ router.post(
   allowRoles(USER_ROLES.ADMIN),
   validate(payrollPaymentSchema),
   userController.paySalary
+);
+router.post(
+  "/:id/payroll/salary",
+  allowRoles(USER_ROLES.ADMIN),
+  validate(payrollSalaryUpdateSchema),
+  userController.updatePayrollSalary
 );
 router.get("/:id", allowRoles(USER_ROLES.ADMIN), userController.renderShow);
 router.get("/:id/edit", allowRoles(USER_ROLES.ADMIN), userController.renderEdit);

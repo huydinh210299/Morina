@@ -41,6 +41,14 @@ const payrollPaymentSchema = Joi.object({
     .required()
 });
 
+const payrollSalaryUpdateSchema = Joi.object({
+  month: Joi.string()
+    .pattern(/^\d{4}-\d{2}$/)
+    .required(),
+  salary: Joi.number().min(0).required(),
+  description: Joi.string().trim().allow("").default("")
+});
+
 const payrollAdjustmentSchema = Joi.object({
   month: Joi.string()
     .pattern(/^\d{4}-\d{2}$/)
@@ -170,6 +178,7 @@ module.exports = {
   timekeepingCreateSchema,
   settingValueSchema,
   payrollPaymentSchema,
+  payrollSalaryUpdateSchema,
   payrollAdjustmentSchema,
   financePaymentSchema,
   categorySchema,

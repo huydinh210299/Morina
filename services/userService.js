@@ -652,6 +652,9 @@ const getPayrollData = async ({ userId, month }) => {
   const extraCommissionSalary = approvedCommissionEntries.reduce((sum, entry) => sum + entry.amount, 0);
   const faultSalary = faultEntries.reduce((sum, entry) => sum + entry.amount, 0);
   const salary = shiftSalary + orderCommissionSalary + extraCommissionSalary - faultSalary;
+  const selectedSalaryEntry = (userItem.salary || []).find(
+    (entry) => entry.month === range.start.getMonth() + 1 && entry.year === range.start.getFullYear()
+  );
   const pendingCount = userItem.timekeeping.filter(
     (entry) => !entry.approved && entry.shiftId && isDateInRange(entry.date, range.start, range.end)
   ).length;
@@ -671,11 +674,44 @@ const getPayrollData = async ({ userId, month }) => {
     extraCommissionSalary,
     faultSalary,
     salary,
+    selectedSalaryEntry,
     pendingCount,
     approvedCommissionEntries,
     pendingCommissionEntries,
     faultEntries,
     salaryHistory: buildSalaryHistory(userItem.salary)
+  };
+};
+
+const updatePayrollSalary = async ({ userId, validatedBody, user }) => {
+  const range = parseMonthInput(validatedBody.month);
+  const userItem = await findUserByIdOrFail(userId, "-password");
+  ensureStaffUser(userItem);
+
+  const payrollMonth = range.start.getMonth() + 1;
+  const payrollYear = range.start.getFullYear();
+  const salaryEntry = userItem.salary.find(
+    (entry) => entry.month === payrollMonth && entry.year === payrollYear
+  );
+
+  if (salaryEntry) {
+    salaryEntry.salary = validatedBody.salary;
+    salaryEntry.description = validatedBody.description;
+  } else {
+    userItem.salary.push({
+      month: payrollMonth,
+      year: payrollYear,
+      salary: validatedBody.salary,
+      description: validatedBody.description
+    });
+  }
+
+  userItem.updatedBy = user._id.toString();
+  await userItem.save();
+
+  return {
+    successMessage: "Cập nhật lương theo tháng thành công.",
+    redirectTo: `/users/${userId}/payroll?month=${range.selectedMonth}`
   };
 };
 
@@ -946,5 +982,6 @@ module.exports = {
   createFault,
   deleteFault,
   getPayrollData,
-  paySalary
+  paySalary,
+  updatePayrollSalary
 };

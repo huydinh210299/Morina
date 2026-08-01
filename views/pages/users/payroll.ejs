@@ -66,6 +66,23 @@
   </div>
 
   <% if (userItem.role === "staff") { %>
+    <form action="/users/<%= userItem._id %>/payroll/salary" method="POST" class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
+      <h2 class="text-2xl font-black text-slate-900">Cập nhật lương theo tháng</h2>
+      <p class="mt-2 text-slate-500">Lưu mức lương và mô tả cho tháng <%= selectedMonth %>.</p>
+      <input type="hidden" name="month" value="<%= selectedMonth %>" />
+      <div class="mt-6 grid gap-5 md:grid-cols-2">
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-slate-700">Mức lương</label>
+          <input name="salary" type="number" min="0" step="1" required value="<%= selectedSalaryEntry?.salary ?? salary %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-slate-700">Mô tả</label>
+          <input name="description" type="text" value="<%= selectedSalaryEntry?.description || '' %>" placeholder="Ví dụ: Lương tháng đã điều chỉnh" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+        </div>
+      </div>
+      <button type="submit" class="mt-5 rounded-full bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700">Cập nhật lương</button>
+    </form>
+
     <div class="grid gap-6 xl:grid-cols-3">
       <form action="/users/<%= userItem._id %>/faults" method="POST" class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
         <h2 class="text-2xl font-black text-slate-900">Thêm lỗi phạt</h2>
@@ -243,7 +260,10 @@
       <% salaryHistory.forEach((item) => { %>
         <div class="rounded-3xl border border-slate-200 p-5">
           <p class="font-semibold text-slate-900">Tháng <%= String(item.month).padStart(2, "0") %>/<%= item.year %></p>
-          <p class="mt-1 text-sm text-slate-500">Tổng lương đã thanh toán: <span class="font-semibold text-slate-700"><%= formatCurrency(item.salary) %></span></p>
+          <p class="mt-1 text-sm text-slate-500">Tổng lương đã lưu: <span class="font-semibold text-slate-700"><%= formatCurrency(item.salary) %></span></p>
+          <% if (item.description) { %>
+            <p class="mt-1 text-sm text-slate-500">Mô tả: <%= item.description %></p>
+          <% } %>
         </div>
       <% }) %>
     </div>
