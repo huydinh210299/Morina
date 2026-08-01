@@ -410,18 +410,30 @@ const resolveOrderAmount = (payload) => {
   return Number(payload.orderAmount);
 };
 
+const calculateRemainingAmount = (order) => {
+  const totalDue = Number(order.orderAmount || 0) + Number(order.surcharge || 0) + Number(order.deposit || 0);
+  const totalPaid = (order.payments || []).reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+
+  return Math.max(0, totalDue - totalPaid);
+};
+
 const getIndexData = async (query) => {
   const requestedPage = Number.parseInt(query.page, 10);
   const { filters, mongoFilter } = buildOrderFilters(query);
 
   const totalItems = await Order.countDocuments(mongoFilter);
   const pagination = buildPagination(Number.isNaN(requestedPage) ? 1 : requestedPage, totalItems);
-  const orders = await Order.find(mongoFilter)
+  const orderDocuments = await Order.find(mongoFilter)
     .populate("products.product")
     .populate("accessories.accessory")
     .sort({ createdAt: -1 })
     .skip((pagination.page - 1) * pagination.pageSize)
     .limit(pagination.pageSize);
+
+  const orders = orderDocuments.map((order) => ({
+    ...order.toObject(),
+    remainingAmount: calculateRemainingAmount(order)
+  }));
 
   return {
     title: "Đơn hàng",

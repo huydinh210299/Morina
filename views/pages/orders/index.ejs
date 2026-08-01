@@ -192,8 +192,8 @@
               </td>
               <td class="px-6 py-4 text-slate-600"><%= new Date(order.createdAt).toLocaleString() %></td>
               <td class="px-6 py-4 text-slate-600">
-                <%= formatCurrency(order.orderAmount) %><br />
-                <span class="text-xs text-slate-400">Cọc: <%= formatCurrency(order.deposit || 0) %></span>
+                <p>Tổng tiền đơn: <span class="font-semibold"><%= formatCurrency(order.orderAmount) %></span></p>
+                <p class="mt-1 text-sm text-slate-500">Còn cần thanh toán: <span class="font-semibold text-rose-700"><%= formatCurrency(order.remainingAmount) %></span></p>
               </td>
               <td class="px-6 py-4 text-slate-600">
                 <span class="mr-2 inline-flex rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800"><%= order.alreadyPickup ? "Đã lấy" : "Chờ lấy" %></span>
