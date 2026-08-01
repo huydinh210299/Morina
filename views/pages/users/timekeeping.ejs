@@ -10,7 +10,7 @@
     </form>
   </div>
 
-  <div class="grid gap-4 md:grid-cols-<%= isStaff ? 4 : 3 %>">
+  <div class="grid gap-4 md:grid-cols-3 xl:grid-cols-<%= isStaff ? 6 : 3 %>">
     <div class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
       <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Tổng lương tháng</p>
       <p class="mt-3 text-3xl font-black text-brand-700"><%= formatCurrency(totalSalary) %></p>
@@ -19,17 +19,23 @@
       <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Lương chưa thanh toán</p>
       <p class="mt-3 text-3xl font-black text-emerald-700"><%= formatCurrency(accruedSalary) %></p>
     </div>
+    <% if (isStaff) { %>
+      <div class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
+        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Lương mặc định / giờ</p>
+        <p class="mt-3 text-3xl font-black text-emerald-700"><%= formatCurrency(hourSalary) %></p>
+        <p class="mt-2 text-sm text-slate-500">Lương ca làm: <span class="font-semibold text-slate-700"><%= formatCurrency(shiftSalary) %></span></p>
+      </div>
+      <div class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
+        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Hoa hồng đơn đã tạo</p>
+        <p class="mt-3 text-3xl font-black text-violet-700"><%= formatCurrency(orderCommissionSalary) %></p>
+        <p class="mt-2 text-sm text-slate-500"><span class="font-semibold text-slate-700"><%= orderCount %></span> đơn × <%= formatCurrency(commission) %></p>
+      </div>
+    <% } %>
     <div class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
       <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Lỗi phạt</p>
       <p class="mt-3 text-3xl font-black text-rose-700"><%= formatCurrency(faultSalary) %></p>
       <p class="mt-2 text-sm text-slate-500">Đã thanh toán: <span class="font-semibold text-slate-700"><%= formatCurrency(paidSalary) %></span></p>
     </div>
-    <% if (isStaff) { %>
-      <div class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
-        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Số đơn đã tạo</p>
-        <p class="mt-3 text-3xl font-black text-violet-700"><%= orderCount %></p>
-      </div>
-    <% } %>
   </div>
 
   <div class="grid gap-6 xl:grid-cols-[1fr_1fr_1.3fr]">
