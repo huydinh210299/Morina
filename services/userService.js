@@ -459,6 +459,8 @@ const getOwnTimekeepingData = async ({ userId, month }) => {
     entries,
     commissionEntries,
     faultEntries,
+    isStaff: userItem.role === USER_ROLES.STAFF,
+    orderCount: getCreatedDataCount(userItem),
     faultSalary,
     accruedSalary,
     paidSalary,
