@@ -465,6 +465,8 @@ const getOwnTimekeepingData = async ({ userId, month }) => {
     commission,
     shiftSalary,
     orderCommissionSalary,
+    extraCommissionSalary,
+    approvedCommissionCount: approvedCommissionEntries.length,
     faultSalary,
     accruedSalary,
     paidSalary,
