@@ -126,7 +126,7 @@ const getRevenueSummary = async (range) => {
       {
         $group: {
           _id: null,
-          totalRevenue: { $sum: "$orderAmount" },
+          totalRevenue: { $sum: { $add: ["$orderAmount", { $ifNull: ["$surcharge", 0] }] } },
           orderCount: { $sum: 1 }
         }
       }
@@ -197,7 +197,7 @@ const getDailyRevenueSummary = async (range) => {
     {
       $group: {
         _id: null,
-        totalRevenue: { $sum: "$orderAmount" },
+        totalRevenue: { $sum: { $add: ["$orderAmount", { $ifNull: ["$surcharge", 0] }] } },
         orderCount: { $sum: 1 }
       }
     }
@@ -223,7 +223,7 @@ const getMonthlyRevenueChart = async (range) => {
     {
       $group: {
         _id: { $dayOfMonth: "$createdAt" },
-        totalRevenue: { $sum: "$orderAmount" },
+        totalRevenue: { $sum: { $add: ["$orderAmount", { $ifNull: ["$surcharge", 0] }] } },
         orderCount: { $sum: 1 }
       }
     }

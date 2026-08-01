@@ -525,7 +525,7 @@ const updateOrderAmountState = () => {
     (sum, input) => sum + toNumber(input.value),
     0
   );
-  const calculated = productTotal + accessoryTotal + toNumber(surchargeInput?.value);
+  const calculated = productTotal + accessoryTotal;
   const manualOverride = orderAmountInput.dataset.manualOverride === "true";
 
   totalDisplay.textContent = currencyFormatter.format(calculated);
@@ -535,11 +535,11 @@ const updateOrderAmountState = () => {
   }
 
   const currentFinal = toNumber(orderAmountInput.value);
-  const totalWithDeposit = currentFinal + toNumber(depositInput?.value);
+  const totalWithDeposit = currentFinal + toNumber(surchargeInput?.value) + toNumber(depositInput?.value);
   const discount = calculated - currentFinal;
 
   if (totalWithDepositDisplay) {
-    totalWithDepositDisplay.textContent = `Tổng thu (gồm cọc): ${currencyFormatter.format(totalWithDeposit)}`;
+    totalWithDepositDisplay.textContent = `Tổng cần thu (đơn + phụ thu + cọc): ${currencyFormatter.format(totalWithDeposit)}`;
   }
 
   hint.textContent =
@@ -585,7 +585,7 @@ const initializeOrderAmountOverride = () => {
     (sum, input) => sum + toNumber(input.value),
     0
   );
-  const calculated = productTotal + accessoryTotal + toNumber(surchargeInput?.value);
+  const calculated = productTotal + accessoryTotal;
   orderAmountInput.dataset.manualOverride = Math.abs(toNumber(orderAmountInput.value) - calculated) < 0.01 ? "false" : "true";
 };
 
@@ -847,8 +847,7 @@ document.addEventListener("input", (event) => {
       Array.from(document.querySelectorAll('input[name="accessoryPrices"]')).reduce(
         (sum, input) => sum + toNumber(input.value),
         0
-      ) +
-      toNumber(document.querySelector('input[name="surcharge"]')?.value);
+      );
 
     event.target.dataset.manualOverride = Math.abs(toNumber(event.target.value) - calculated) < 0.01 ? "false" : "true";
     updateOrderAmountState();

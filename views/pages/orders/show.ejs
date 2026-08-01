@@ -1,6 +1,6 @@
 <%
   const totalPaid = order.payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
-  const totalDue = Number(order.orderAmount || 0) + Number(order.deposit || 0);
+  const totalDue = Number(order.orderAmount || 0) + Number(order.surcharge || 0) + Number(order.deposit || 0);
   const remainingAmount = totalDue - totalPaid;
   const isOverpaid = remainingAmount < 0;
 %>
@@ -36,7 +36,7 @@
           <button type="submit" class="rounded-full bg-amber-100 px-5 py-3 font-semibold text-amber-800 transition hover:bg-amber-200">Cập nhật cọc</button>
         </form>
         <p class="mt-2 text-slate-700">Phụ thu: <%= formatCurrency(order.surcharge) %></p>
-        <p class="mt-2 text-slate-700">Tổng cần thu (đơn + cọc): <span class="font-semibold"><%= formatCurrency(totalDue) %></span></p>
+        <p class="mt-2 text-slate-700">Tổng cần thu (đơn + phụ thu + cọc): <span class="font-semibold"><%= formatCurrency(totalDue) %></span></p>
         <p class="mt-2 text-slate-700">Đã thanh toán: <span class="font-semibold"><%= formatCurrency(totalPaid) %></span></p>
         <p class="mt-2 text-slate-700">
           <%= isOverpaid ? "Thanh toán dư" : "Còn cần thanh toán" %>:

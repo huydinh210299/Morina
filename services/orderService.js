@@ -91,7 +91,7 @@ const validatePayload = (schema, payload) => {
 const calculateOrderAmount = (payload) => {
   const productTotal = payload.products.reduce((sum, item) => sum + Number(item.price), 0);
   const accessoryTotal = payload.accessories.reduce((sum, item) => sum + Number(item.price), 0);
-  return productTotal + accessoryTotal + Number(payload.surcharge || 0);
+  return productTotal + accessoryTotal;
 };
 
 const getMonthRange = (date = new Date()) => {
