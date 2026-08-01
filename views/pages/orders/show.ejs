@@ -23,8 +23,8 @@
     <div class="mt-8 grid gap-6 md:grid-cols-2">
       <div class="rounded-3xl bg-slate-50 p-5">
         <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Lịch thuê</p>
-        <p class="mt-3 text-slate-700">Bắt đầu: <%= new Date(order.generalStartTime).toLocaleString() %></p>
-        <p class="mt-2 text-slate-700">Kết thúc: <%= new Date(order.generalEndTime).toLocaleString() %></p>
+        <p class="mt-3 text-slate-700">Bắt đầu: <%= formatDateTime(order.generalStartTime) %></p>
+        <p class="mt-2 text-slate-700">Kết thúc: <%= formatDateTime(order.generalEndTime) %></p>
       </div>
       <div class="rounded-3xl bg-slate-50 p-5">
         <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Tài chính</p>
@@ -66,7 +66,7 @@
           <div class="rounded-3xl border border-slate-200 p-4">
             <p class="font-semibold text-slate-900"><%= item.product?.code || "Sản phẩm không xác định" %></p>
             <p class="mt-2 text-sm text-slate-600"><%= formatCurrency(item.price) %></p>
-            <p class="mt-1 text-sm text-slate-500"><%= new Date(item.startTime).toLocaleString() %> → <%= new Date(item.endTime).toLocaleString() %></p>
+            <p class="mt-1 text-sm text-slate-500"><%= formatDateTime(item.startTime) %> → <%= formatDateTime(item.endTime) %></p>
           </div>
         <% }) %>
       </div>
@@ -86,7 +86,7 @@
             <p class="font-semibold text-slate-900"><%= item.accessory?.code || "Phụ kiện không xác định" %> <%= item.accessory?.name ? `- ${item.accessory.name}` : "" %></p>
             <p class="mt-2 text-sm text-slate-600">Số lượng thuê: <%= item.amount ?? 1 %></p>
             <p class="mt-2 text-sm text-slate-600"><%= formatCurrency(item.price) %></p>
-            <p class="mt-1 text-sm text-slate-500"><%= new Date(item.startTime).toLocaleString() %> → <%= new Date(item.endTime).toLocaleString() %></p>
+            <p class="mt-1 text-sm text-slate-500"><%= formatDateTime(item.startTime) %> → <%= formatDateTime(item.endTime) %></p>
           </div>
         <% }) %>
       </div>

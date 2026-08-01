@@ -33,9 +33,20 @@ const vndFormatter = new Intl.NumberFormat("vi-VN", {
   maximumFractionDigits: 0
 });
 const dateTimeFormatter = new Intl.DateTimeFormat("vi-VN", {
-  dateStyle: "short",
-  timeStyle: "short"
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23"
 });
+
+const formatDateTime = (value) => {
+  const parts = dateTimeFormatter.formatToParts(new Date(value));
+  const getPart = (type) => parts.find((part) => part.type === type)?.value;
+
+  return `${getPart("day")}/${getPart("month")}/${getPart("year")} ${getPart("hour")}:${getPart("minute")}`;
+};
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -64,7 +75,7 @@ app.use((req, res, next) => {
       return "-";
     }
 
-    return dateTimeFormatter.format(new Date(value));
+    return formatDateTime(value);
   };
   delete req.session.success;
   delete req.session.error;

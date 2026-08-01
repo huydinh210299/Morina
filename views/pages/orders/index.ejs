@@ -187,10 +187,10 @@
                 <% } %>
               </td>
               <td class="px-6 py-4 text-slate-600">
-                <%= new Date(order.generalStartTime).toLocaleString() %><br />
-                <%= new Date(order.generalEndTime).toLocaleString() %>
+                <%= formatDateTime(order.generalStartTime) %><br />
+                <%= formatDateTime(order.generalEndTime) %>
               </td>
-              <td class="px-6 py-4 text-slate-600"><%= new Date(order.createdAt).toLocaleString() %></td>
+              <td class="px-6 py-4 text-slate-600"><%= formatDateTime(order.createdAt) %></td>
               <td class="px-6 py-4 text-slate-600">
                 <p>Tổng tiền đơn: <span class="font-semibold"><%= formatCurrency(order.totalOrderAmount) %></span></p>
                 <p class="mt-1 text-sm text-slate-500">Tiền cọc: <span class="font-semibold"><%= formatCurrency(order.deposit || 0) %></span></p>
