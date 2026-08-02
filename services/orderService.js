@@ -229,7 +229,9 @@ const getDayRange = (date) => {
 };
 
 const buildOrderFilters = (query = {}) => {
-  const { start, end } = getMonthRange();
+  const currentDate = new Date();
+  const { start } = getMonthRange(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  const { end } = getMonthRange(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   const defaultEndDate = new Date(end);
   defaultEndDate.setDate(defaultEndDate.getDate() - 1);
   defaultEndDate.setHours(0, 0, 0, 0);
