@@ -15,6 +15,7 @@ router.put("/:id/payments/:paymentIndex", orderController.updatePayment);
 router.post("/:id/products", orderController.addProduct);
 router.post("/:id/accessories", orderController.addAccessory);
 router.put("/:id/deposit", orderController.updateDeposit);
+router.put("/:id/rental-dates", orderController.updateRentalDates);
 router.post("/:id/status", orderController.updateStatus);
 router.post("/:id/note", orderController.updateNote);
 router.get("/:id", orderController.renderShow);

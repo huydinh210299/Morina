@@ -141,6 +141,11 @@ const orderDepositUpdateSchema = Joi.object({
   deposit: Joi.number().min(0).required()
 });
 
+const orderRentalDateUpdateSchema = Joi.object({
+  generalStartTime: Joi.date().required(),
+  generalEndTime: Joi.date().min(Joi.ref("generalStartTime")).required()
+});
+
 const orderStatusSchema = Joi.object({
   alreadyPickup: Joi.boolean().truthy("on").falsy("off").falsy("").default(false),
   returned: Joi.boolean().truthy("on").falsy("off").falsy("").default(false),
@@ -190,6 +195,7 @@ module.exports = {
   orderProductAdditionSchema,
   orderAccessoryAdditionSchema,
   orderDepositUpdateSchema,
+  orderRentalDateUpdateSchema,
   orderStatusSchema,
   orderNoteSchema
 };

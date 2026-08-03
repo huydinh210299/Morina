@@ -1,12 +1,4 @@
 <%
-  const formatDateTimeLocal = (value) => {
-    if (!value) return "";
-    const date = new Date(value);
-    const offset = date.getTimezoneOffset();
-    const localDate = new Date(date.getTime() - offset * 60000);
-    return localDate.toISOString().slice(0, 16);
-  };
-
   const orderProducts = order?.products?.length ? order.products : [{}];
   const orderAccessories = order?.accessories?.length ? order.accessories : [];
   const orderPayments = order?.payments?.length ? order.payments : [{}];

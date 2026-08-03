@@ -48,6 +48,16 @@ const formatDateTime = (value) => {
   return `${getPart("day")}/${getPart("month")}/${getPart("year")} ${getPart("hour")}:${getPart("minute")}`;
 };
 
+const formatDateTimeLocal = (value) => {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+  const offset = date.getTimezoneOffset();
+  return new Date(date.getTime() - offset * 60000).toISOString().slice(0, 16);
+};
+
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.set("layout", "layouts/main");
@@ -70,6 +80,7 @@ app.use((req, res, next) => {
   res.locals.success = req.session.success || null;
   res.locals.error = req.session.error || null;
   res.locals.formatCurrency = (value) => vndFormatter.format(Number(value) || 0);
+  res.locals.formatDateTimeLocal = formatDateTimeLocal;
   res.locals.formatDateTime = (value) => {
     if (!value) {
       return "-";

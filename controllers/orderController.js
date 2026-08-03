@@ -144,6 +144,21 @@ const updateDeposit = async (req, res) => {
   res.redirect(`/orders/${req.params.id}`);
 };
 
+const updateRentalDates = async (req, res) => {
+  try {
+    const result = await orderService.updateOrderRentalDates({
+      id: req.params.id,
+      body: req.body,
+      user: req.user
+    });
+    req.session.success = result.successMessage;
+  } catch (error) {
+    req.session.error = error.message;
+  }
+
+  res.redirect(`/orders/${req.params.id}`);
+};
+
 const updateStatus = async (req, res) => {
   const result = await orderService.updateOrderStatus({
     id: req.params.id,
@@ -178,6 +193,7 @@ module.exports = wrapControllerHandlers({
   addProduct,
   addAccessory,
   updateDeposit,
+  updateRentalDates,
   updateStatus,
   updateNote
 });

@@ -9,6 +9,7 @@ const {
   orderProductAdditionSchema,
   orderAccessoryAdditionSchema,
   orderDepositUpdateSchema,
+  orderRentalDateUpdateSchema,
   orderStatusSchema,
   orderNoteSchema
 } = require("../utils/validators");
@@ -739,6 +740,48 @@ const updateOrderDeposit = async ({ id, body, user }) => {
   };
 };
 
+const updateOrderRentalDates = async ({ id, body, user }) => {
+  const order = await findOrderOrFail(id);
+  const rentalDates = validatePayload(orderRentalDateUpdateSchema, {
+    generalStartTime: body.generalStartTime,
+    generalEndTime: body.generalEndTime
+  });
+
+  const products = order.products.map((item) => ({
+    product: item.product,
+    startTime: item.useGeneralTimes !== false ? rentalDates.generalStartTime : item.startTime,
+    endTime: item.useGeneralTimes !== false ? rentalDates.generalEndTime : item.endTime
+  }));
+  const conflicts = await findConflictingProductLines({
+    payload: { products },
+    excludeOrderId: id
+  });
+
+  if (conflicts.length) {
+    const error = new Error(buildConflictMessage(conflicts));
+    error.statusCode = 409;
+    throw error;
+  }
+
+  order.generalStartTime = rentalDates.generalStartTime;
+  order.generalEndTime = rentalDates.generalEndTime;
+
+  for (const item of [...order.products, ...order.accessories]) {
+    if (item.useGeneralTimes !== false) {
+      item.startTime = rentalDates.generalStartTime;
+      item.endTime = rentalDates.generalEndTime;
+    }
+  }
+
+  Object.assign(order, setUpdateAuditFields({}, user));
+  await order.save();
+
+  return {
+    successMessage: "Đã cập nhật lịch thuê thành công.",
+    redirectTo: `/orders/${order._id}`
+  };
+};
+
 const updateOrderStatus = async ({ id, body, user }) => {
   const order = await findOrderOrFail(id);
   const statuses = validatePayload(orderStatusSchema, {
@@ -804,6 +847,7 @@ module.exports = {
   addOrderProduct,
   addOrderAccessory,
   updateOrderDeposit,
+  updateOrderRentalDates,
   updateOrderStatus,
   updateOrderNote,
   checkOrderConflicts
