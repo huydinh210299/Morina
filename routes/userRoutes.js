@@ -10,6 +10,7 @@ const {
   settingValueSchema,
   payrollPaymentSchema,
   payrollSalaryUpdateSchema,
+  staffOrderCountSchema,
   payrollAdjustmentSchema
 } = require("../utils/validators");
 const { USER_ROLES } = require("../utils/constants");
@@ -109,6 +110,12 @@ router.post(
   allowRoles(USER_ROLES.ADMIN),
   validate(payrollSalaryUpdateSchema),
   userController.updatePayrollSalary
+);
+router.post(
+  "/:id/order-count",
+  allowRoles(USER_ROLES.ADMIN),
+  validate(staffOrderCountSchema),
+  userController.updateStaffOrderCount
 );
 router.get("/:id", allowRoles(USER_ROLES.ADMIN), userController.renderShow);
 router.get("/:id/edit", allowRoles(USER_ROLES.ADMIN), userController.renderEdit);

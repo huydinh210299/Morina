@@ -218,6 +218,16 @@ const updatePayrollSalary = async (req, res) => {
   res.redirect(result.redirectTo);
 };
 
+const updateStaffOrderCount = async (req, res) => {
+  const result = await userService.updateStaffOrderCount({
+    userId: req.params.id,
+    validatedBody: req.validatedBody,
+    user: req.user
+  });
+  req.session.success = result.successMessage;
+  res.redirect(result.redirectTo);
+};
+
 module.exports = wrapControllerHandlers({
   renderIndex,
   renderCreate,
@@ -243,5 +253,6 @@ module.exports = wrapControllerHandlers({
   deleteFault,
   renderPayroll,
   paySalary,
-  updatePayrollSalary
+  updatePayrollSalary,
+  updateStaffOrderCount
 });

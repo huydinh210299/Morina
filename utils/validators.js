@@ -49,6 +49,13 @@ const payrollSalaryUpdateSchema = Joi.object({
   description: Joi.string().trim().allow("").default("")
 });
 
+const staffOrderCountSchema = Joi.object({
+  totalOrder: Joi.number().integer().min(0).required(),
+  month: Joi.string()
+    .pattern(/^\d{4}-\d{2}$/)
+    .allow("")
+});
+
 const payrollAdjustmentSchema = Joi.object({
   month: Joi.string()
     .pattern(/^\d{4}-\d{2}$/)
@@ -184,6 +191,7 @@ module.exports = {
   settingValueSchema,
   payrollPaymentSchema,
   payrollSalaryUpdateSchema,
+  staffOrderCountSchema,
   payrollAdjustmentSchema,
   financePaymentSchema,
   categorySchema,

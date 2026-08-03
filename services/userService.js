@@ -324,6 +324,29 @@ const updateUser = async ({ id, validatedBody, user }) => {
   };
 };
 
+const updateStaffOrderCount = async ({ userId, validatedBody, user }) => {
+  const userItem = await findUserByIdOrFail(userId);
+  ensureStaffUser(userItem);
+
+  await User.findByIdAndUpdate(
+    userId,
+    setUpdateAuditFields(
+      {
+        totalOrder: validatedBody.totalOrder
+      },
+      user
+    ),
+    { runValidators: true }
+  );
+
+  const monthQuery = validatedBody.month ? `?month=${validatedBody.month}` : "";
+
+  return {
+    successMessage: "Cập nhật số đơn đã tạo của nhân viên thành công.",
+    redirectTo: `/users/${userId}/payroll${monthQuery}`
+  };
+};
+
 const getShiftIndexData = async ({ editShiftId } = {}) => {
   const [shifts, hourSalarySetting] = await Promise.all([Shift.find().sort({ createdAt: -1 }), getHourSalarySetting()]);
   const editingShift = editShiftId
@@ -965,6 +988,7 @@ module.exports = {
   createUser,
   getEditData,
   updateUser,
+  updateStaffOrderCount,
   getShiftIndexData,
   createShift,
   updateShift,

@@ -66,6 +66,19 @@
   </div>
 
   <% if (userItem.role === "staff") { %>
+    <form action="/users/<%= userItem._id %>/order-count" method="POST" class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
+      <h2 class="text-2xl font-black text-slate-900">Cập nhật số đơn đã tạo</h2>
+      <p class="mt-2 text-slate-500">Dùng khi quản trị viên tạo đơn hàng theo yêu cầu của nhân viên. Số đơn này được dùng để tính hoa hồng.</p>
+      <input type="hidden" name="month" value="<%= selectedMonth %>" />
+      <div class="mt-6 grid gap-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+        <label class="block">
+          <span class="mb-2 block text-sm font-semibold text-slate-700">Số đơn đã tạo</span>
+          <input name="totalOrder" type="number" min="0" step="1" required value="<%= orderCount %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+        </label>
+        <button type="submit" class="rounded-full bg-brand-500 px-6 py-3 font-semibold text-white transition hover:bg-brand-700">Cập nhật số đơn</button>
+      </div>
+    </form>
+
     <form action="/users/<%= userItem._id %>/payroll/salary" method="POST" class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
       <h2 class="text-2xl font-black text-slate-900">Cập nhật lương theo tháng</h2>
       <p class="mt-2 text-slate-500">Lưu mức lương và mô tả cho tháng <%= selectedMonth %>.</p>
