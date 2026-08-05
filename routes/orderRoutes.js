@@ -19,8 +19,8 @@ router.put("/:id/rental-dates", orderController.updateRentalDates);
 router.post("/:id/status", orderController.updateStatus);
 router.post("/:id/note", orderController.updateNote);
 router.get("/:id", orderController.renderShow);
-router.get("/:id/edit", allowRoles(USER_ROLES.ADMIN), orderController.renderEdit);
-router.put("/:id", allowRoles(USER_ROLES.ADMIN), orderController.update);
+router.get("/:id/edit", orderController.renderEdit);
+router.put("/:id", orderController.update);
 router.delete("/:id", allowRoles(USER_ROLES.ADMIN), orderController.remove);
 
 module.exports = router;

@@ -75,7 +75,7 @@ const remove = async (req, res) => {
 };
 
 const renderShow = async (req, res) => {
-  res.render("pages/orders/show", await orderService.getShowData(req.params.id));
+  res.render("pages/orders/view", await orderService.getShowData(req.params.id));
 };
 
 const addPayment = async (req, res) => {
