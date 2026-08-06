@@ -41,6 +41,30 @@
       </div>
     </div>
 
+    <div class="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-5">
+      <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Thao tác đơn hàng</p>
+      <div class="mt-4 flex flex-wrap gap-3">
+        <form action="/orders/<%= order._id %>/status" method="POST">
+          <input type="hidden" name="action" value="pickup" />
+          <button type="submit" <%= order.alreadyPickup ? "disabled" : "" %> class="rounded-full bg-sky-100 px-5 py-3 font-semibold text-sky-800 transition hover:bg-sky-200 disabled:cursor-not-allowed disabled:opacity-60">
+            <%= order.alreadyPickup ? "Đã nhận hàng" : "Xác nhận nhận hàng" %>
+          </button>
+        </form>
+        <form action="/orders/<%= order._id %>/status" method="POST">
+          <input type="hidden" name="action" value="return" />
+          <button type="submit" <%= order.returned ? "disabled" : "" %> class="rounded-full bg-emerald-100 px-5 py-3 font-semibold text-emerald-800 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-60">
+            <%= order.returned ? "Đã trả hàng" : "Xác nhận trả hàng" %>
+          </button>
+        </form>
+        <form action="/orders/<%= order._id %>/status" method="POST">
+          <input type="hidden" name="action" value="refund" />
+          <button type="submit" <%= order.returnDeposit ? "disabled" : "" %> class="rounded-full bg-amber-100 px-5 py-3 font-semibold text-amber-800 transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-60">
+            <%= order.returnDeposit ? "Đã hoàn tiền" : "Hoàn tiền cọc" %>
+          </button>
+        </form>
+      </div>
+    </div>
+
     <% if (order.note) { %>
       <div class="mt-6 rounded-3xl bg-slate-50 p-5">
         <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Ghi chú</p>

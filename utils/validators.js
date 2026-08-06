@@ -159,6 +159,10 @@ const orderStatusSchema = Joi.object({
   returnDeposit: Joi.boolean().truthy("on").falsy("off").falsy("").default(false)
 });
 
+const orderStatusActionSchema = Joi.object({
+  action: Joi.string().valid("pickup", "return", "refund").required()
+});
+
 const orderNoteSchema = Joi.object({
   note: Joi.string().trim().allow("").default("")
 });
@@ -205,5 +209,6 @@ module.exports = {
   orderDepositUpdateSchema,
   orderRentalDateUpdateSchema,
   orderStatusSchema,
+  orderStatusActionSchema,
   orderNoteSchema
 };

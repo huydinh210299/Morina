@@ -11,6 +11,7 @@ const {
   orderDepositUpdateSchema,
   orderRentalDateUpdateSchema,
   orderStatusSchema,
+  orderStatusActionSchema,
   orderNoteSchema
 } = require("../utils/validators");
 const { setCreateAuditFields, setUpdateAuditFields } = require("../utils/audit");
@@ -784,6 +785,35 @@ const updateOrderRentalDates = async ({ id, body, user }) => {
 
 const updateOrderStatus = async ({ id, body, user }) => {
   const order = await findOrderOrFail(id);
+
+  if (body.action) {
+    const { action } = validatePayload(orderStatusActionSchema, { action: body.action });
+    const statusByAction = {
+      pickup: {
+        field: "alreadyPickup",
+        successMessage: "Đã xác nhận khách nhận hàng."
+      },
+      return: {
+        field: "returned",
+        successMessage: "Đã xác nhận khách trả hàng."
+      },
+      refund: {
+        field: "returnDeposit",
+        successMessage: "Đã xác nhận hoàn tiền cọc."
+      }
+    };
+    const status = statusByAction[action];
+
+    order[status.field] = true;
+    Object.assign(order, setUpdateAuditFields({}, user));
+    await order.save();
+
+    return {
+      successMessage: status.successMessage,
+      redirectTo: `/orders/${order._id}`
+    };
+  }
+
   const statuses = validatePayload(orderStatusSchema, {
     alreadyPickup: body.alreadyPickup,
     returned: body.returned,
