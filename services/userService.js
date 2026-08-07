@@ -562,9 +562,11 @@ const createCommissionRequest = async ({ userId, validatedBody, user }) => {
   };
 };
 
-const getPendingTimekeepingData = async ({ month }) => {
+const getPendingTimekeepingData = async ({ month, tab }) => {
   const range = parseMonthInput(month);
-  const users = await User.find({ "timekeeping.approved": false })
+  const users = await User.find({
+    $or: [{ "timekeeping.approved": false }, { "commissions.approved": false }]
+  })
     .select("-password")
     .populate("timekeeping.shiftId")
     .sort({ updatedAt: -1 });
@@ -586,10 +588,27 @@ const getPendingTimekeepingData = async ({ month }) => {
     )
     .sort(sortByDateDesc);
 
+  const pendingCommissionEntries = users
+    .flatMap((userItem) =>
+      (userItem.commissions || [])
+        .filter((entry) => !entry.approved && isDateInRange(entry.date, range.start, range.end))
+        .map((entry) => ({
+          userId: userItem._id,
+          username: userItem.username,
+          commissionId: entry._id,
+          date: entry.date,
+          amount: Number(entry.amount || 0),
+          description: entry.description
+        }))
+    )
+    .sort(sortByDateDesc);
+
   return {
-    title: "Duyệt chấm công",
+    title: "Duyệt yêu cầu",
     pendingEntries,
-    selectedMonth: range.selectedMonth
+    pendingCommissionEntries,
+    selectedMonth: range.selectedMonth,
+    activeTab: tab === "commission" ? "commission" : "timekeeping"
   };
 };
 
@@ -620,7 +639,7 @@ const approveTimekeeping = async ({ userId, timekeepingId, user }) => {
   };
 };
 
-const approveCommission = async ({ userId, commissionId, month, user }) => {
+const approveCommission = async ({ userId, commissionId, month, fromPendingPage, user }) => {
   const userItem = await User.findById(userId);
 
   if (!userItem) {
@@ -646,7 +665,9 @@ const approveCommission = async ({ userId, commissionId, month, user }) => {
 
   return {
     successMessage: "Đã duyệt hoa hồng thành công.",
-    redirectTo: `/users/${userId}/payroll?month=${buildAdjustmentRedirectMonth(month, new Date(commissionEntry.date))}`
+    redirectTo: fromPendingPage
+      ? `/users/timekeeping/pending?month=${buildAdjustmentRedirectMonth(month, new Date(commissionEntry.date))}&tab=commission`
+      : `/users/${userId}/payroll?month=${buildAdjustmentRedirectMonth(month, new Date(commissionEntry.date))}`
   };
 };
 
@@ -919,7 +940,7 @@ const deleteTimekeeping = async ({ userId, timekeepingId, user }) => {
   };
 };
 
-const deleteCommission = async ({ userId, commissionId, month, user }) => {
+const deleteCommission = async ({ userId, commissionId, month, fromPendingPage, user }) => {
   const userItem = await User.findById(userId);
 
   if (!userItem) {
@@ -946,7 +967,9 @@ const deleteCommission = async ({ userId, commissionId, month, user }) => {
 
   return {
     successMessage: "Đã xóa hoa hồng thành công.",
-    redirectTo: `/users/${userId}/payroll?month=${redirectMonth}`
+    redirectTo: fromPendingPage
+      ? `/users/timekeeping/pending?month=${redirectMonth}&tab=commission`
+      : `/users/${userId}/payroll?month=${redirectMonth}`
   };
 };
 

@@ -120,7 +120,8 @@ const renderPendingTimekeeping = async (req, res) => {
   res.render(
     "pages/users/pending-timekeeping",
     await userService.getPendingTimekeepingData({
-      month: req.query.month
+      month: req.query.month,
+      tab: req.query.tab
     })
   );
 };
@@ -150,6 +151,7 @@ const approveCommission = async (req, res) => {
     userId: req.params.userId,
     commissionId: req.params.commissionId,
     month: req.query.month,
+    fromPendingPage: req.query.tab === "commission",
     user: req.user
   });
   req.session.success = result.successMessage;
@@ -161,6 +163,7 @@ const deleteCommission = async (req, res) => {
     userId: req.params.userId,
     commissionId: req.params.commissionId,
     month: req.query.month,
+    fromPendingPage: req.query.tab === "commission",
     user: req.user
   });
   req.session.success = result.successMessage;
