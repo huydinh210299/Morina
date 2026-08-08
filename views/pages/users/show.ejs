@@ -18,6 +18,7 @@
         <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Thông tin tài khoản</p>
         <p class="mt-3 text-slate-700">Tên đăng nhập: <span class="font-semibold text-slate-900"><%= userItem.username %></span></p>
         <p class="mt-2 text-slate-700">Vai trò: <span class="font-semibold text-slate-900"><%= userItem.role %></span></p>
+        <p class="mt-2 text-slate-700">Trạng thái: <span class="font-semibold text-slate-900"><%= userItem.active === false ? "Đã vô hiệu hóa" : "Đang hoạt động" %></span></p>
         <p class="mt-2 text-slate-700">Tổng đơn đã tạo: <span class="font-semibold text-slate-900"><%= userItem.totalOrder || 0 %></span></p>
         <p class="mt-2 text-slate-700">Số lần đã nhận lương: <span class="font-semibold text-slate-900"><%= userItem.salary?.length || 0 %></span></p>
         <p class="mt-2 text-slate-700">Hoa hồng đã duyệt: <span class="font-semibold text-slate-900"><%= approvedCommissionCount %></span></p>

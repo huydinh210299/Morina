@@ -324,6 +324,27 @@ const updateUser = async ({ id, validatedBody, user }) => {
   };
 };
 
+const toggleUserActive = async ({ id, user }) => {
+  const userItem = await findUserByIdOrFail(id);
+  const active = userItem.active === false;
+
+  await User.findByIdAndUpdate(
+    id,
+    setUpdateAuditFields(
+      {
+        active
+      },
+      user
+    ),
+    { runValidators: true }
+  );
+
+  return {
+    successMessage: active ? "Đã bật tài khoản người dùng." : "Đã vô hiệu hóa tài khoản người dùng.",
+    redirectTo: "/users"
+  };
+};
+
 const updateStaffOrderCount = async ({ userId, validatedBody, user }) => {
   const userItem = await findUserByIdOrFail(userId);
   ensureStaffUser(userItem);
@@ -1011,6 +1032,7 @@ module.exports = {
   createUser,
   getEditData,
   updateUser,
+  toggleUserActive,
   updateStaffOrderCount,
   getShiftIndexData,
   createShift,

@@ -80,6 +80,13 @@ const loginUser = async ({ validatedBody }) => {
     };
   }
 
+  if (user.active === false) {
+    return {
+      errorMessage: "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.",
+      redirectTo: "/auth/login"
+    };
+  }
+
   const token = generateToken({
     userId: user._id.toString(),
     role: user.role

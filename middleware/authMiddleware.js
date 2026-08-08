@@ -11,7 +11,10 @@ const attachUser = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId).select("-password");
+    const user = await User.findOne({
+      _id: decoded.userId,
+      active: { $ne: false }
+    }).select("-password");
     req.user = user || null;
     res.locals.currentUser = user || null;
   } catch (error) {

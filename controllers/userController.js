@@ -36,6 +36,15 @@ const update = async (req, res) => {
   res.redirect(result.redirectTo);
 };
 
+const toggleActive = async (req, res) => {
+  const result = await userService.toggleUserActive({
+    id: req.params.id,
+    user: req.user
+  });
+  req.session.success = result.successMessage;
+  res.redirect(result.redirectTo);
+};
+
 const renderShiftIndex = async (req, res) => {
   res.render("pages/users/shifts", await userService.getShiftIndexData({ editShiftId: req.query.edit }));
 };
@@ -238,6 +247,7 @@ module.exports = wrapControllerHandlers({
   create,
   renderEdit,
   update,
+  toggleActive,
   renderShiftIndex,
   createShift,
   updateShift,

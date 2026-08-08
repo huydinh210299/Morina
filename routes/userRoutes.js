@@ -120,5 +120,6 @@ router.post(
 router.get("/:id", allowRoles(USER_ROLES.ADMIN), userController.renderShow);
 router.get("/:id/edit", allowRoles(USER_ROLES.ADMIN), userController.renderEdit);
 router.put("/:id", allowRoles(USER_ROLES.ADMIN), validate(userUpdateSchema), userController.update);
+router.post("/:id/toggle-active", allowRoles(USER_ROLES.ADMIN), userController.toggleActive);
 
 module.exports = router;

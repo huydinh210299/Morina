@@ -2,7 +2,11 @@ require("dotenv").config();
 
 const mongoose = require("mongoose");
 
-const migrations = [require("./remove-uuid-ids"), require("./add-payment-date")];
+const migrations = [
+  require("./remove-uuid-ids"),
+  require("./add-payment-date"),
+  require("./add-user-active")
+];
 const HISTORY_COLLECTION = "migration_history";
 
 const normalizeLegacyHistoryRecord = async (history, migration) => {

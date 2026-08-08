@@ -98,6 +98,10 @@ const userSchema = new mongoose.Schema(
       enum: ["admin", "staff"],
       default: "staff"
     },
+    active: {
+      type: Boolean,
+      default: true
+    },
     totalOrder: {
       type: Number,
       default: 0,
