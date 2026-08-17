@@ -58,6 +58,10 @@
         <input name="phone" type="text" required value="<%= order?.phone || '' %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
       </div>
       <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">Ngày giờ tạo đơn</label>
+        <input name="createdAt" type="datetime-local" required value="<%= formatDateTimeLocal(order?.createdAt) %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+      </div>
+      <div>
         <label class="mb-2 block text-sm font-semibold text-slate-700">Thuê từ</label>
         <input name="generalStartTime" type="datetime-local" required value="<%= formatDateTimeLocal(order?.generalStartTime) %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
       </div>

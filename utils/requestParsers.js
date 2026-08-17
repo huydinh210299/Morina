@@ -142,6 +142,7 @@ const parseOrderPayload = (body) => {
     important: body.important,
     note: body.note,
     orderAmount: body.orderAmount,
+    createdAt: body.createdAt,
     generalStartTime: body.generalStartTime,
     generalEndTime: body.generalEndTime,
     alreadyPickup: body.alreadyPickup,

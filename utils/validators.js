@@ -176,6 +176,7 @@ const orderSchema = Joi.object({
   important: Joi.boolean().truthy("on").falsy("off").falsy("").default(false),
   note: Joi.string().trim().allow("").default(""),
   orderAmount: Joi.number().min(0).optional(),
+  createdAt: Joi.date().default(() => new Date()),
   generalStartTime: Joi.date().required(),
   generalEndTime: Joi.date().min(Joi.ref("generalStartTime")).required(),
   alreadyPickup: Joi.boolean().truthy("on").falsy("off").falsy("").default(false),

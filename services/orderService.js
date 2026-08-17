@@ -452,7 +452,7 @@ const getIndexData = async (query) => {
 
 const getCreateData = async () => ({
   title: "Tạo đơn hàng",
-  order: null,
+  order: { createdAt: new Date() },
   ...(await getOrderDependencies()),
   formAction: "/orders",
   formMethod: "POST"
@@ -522,7 +522,8 @@ const updateOrder = async ({ id, body, user }) => {
   await ensureOrderConflictConfirmed({ body, payload, excludeOrderId: id });
 
   await Order.findByIdAndUpdate(id, setUpdateAuditFields(payload, user), {
-    runValidators: true
+    runValidators: true,
+    overwriteImmutable: true
   });
 
   return {
