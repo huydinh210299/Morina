@@ -70,7 +70,7 @@
       </div>
     </form>
 
-    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
       <div class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
         <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Doanh thu</p>
         <p class="mt-3 text-3xl font-black text-emerald-700"><%= formatCurrency(revenue.totalRevenue) %></p>
@@ -90,6 +90,11 @@
         <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Doanh thu ròng</p>
         <p class="mt-3 text-3xl font-black <%= revenue.netRevenue >= 0 ? 'text-slate-900' : 'text-rose-700' %>"><%= formatCurrency(revenue.netRevenue) %></p>
         <p class="mt-2 text-sm text-slate-500">Doanh thu - lương - khoản chi</p>
+      </div>
+      <div class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
+        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Doanh thu trung bình/ngày</p>
+        <p class="mt-3 text-3xl font-black text-emerald-700"><%= formatCurrency(revenue.averageDailyRevenue) %></p>
+        <p class="mt-2 text-sm text-slate-500">Tổng doanh thu / <%= revenue.daysFromMonthStart %> ngày từ đầu tháng đến hôm nay</p>
       </div>
     </div>
 

@@ -169,6 +169,14 @@ const getRevenueSummary = async (range) => {
   const orderCount = revenueData[0]?.orderCount || 0;
   const totalPayment = paymentData[0]?.totalPayment || 0;
   const paymentCount = paymentData[0]?.paymentCount || 0;
+  const netRevenue = totalRevenue - totalSalary - totalPayment;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const lastDayOfMonth = new Date(range.year, range.month, 0);
+  const endOfReportingPeriod = new Date(Math.min(today.getTime(), lastDayOfMonth.getTime()));
+  const daysFromMonthStart = endOfReportingPeriod >= range.start
+    ? Math.floor((endOfReportingPeriod - range.start) / (24 * 60 * 60 * 1000)) + 1
+    : 0;
 
   return {
     selectedMonth: range.selectedMonth,
@@ -177,7 +185,9 @@ const getRevenueSummary = async (range) => {
     totalRevenue,
     totalSalary,
     totalPayment,
-    netRevenue: totalRevenue - totalSalary - totalPayment,
+    netRevenue,
+    daysFromMonthStart,
+    averageDailyRevenue: daysFromMonthStart ? totalRevenue / daysFromMonthStart : 0,
     orderCount,
     paymentCount,
     staffSalaryItems
