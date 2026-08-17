@@ -423,6 +423,13 @@ const calculateRemainingAmount = (order) => {
   return Math.max(0, totalDue - totalPaid);
 };
 
+const calculateOverpaidAmount = (order) => {
+  const totalDue = calculateTotalOrderAmount(order) + Number(order.deposit || 0);
+  const totalPaid = (order.payments || []).reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+
+  return Math.max(0, totalPaid - totalDue);
+};
+
 const getIndexData = async (query) => {
   const requestedPage = Number.parseInt(query.page, 10);
   const { filters, mongoFilter } = buildOrderFilters(query);
@@ -439,7 +446,8 @@ const getIndexData = async (query) => {
   const orders = orderDocuments.map((order) => ({
     ...order.toObject(),
     totalOrderAmount: calculateTotalOrderAmount(order),
-    remainingAmount: calculateRemainingAmount(order)
+    remainingAmount: calculateRemainingAmount(order),
+    overpaidAmount: calculateOverpaidAmount(order)
   }));
 
   return {

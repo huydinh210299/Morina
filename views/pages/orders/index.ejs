@@ -149,7 +149,7 @@
         <thead class="bg-slate-50">
           <tr>
             <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Khách hàng</th>
-            <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Mã sản phẩm</th>
+            <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Mã sản phẩm / phụ kiện</th>
             <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Ngày thuê</th>
             <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Ngày tạo</th>
             <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Số tiền</th>
@@ -176,10 +176,14 @@
               </td>
               <td class="px-6 py-4 text-slate-600">
                 <% const productCodes = order.products.map((item) => item.product?.code).filter(Boolean); %>
-                <% if (productCodes.length) { %>
+                <% const accessoryCodes = order.accessories.map((item) => item.accessory?.code).filter(Boolean); %>
+                <% if (productCodes.length || accessoryCodes.length) { %>
                   <div class="flex flex-wrap gap-2">
                     <% productCodes.forEach((code) => { %>
                       <span class="inline-flex rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-800"><%= code %></span>
+                    <% }) %>
+                    <% accessoryCodes.forEach((code) => { %>
+                      <span class="inline-flex rounded-full bg-cyan-100 px-3 py-1 text-xs font-semibold text-cyan-800"><%= code %></span>
                     <% }) %>
                   </div>
                 <% } else { %>
@@ -194,7 +198,11 @@
               <td class="px-6 py-4 text-slate-600">
                 <p>Tổng tiền đơn: <span class="font-semibold"><%= formatCurrency(order.totalOrderAmount) %></span></p>
                 <p class="mt-1 text-sm text-slate-500">Tiền cọc: <span class="font-semibold"><%= formatCurrency(order.deposit || 0) %></span></p>
-                <p class="mt-1 text-sm text-slate-500">Còn cần thanh toán: <span class="font-semibold text-rose-700"><%= formatCurrency(order.remainingAmount) %></span></p>
+                <% if (order.overpaidAmount > 0) { %>
+                  <p class="mt-1 text-sm text-emerald-700">Thanh toán thừa: <span class="font-semibold"><%= formatCurrency(order.overpaidAmount) %></span></p>
+                <% } else { %>
+                  <p class="mt-1 text-sm text-slate-500">Còn cần thanh toán: <span class="font-semibold text-rose-700"><%= formatCurrency(order.remainingAmount) %></span></p>
+                <% } %>
               </td>
               <td class="px-6 py-4 text-slate-600">
                 <span class="mr-2 inline-flex rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800"><%= order.alreadyPickup ? "Đã lấy" : "Chờ lấy" %></span>
