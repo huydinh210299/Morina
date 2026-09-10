@@ -1,4 +1,5 @@
 const Order = require("../models/Order");
+const SaleEvent = require("../models/SaleEvent");
 
 const getDayRange = (date) => {
   const start = new Date(date);
@@ -43,7 +44,7 @@ const getDashboardData = async (user) => {
   const tomorrowRange = getDayRange(tomorrow);
   const todayTomorrowFilter = getTodayTomorrowFilter();
 
-  const [todayOrders, tomorrowOrders, importantOrders, bookshipOrders, returnDueTodayOrders, overdueUnreturnedOrders] = await Promise.all([
+  const [todayOrders, tomorrowOrders, importantOrders, bookshipOrders, returnDueTodayOrders, overdueUnreturnedOrders, activeSaleEvents] = await Promise.all([
     Order.countDocuments({
       generalStartTime: {
         $gte: todayRange.start,
@@ -81,12 +82,14 @@ const getDashboardData = async (user) => {
     Order.countDocuments({
       generalEndTime: { $lt: new Date() },
       returned: false
-    })
+    }),
+    SaleEvent.find({ status: "active" }).select("title description updatedAt").sort({ updatedAt: -1, createdAt: -1 })
   ]);
 
   return {
     title: "Tổng quan",
     currentUser: user,
+    activeSaleEvents,
     stats: {
       todayOrders,
       tomorrowOrders,

@@ -89,6 +89,12 @@ const noteSchema = Joi.object({
   categoryId: Joi.string().trim().required()
 });
 
+const saleEventSchema = Joi.object({
+  title: Joi.string().trim().required(),
+  description: Joi.string().trim().required(),
+  status: Joi.string().valid("active", "inactive").required()
+});
+
 const productSchema = Joi.object({
   code: Joi.string().trim().required(),
   fullDayPrice: Joi.number().min(0).required(),
@@ -209,6 +215,7 @@ module.exports = {
   financeEntrySchema,
   categorySchema,
   noteSchema,
+  saleEventSchema,
   productSchema,
   accessorySchema,
   orderSchema,
