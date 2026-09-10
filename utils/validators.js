@@ -71,6 +71,13 @@ const financePaymentSchema = Joi.object({
   paymentDate: Joi.date().required()
 });
 
+const financeEntrySchema = Joi.object({
+  entryType: Joi.string().valid("income", "expense").required(),
+  amount: Joi.number().min(0).required(),
+  description: Joi.string().trim().allow("").default(""),
+  transactionDate: Joi.date().required()
+});
+
 const categorySchema = Joi.object({
   code: Joi.string().trim().uppercase().required(),
   description: Joi.string().trim().allow("").required()
@@ -199,6 +206,7 @@ module.exports = {
   staffOrderCountSchema,
   payrollAdjustmentSchema,
   financePaymentSchema,
+  financeEntrySchema,
   categorySchema,
   noteSchema,
   productSchema,

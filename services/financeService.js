@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Order = require("../models/Order");
 const Payment = require("../models/Payment");
+const FinanceEntry = require("../models/FinanceEntry");
 const User = require("../models/User");
 const { setCreateAuditFields, setUpdateAuditFields } = require("../utils/audit");
 
@@ -75,6 +76,24 @@ const normalizePaymentFilters = ({ paymentMonth, paymentYear, page, edit } = {})
   };
 };
 
+const normalizeFinanceEntryFilters = ({ entryMonth, entryYear, entryPage, entryEdit } = {}) => {
+  const fallback = new Date();
+  const normalizedMonth = Number.parseInt(entryMonth, 10);
+  const normalizedYear = Number.parseInt(entryYear, 10);
+  const resolvedMonth = normalizedMonth >= 1 && normalizedMonth <= 12 ? normalizedMonth : fallback.getMonth() + 1;
+  const resolvedYear = normalizedYear >= 2000 ? normalizedYear : fallback.getFullYear();
+  const resolvedPage = Math.max(1, Number.parseInt(entryPage, 10) || 1);
+
+  return {
+    entryMonth: resolvedMonth,
+    entryYear: resolvedYear,
+    entryPage: resolvedPage,
+    entryEdit: typeof entryEdit === "string" && entryEdit ? entryEdit : "",
+    start: new Date(resolvedYear, resolvedMonth - 1, 1),
+    end: new Date(resolvedYear, resolvedMonth, 1)
+  };
+};
+
 const buildPagination = (currentPage, totalItems) => {
   const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
   const page = Math.min(Math.max(currentPage, 1), totalPages);
@@ -94,6 +113,9 @@ const buildPagination = (currentPage, totalItems) => {
 const buildPaymentRedirect = ({ paymentMonth, paymentYear, page }) =>
   `/finance?tab=payments&paymentMonth=${paymentMonth}&paymentYear=${paymentYear}&page=${page}`;
 
+const buildFinanceEntryRedirect = ({ entryMonth, entryYear, entryPage }) =>
+  `/finance?tab=entries&entryMonth=${entryMonth}&entryYear=${entryYear}&entryPage=${entryPage}`;
+
 const findPaymentOrFail = async (id) => {
   if (!mongoose.isValidObjectId(id)) {
     const error = new Error("Không tìm thấy khoản chi.");
@@ -110,6 +132,24 @@ const findPaymentOrFail = async (id) => {
   }
 
   return payment;
+};
+
+const findFinanceEntryOrFail = async (id) => {
+  if (!mongoose.isValidObjectId(id)) {
+    const error = new Error("Không tìm thấy giao dịch thu chi.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const entry = await FinanceEntry.findById(id);
+
+  if (!entry) {
+    const error = new Error("Không tìm thấy giao dịch thu chi.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return entry;
 };
 
 const getRevenueSummary = async (range) => {
@@ -294,15 +334,63 @@ const getPaymentManagementData = async (query = {}) => {
   };
 };
 
+const getFinanceEntryManagementData = async (query = {}) => {
+  const normalized = normalizeFinanceEntryFilters(query);
+  const filter = {
+    transactionDate: {
+      $gte: normalized.start,
+      $lt: normalized.end
+    }
+  };
+
+  const [totalItems, totals] = await Promise.all([
+    FinanceEntry.countDocuments(filter),
+    FinanceEntry.aggregate([
+      { $match: filter },
+      {
+        $group: {
+          _id: "$entryType",
+          total: { $sum: "$amount" }
+        }
+      }
+    ])
+  ]);
+  const pagination = buildPagination(normalized.entryPage, totalItems);
+  const entries = await FinanceEntry.find(filter)
+    .sort({ transactionDate: -1, createdAt: -1 })
+    .skip((pagination.page - 1) * pagination.pageSize)
+    .limit(pagination.pageSize);
+  const editingEntry =
+    normalized.entryEdit && mongoose.isValidObjectId(normalized.entryEdit)
+      ? await FinanceEntry.findById(normalized.entryEdit)
+      : null;
+  const totalIncome = totals.find((item) => item._id === "income")?.total || 0;
+  const totalExpense = totals.find((item) => item._id === "expense")?.total || 0;
+
+  return {
+    filters: {
+      entryMonth: normalized.entryMonth,
+      entryYear: normalized.entryYear
+    },
+    entries,
+    pagination,
+    editingEntry,
+    totalIncome,
+    totalExpense,
+    netAmount: totalIncome - totalExpense
+  };
+};
+
 const getFinancePageData = async (query = {}) => {
-  const activeTab = query.tab === "payments" ? "payments" : "revenue";
+  const activeTab = ["payments", "entries"].includes(query.tab) ? query.tab : "revenue";
   const revenueMonth = parseMonthInput(query.summaryMonth);
   const revenueDay = parseDateInput(query.summaryDay);
-  const [revenueSummary, dailyRevenueSummary, monthlyRevenueChart, paymentManagement] = await Promise.all([
+  const [revenueSummary, dailyRevenueSummary, monthlyRevenueChart, paymentManagement, financeEntryManagement] = await Promise.all([
     getRevenueSummary(revenueMonth),
     getDailyRevenueSummary(revenueDay),
     getMonthlyRevenueChart(revenueMonth),
-    getPaymentManagementData(query)
+    getPaymentManagementData(query),
+    getFinanceEntryManagementData(query)
   ]);
 
   return {
@@ -311,7 +399,8 @@ const getFinancePageData = async (query = {}) => {
     revenueSummary,
     dailyRevenueSummary,
     monthlyRevenueChart,
-    paymentManagement
+    paymentManagement,
+    financeEntryManagement
   };
 };
 
@@ -369,9 +458,68 @@ const deletePayment = async ({ id, query }) => {
   };
 };
 
+const createEntry = async ({ validatedBody, user, query }) => {
+  const filters = normalizeFinanceEntryFilters(query);
+
+  await FinanceEntry.create(
+    setCreateAuditFields(
+      {
+        entryType: validatedBody.entryType,
+        amount: validatedBody.amount,
+        description: validatedBody.description,
+        transactionDate: validatedBody.transactionDate
+      },
+      user
+    )
+  );
+
+  return {
+    successMessage: "Tạo giao dịch thu chi thành công.",
+    redirectTo: buildFinanceEntryRedirect(filters)
+  };
+};
+
+const updateEntry = async ({ id, validatedBody, user, query }) => {
+  const filters = normalizeFinanceEntryFilters(query);
+  await findFinanceEntryOrFail(id);
+
+  await FinanceEntry.findByIdAndUpdate(
+    id,
+    setUpdateAuditFields(
+      {
+        entryType: validatedBody.entryType,
+        amount: validatedBody.amount,
+        description: validatedBody.description,
+        transactionDate: validatedBody.transactionDate
+      },
+      user
+    ),
+    { runValidators: true }
+  );
+
+  return {
+    successMessage: "Cập nhật giao dịch thu chi thành công.",
+    redirectTo: buildFinanceEntryRedirect(filters)
+  };
+};
+
+const deleteEntry = async ({ id, query }) => {
+  const filters = normalizeFinanceEntryFilters(query);
+  await findFinanceEntryOrFail(id);
+  await FinanceEntry.findByIdAndDelete(id);
+
+  return {
+    successMessage: "Xóa giao dịch thu chi thành công.",
+    redirectTo: buildFinanceEntryRedirect(filters)
+  };
+};
+
 module.exports = {
   getFinancePageData,
   createPayment,
   updatePayment,
-  deletePayment
+  deletePayment,
+  createEntry,
+  updateEntry,
+  deleteEntry
 };

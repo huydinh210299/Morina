@@ -35,9 +35,42 @@ const deletePayment = async (req, res) => {
   res.redirect(result.redirectTo);
 };
 
+const createEntry = async (req, res) => {
+  const result = await financeService.createEntry({
+    validatedBody: req.validatedBody,
+    user: req.user,
+    query: req.query
+  });
+  req.session.success = result.successMessage;
+  res.redirect(result.redirectTo);
+};
+
+const updateEntry = async (req, res) => {
+  const result = await financeService.updateEntry({
+    id: req.params.id,
+    validatedBody: req.validatedBody,
+    user: req.user,
+    query: req.query
+  });
+  req.session.success = result.successMessage;
+  res.redirect(result.redirectTo);
+};
+
+const deleteEntry = async (req, res) => {
+  const result = await financeService.deleteEntry({
+    id: req.params.id,
+    query: req.query
+  });
+  req.session.success = result.successMessage;
+  res.redirect(result.redirectTo);
+};
+
 module.exports = wrapControllerHandlers({
   renderIndex,
   createPayment,
   updatePayment,
-  deletePayment
+  deletePayment,
+  createEntry,
+  updateEntry,
+  deleteEntry
 });
