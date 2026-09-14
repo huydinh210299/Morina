@@ -4,6 +4,7 @@ const Product = require("../models/Product");
 
 const PRICE_MULTIPLIER = 1000;
 const DEFAULT_G_PRICE = 35;
+const EXTENDED_G_PRICE = 35;
 const IMAGE_LINK_CSV_PATH = path.join(__dirname, "..", "data", "image_link.csv");
 const DEFAULT_SHOE_SIZES = [
   { code: "G01", size: "38" },
@@ -155,7 +156,7 @@ const DEFAULT_PRODUCTS = [
   ...buildProducts("HN", "HN", [85, 90, 90, 90, 85, 90, 90, 85, 85, 85, 85, 90, 90, 85, 85, 85, 110, 115, 110, 90], [60, 65, 65, 65, 60, 65, 65, 60, 60, 60, 60, 65, 65, 60, 60, 60, 75, 75, 75, 65]),
   ...buildProducts("ĐN", "ĐN", [99, 90, 90, 90, 90, 85, 100, 90, 100, 90, 80], [70, 65, 65, 65, 65, 60, 70, 65, 70, 65, 60]),
   ...buildProducts("T", "T", [20, 30, 25, 30, 30, 30, 20, 30, 25, 20, 25]),
-  ...buildProducts("G", "G", Array(25).fill(DEFAULT_G_PRICE)),
+  ...buildProducts("G", "G", Array(35).fill(DEFAULT_G_PRICE)),
   ...buildProducts("M", "M", [25, 30, 25, 25, 25, 25]),
   ...buildProducts("H", "H", [35, 35, 40]),
   ...buildProducts("N", "N", Array(7).fill(30), Array(7).fill(20)),
