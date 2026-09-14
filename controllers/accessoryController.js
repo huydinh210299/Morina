@@ -38,7 +38,7 @@ const update = async (req, res) => {
 };
 
 const remove = async (req, res) => {
-  const result = await accessoryService.deleteAccessory(req.params.id);
+  const result = await accessoryService.archiveAccessory({ id: req.params.id, user: req.user });
   req.session.success = result.successMessage;
   res.redirect(result.redirectTo);
 };

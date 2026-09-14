@@ -32,6 +32,10 @@ const accessorySchema = new mongoose.Schema(
       default: "",
       trim: true
     },
+    isDeleted: {
+      type: Boolean,
+      default: false
+    },
     createdBy: {
       type: String,
       required: true

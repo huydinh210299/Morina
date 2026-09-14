@@ -38,7 +38,7 @@ const findOrderOrFail = async (id) => {
 const getOrderDependencies = async () => {
   const [products, accessories] = await Promise.all([
     Product.find({ isDeleted: false }).sort({ code: 1 }),
-    Accessory.find().sort({ code: 1 })
+    Accessory.find({ isDeleted: { $ne: true } }).sort({ code: 1 })
   ]);
 
   return { products, accessories };
@@ -554,7 +554,7 @@ const getShowData = async (id) => {
   const [order, availableProducts, availableAccessories] = await Promise.all([
     Order.findById(id).populate("products.product").populate("accessories.accessory"),
     Product.find({ isDeleted: false }).sort({ code: 1 }).select("code size note fullDayPrice sixHPrice"),
-    Accessory.find().sort({ code: 1 }).select("code name price amount")
+    Accessory.find({ isDeleted: { $ne: true } }).sort({ code: 1 }).select("code name price amount")
   ]);
 
   if (!order) {
@@ -699,7 +699,8 @@ const addOrderAccessory = async ({ id, body, user }) => {
   }
 
   const accessories = await Accessory.find({
-    code: { $in: payload.accessories.map((item) => item.accessoryCode) }
+    code: { $in: payload.accessories.map((item) => item.accessoryCode) },
+    isDeleted: { $ne: true }
   });
   const accessoryByCode = new Map(accessories.map((accessory) => [accessory.code, accessory]));
   const missingAccessory = payload.accessories.find((item) => !accessoryByCode.has(item.accessoryCode));

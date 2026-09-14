@@ -59,8 +59,8 @@
                 <a href="/accessories/<%= accessory._id %>/rentals" class="rounded-full bg-brand-50 px-4 py-2 text-sm font-semibold text-brand-700">Lịch thuê</a>
                 <% if (currentUser.role === "admin") { %>
                   <a href="/accessories/<%= accessory._id %>/edit" class="rounded-full bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-800">Sửa</a>
-                  <form action="/accessories/<%= accessory._id %>?_method=DELETE" method="POST" onsubmit="return confirm('Xóa phụ kiện này?');">
-                    <button type="submit" class="rounded-full bg-rose-100 px-4 py-2 text-sm font-semibold text-rose-800">Xóa</button>
+                  <form action="/accessories/<%= accessory._id %>?_method=DELETE" method="POST" onsubmit="return confirm('Lưu trữ phụ kiện này?');">
+                    <button type="submit" class="rounded-full bg-rose-100 px-4 py-2 text-sm font-semibold text-rose-800">Lưu trữ</button>
                   </form>
                 <% } %>
               </div>

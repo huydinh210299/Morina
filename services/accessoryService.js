@@ -20,7 +20,7 @@ const buildPagination = (requestedPage, totalItems) => {
 };
 
 const findAccessoryOrFail = async (id) => {
-  const accessory = await Accessory.findById(id);
+  const accessory = await Accessory.findOne({ _id: id, isDeleted: { $ne: true } });
 
   if (!accessory) {
     const error = new Error("Không tìm thấy phụ kiện.");
@@ -32,12 +32,13 @@ const findAccessoryOrFail = async (id) => {
 };
 
 const getIndexData = async (query = {}) => {
-  const totalItems = await Accessory.countDocuments();
+  const activeAccessoryFilter = { isDeleted: { $ne: true } };
+  const totalItems = await Accessory.countDocuments(activeAccessoryFilter);
   const pagination = buildPagination(query.page, totalItems);
 
   return {
     title: "Phụ kiện",
-    accessories: await Accessory.find()
+    accessories: await Accessory.find(activeAccessoryFilter)
       .sort({ code: 1 })
       .skip((pagination.page - 1) * PAGE_SIZE)
       .limit(PAGE_SIZE),
@@ -127,12 +128,12 @@ const updateAccessory = async ({ id, validatedBody, user }) => {
   };
 };
 
-const deleteAccessory = async (id) => {
+const archiveAccessory = async ({ id, user }) => {
   await findAccessoryOrFail(id);
-  await Accessory.findByIdAndDelete(id);
+  await Accessory.findByIdAndUpdate(id, setUpdateAuditFields({ isDeleted: true }, user));
 
   return {
-    successMessage: "Xóa phụ kiện thành công.",
+    successMessage: "Lưu trữ phụ kiện thành công.",
     redirectTo: "/accessories"
   };
 };
@@ -145,5 +146,5 @@ module.exports = {
   createAccessory,
   getEditData,
   updateAccessory,
-  deleteAccessory
+  archiveAccessory
 };
