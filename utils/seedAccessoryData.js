@@ -39,6 +39,22 @@ const parseCsvLine = (line) => {
   return values;
 };
 
+const getAccessoryImageUrl = (imageUrl) => {
+  try {
+    const url = new URL(imageUrl);
+    const isGoogleDrive = url.hostname === "drive.google.com" || url.hostname.endsWith(".drive.google.com");
+    const fileId = url.searchParams.get("id") || url.pathname.match(/\/d\/([^/]+)/)?.[1];
+
+    if (isGoogleDrive && fileId) {
+      return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+    }
+  } catch {
+    return imageUrl;
+  }
+
+  return imageUrl;
+};
+
 const getAccessoryRows = () => {
   if (!fs.existsSync(ACCESSORIES_CSV_PATH)) {
     throw new Error(`Không tìm thấy tệp dữ liệu phụ kiện: ${ACCESSORIES_CSV_PATH}`);
@@ -81,7 +97,7 @@ const getAccessoryRows = () => {
       code,
       name,
       price: priceInThousands * PRICE_MULTIPLIER,
-      imageUrl: row["Link công khai"]
+      imageUrl: getAccessoryImageUrl(row["Link công khai"])
     };
   });
 };
