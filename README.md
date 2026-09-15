@@ -49,6 +49,14 @@ You can seed the app with:
 npm run seed
 ```
 
+To import accessories from `data/accessories.csv`, run:
+
+```bash
+npm run seed:accessories
+```
+
+It creates accessories whose code does not exist and updates the name, price, and image of existing accessories without changing their quantity or note.
+
 The initial admin credentials are read from environment variables:
 
 - `ADMIN_USERNAME`

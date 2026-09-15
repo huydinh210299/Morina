@@ -1,8 +1,8 @@
 const Category = require("../models/Category");
-const Accessory = require("../models/Accessory");
 const Shift = require("../models/Shift");
 const NoteCategory = require("../models/NoteCategory");
 const { seedProductData } = require("./seedProductData");
+const seedAccessoryData = require("./seedAccessoryData");
 
 const DEFAULT_CATEGORIES = [
   { code: "AD", description: "Áo dài" },
@@ -18,16 +18,6 @@ const DEFAULT_CATEGORIES = [
   { code: "VD", description: "Váy dài" },
   { code: "VN", description: "Váy ngắn" },
   { code: "ĐN", description: "Váy đen ngắn" }
-];
-
-const DEFAULT_ACCESSORIES = [
-  { code: "HT", name: "Hoa tai", price: 5000 },
-  { code: "KM", name: "Kẹp mắt đeo len", price: 15000 },
-  { code: "KT", name: "Kẹp tóc", price: 10000 },
-  { code: "LM", name: "Len mắt", price: 69000 },
-  { code: "NM", name: "Nhỏ mắt", price: 50000 },
-  { code: "NN", name: "Nước ngâm len", price: 50000 },
-  { code: "VC", name: "Vòng cổ", price: 10000 }
 ];
 
 const DEFAULT_SHIFTS = [
@@ -49,22 +39,6 @@ const seedCategoryData = async (userId) => {
       {
         $setOnInsert: {
           ...category,
-          createdBy: userId,
-          updatedBy: userId
-        }
-      },
-      { upsert: true }
-    );
-  }
-};
-
-const seedAccessoryData = async (userId) => {
-  for (const accessory of DEFAULT_ACCESSORIES) {
-    await Accessory.updateOne(
-      { code: accessory.code },
-      {
-        $setOnInsert: {
-          ...accessory,
           createdBy: userId,
           updatedBy: userId
         }
