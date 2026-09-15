@@ -1,0 +1,7 @@
+interface:
+  display_name: "Landing page váy RentalShop"
+  short_description: "Tạo catalog váy tĩnh từ dữ liệu RentalShop"
+  default_prompt: "Dùng $rentalshop-static-dress-landing để tạo landing page catalog váy tĩnh từ dữ liệu RentalShop."
+
+policy:
+  allow_implicit_invocation: true
