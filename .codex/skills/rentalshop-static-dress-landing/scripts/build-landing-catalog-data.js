@@ -5,8 +5,10 @@ const path = require("path");
 
 const DRESS_CATEGORY_CODES = new Set(["AD", "AL", "CB", "G", "HN", "M", "N", "T", "VD", "VN", "ĐN"]);
 const EXCLUDED_CATEGORY_CODES = new Set(["H", "Q"]);
+const DEFAULT_EXCLUDED_ACCESSORY_CODES = new Set(["VA", "VH", "VT"]);
+const LANDING_CATEGORY_ORDER = new Map([["AD", 0]]);
 const CATEGORY_NAME_BY_CODE = new Map([
-  ["AD", "Áo dài"],
+  ["AD", "Áo dài - Áo yếm"],
   ["AL", "Áo lụa"],
   ["CB", "Chấm bi"],
   ["G", "Giày"],
@@ -97,6 +99,12 @@ const outputPath = path.resolve(root, outputOption || "public/catalog-data.json"
 const excludedDressCodes = new Set(
   (readOption("--exclude") || "").split(",").map((code) => code.trim().toUpperCase()).filter(Boolean)
 );
+const excludedAccessoryCodes = new Set(
+  (readOption("--exclude-accessories") || [...DEFAULT_EXCLUDED_ACCESSORY_CODES].join(","))
+    .split(",")
+    .map((code) => code.trim().toUpperCase())
+    .filter(Boolean)
+);
 
 if (!fs.existsSync(csvPath)) {
   throw new Error(`Không tìm thấy tệp ảnh: ${csvPath}`);
@@ -117,6 +125,7 @@ for (const row of parseCsv(fs.readFileSync(csvPath, "utf8"))) {
 
 const dressProducts = DEFAULT_PRODUCTS
   .filter(({ categoryCode }) => DRESS_CATEGORY_CODES.has(categoryCode) && !EXCLUDED_CATEGORY_CODES.has(categoryCode))
+  .sort((left, right) => (LANDING_CATEGORY_ORDER.get(left.categoryCode) ?? 1) - (LANDING_CATEGORY_ORDER.get(right.categoryCode) ?? 1))
   .map((product) => ({
     code: product.code,
     categoryCode: product.categoryCode,
@@ -130,22 +139,32 @@ const dressProducts = DEFAULT_PRODUCTS
 
 const accessoryRows = parseCsv(fs.readFileSync(accessoriesCsvPath, "utf8"));
 const hasAccessoryStatus = accessoryRows.some((row) => Object.hasOwn(row, "Trạng thái"));
-const accessories = accessoryRows
+const accessoryCandidates = accessoryRows
   .filter((row) => !hasAccessoryStatus || row["Trạng thái"] === "Công khai")
   .map((row) => ({
-    name: row["Tên ảnh"] || "",
+    code: (row["Mã"] || "").trim().toUpperCase(),
+    name: row["Tên sản phẩm"] || row["Tên ảnh"] || "",
+    priceText: (row["Giá"] || "").trim(),
+    price: Number(row["Giá"]) * 1000,
     imageUrl: getAccessoryImageUrl(row),
     sourceUrl: row["Link công khai"] || ""
-  }))
-  .filter(({ name, imageUrl }) => name && imageUrl);
+  }));
+const invalidAccessoryRows = accessoryCandidates
+  .filter(({ code, name, priceText, price, imageUrl }) => !code || !name || !priceText || !Number.isFinite(price) || price < 0 || !imageUrl)
+  .map(({ code, name }) => code || name || "(không có mã)");
+const accessories = accessoryCandidates
+  .filter(({ code, name, priceText, price, imageUrl }) => code && name && priceText && Number.isFinite(price) && price >= 0 && imageUrl && !excludedAccessoryCodes.has(code))
+  .map(({ code, name, price, imageUrl, sourceUrl }) => ({ code, name, price, imageUrl, sourceUrl }));
 const unmatchedDressProductCodes = dressProducts.filter(({ imageUrl }) => !imageUrl).map(({ code }) => code);
 const productCodeSet = new Set(dressProducts.map(({ code }) => code));
 const unknownExcludedDressCodes = [...excludedDressCodes].filter((code) => !productCodeSet.has(code)).sort();
 const catalog = {
   generatedAt: new Date().toISOString(),
   excludedDressCodes: [...excludedDressCodes].sort(),
+  excludedAccessoryCodes: [...excludedAccessoryCodes].sort(),
   dressProducts,
   accessories,
+  invalidAccessoryRows,
   unmatchedDressProductCodes,
   unknownExcludedDressCodes
 };
@@ -155,3 +174,4 @@ fs.writeFileSync(outputPath, `${JSON.stringify(catalog, null, 2)}\n`, "utf8");
 console.log(`Đã tạo ${dressProducts.length} sản phẩm và ${accessories.length} phụ kiện tại ${outputPath}.`);
 if (unmatchedDressProductCodes.length) console.warn(`Váy chưa có ảnh: ${unmatchedDressProductCodes.join(", ")}`);
 if (unknownExcludedDressCodes.length) console.warn(`Mã váy loại trừ không hợp lệ: ${unknownExcludedDressCodes.join(", ")}`);
+if (invalidAccessoryRows.length) console.warn(`Phụ kiện thiếu dữ liệu hợp lệ: ${invalidAccessoryRows.join(", ")}`);
