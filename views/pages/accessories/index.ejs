@@ -28,18 +28,18 @@
         <% accessories.forEach((accessory) => { %>
           <tr>
             <td class="px-6 py-4">
-              <% if (accessory.imageUrl) { %>
+              <% if (accessory.displayImageUrl || accessory.imageUrl) { %>
                 <button
                   type="button"
                   class="block rounded-2xl transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-brand-100"
                   data-accessory-image-preview
                   data-accessory-code="<%= accessory.code %>"
                   data-accessory-name="<%= accessory.name %>"
-                  data-accessory-image-url="<%= accessory.imageUrl %>"
+                  data-accessory-image-url="<%= accessory.displayImageUrl || accessory.imageUrl %>"
                   data-accessory-detail-url="/accessories/<%= accessory._id %>"
                   aria-label="Xem ảnh lớn của phụ kiện <%= accessory.name %>"
                 >
-                  <img src="<%= accessory.imageUrl %>" alt="Hình ảnh phụ kiện <%= accessory.name %>" class="h-28 w-28 rounded-2xl object-cover ring-1 ring-slate-200" loading="lazy" referrerpolicy="no-referrer" />
+                  <img src="<%= accessory.displayImageUrl || accessory.imageUrl %>" alt="Hình ảnh phụ kiện <%= accessory.name %>" class="h-28 w-28 rounded-2xl object-cover ring-1 ring-slate-200" loading="lazy" referrerpolicy="no-referrer" />
                 </button>
               <% } else { %>
                 <div class="flex h-28 w-28 items-center justify-center rounded-2xl bg-slate-100 px-3 text-center text-xs font-semibold text-slate-500">Chưa có ảnh</div>

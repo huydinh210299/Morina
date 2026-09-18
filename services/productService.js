@@ -3,6 +3,7 @@ const Category = require("../models/Category");
 const Order = require("../models/Order");
 const mongoose = require("mongoose");
 const { setCreateAuditFields, setUpdateAuditFields } = require("../utils/audit");
+const { getCachedImageUrl } = require("../utils/imageProxy");
 
 const PAGE_SIZE = 10;
 const IMAGE_PAGE_SIZE = 24;
@@ -10,27 +11,6 @@ const IMAGE_PAGE_SIZE = 24;
 const getCategories = () => Category.find().sort({ code: 1 });
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-const getGoogleDriveFileId = (url = "") => {
-  const idFromQuery = url.match(/[?&]id=([^&]+)/)?.[1];
-  const idFromPath = url.match(/\/d\/([^/]+)/)?.[1];
-
-  return idFromQuery || idFromPath || "";
-};
-
-const getDisplayImageUrl = (url = "") => {
-  if (!url.includes("drive.google.com")) {
-    return url;
-  }
-
-  const fileId = getGoogleDriveFileId(url);
-
-  if (!fileId) {
-    return url;
-  }
-
-  return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
-};
 
 const findProductOrFail = async (id) => {
   const product = await Product.findById(id);
@@ -111,7 +91,7 @@ const getIndexData = async (query = {}) => {
   );
   const productsWithRentCount = products.map((product) => ({
     ...product,
-    displayImageUrl: getDisplayImageUrl(product.imageUrl),
+    displayImageUrl: getCachedImageUrl(product.imageUrl),
     rentCount: rentCountByProductId.get(product._id.toString()) || 0
   }));
 
@@ -188,7 +168,7 @@ const getImageIndexData = async (query = {}) => {
     .lean();
   const productsWithDisplayImages = products.map((product) => ({
     ...product,
-    displayImageUrl: getDisplayImageUrl(product.imageUrl)
+    displayImageUrl: getCachedImageUrl(product.imageUrl)
   }));
 
   return {

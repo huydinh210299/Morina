@@ -10,8 +10,8 @@
       </div>
 
       <div class="overflow-hidden rounded-3xl bg-slate-100 ring-1 ring-slate-200">
-        <% if (accessory.imageUrl) { %>
-          <img src="<%= accessory.imageUrl %>" alt="Hình ảnh phụ kiện <%= accessory.name %>" class="aspect-square w-full object-cover" />
+        <% if (accessory.displayImageUrl || accessory.imageUrl) { %>
+          <img src="<%= accessory.displayImageUrl || accessory.imageUrl %>" alt="Hình ảnh phụ kiện <%= accessory.name %>" class="aspect-square w-full object-cover" />
         <% } else { %>
           <div class="flex aspect-square w-full items-center justify-center px-6 text-center font-semibold text-slate-500">Chưa có hình ảnh</div>
         <% } %>

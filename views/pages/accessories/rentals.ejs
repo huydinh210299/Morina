@@ -4,8 +4,8 @@
   <div class="flex flex-col gap-6 rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60 sm:flex-row sm:items-start sm:justify-between">
     <div class="flex flex-col gap-5 sm:flex-row sm:items-start">
       <div class="overflow-hidden rounded-3xl bg-slate-100 ring-1 ring-slate-200">
-        <% if (accessory.imageUrl) { %>
-          <img src="<%= accessory.imageUrl %>" alt="Hình ảnh phụ kiện <%= accessory.name %>" class="h-28 w-28 object-cover" />
+        <% if (accessory.displayImageUrl || accessory.imageUrl) { %>
+          <img src="<%= accessory.displayImageUrl || accessory.imageUrl %>" alt="Hình ảnh phụ kiện <%= accessory.name %>" class="h-28 w-28 object-cover" />
         <% } else { %>
           <div class="flex h-28 w-28 items-center justify-center px-4 text-center text-sm font-semibold text-slate-500">Chưa có hình ảnh</div>
         <% } %>

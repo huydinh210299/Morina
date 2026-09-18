@@ -1,6 +1,7 @@
 const Accessory = require("../models/Accessory");
 const Order = require("../models/Order");
 const { setCreateAuditFields, setUpdateAuditFields } = require("../utils/audit");
+const { getCachedImageUrl } = require("../utils/imageProxy");
 
 const PAGE_SIZE = 10;
 
@@ -31,6 +32,11 @@ const findAccessoryOrFail = async (id) => {
   return accessory;
 };
 
+const addDisplayImageUrl = (accessory) => ({
+  ...accessory,
+  displayImageUrl: getCachedImageUrl(accessory.imageUrl)
+});
+
 const getIndexData = async (query = {}) => {
   const activeAccessoryFilter = { isDeleted: { $ne: true } };
   const totalItems = await Accessory.countDocuments(activeAccessoryFilter);
@@ -38,10 +44,11 @@ const getIndexData = async (query = {}) => {
 
   return {
     title: "Phụ kiện",
-    accessories: await Accessory.find(activeAccessoryFilter)
+    accessories: (await Accessory.find(activeAccessoryFilter)
       .sort({ code: 1 })
       .skip((pagination.page - 1) * PAGE_SIZE)
-      .limit(PAGE_SIZE),
+      .limit(PAGE_SIZE)
+      .lean()).map(addDisplayImageUrl),
     pagination
   };
 };
@@ -74,7 +81,7 @@ const getRentalScheduleData = async (id, query = {}) => {
 
   return {
     title: `Lịch thuê phụ kiện ${accessory.code}`,
-    accessory,
+    accessory: addDisplayImageUrl(accessory.toObject()),
     rentals: rentals.slice((pagination.page - 1) * PAGE_SIZE, pagination.page * PAGE_SIZE),
     pagination
   };
@@ -85,7 +92,7 @@ const getShowData = async (id) => {
 
   return {
     title: `Chi tiết phụ kiện ${accessory.code}`,
-    accessory
+    accessory: addDisplayImageUrl(accessory.toObject())
   };
 };
 
