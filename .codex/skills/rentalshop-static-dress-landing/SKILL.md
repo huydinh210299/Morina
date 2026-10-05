@@ -23,7 +23,7 @@ Build a lightweight, customer-facing static catalog with two tabs: `Váy` and `P
 This list is the source of truth for individual dress codes excluded from the public `Váy` tab. It is intentionally empty until the owner supplies codes:
 
 ```js
-const excludedDressCodes = ['VN01', 'VN04'];
+const excludedDressCodes = ['VN01', 'VN04', 'VN09'];
 ```
 
 - When the owner provides codes, update this literal list directly in `SKILL.md` with uppercase codes, for example `const excludedDressCodes = ["VN01", "AD07"];`.
