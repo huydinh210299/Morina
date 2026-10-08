@@ -6,34 +6,7 @@ const PRICE_MULTIPLIER = 1000;
 const DEFAULT_G_PRICE = 35;
 const EXTENDED_G_PRICE = 35;
 const IMAGE_LINK_CSV_PATH = path.join(__dirname, "..", "data", "image_link.csv");
-const DEFAULT_SHOE_SIZES = [
-  { code: "G01", size: "38" },
-  { code: "G02", size: "37" },
-  { code: "G03", size: "38" },
-  { code: "G04", size: "37" },
-  { code: "G05", size: "07" },
-  { code: "G06", size: "37" },
-  { code: "G07", size: "38" },
-  { code: "G08", size: "37" },
-  { code: "G09", size: "38" },
-  { code: "G10", size: "37" },
-  { code: "G11", size: "37" },
-  { code: "G12", size: "37" },
-  { code: "G13", size: "38" },
-  { code: "G14", size: "37" },
-  { code: "G15", size: "37" },
-  { code: "G16", size: "38" },
-  { code: "G17", size: "36" },
-  { code: "G18", size: "37" },
-  { code: "G19", size: "38" },
-  { code: "G20", size: "37" },
-  { code: "G21", size: "37" },
-  { code: "G22", size: "38" },
-  { code: "G23", size: "38" },
-  { code: "G24", size: "38" },
-  { code: "G25", size: "38" }
-];
-const shoeSizeByCode = new Map(DEFAULT_SHOE_SIZES.map(({ code, size }) => [code, size]));
+const SIZE_CSV_PATH = path.join(__dirname, "..", "data", "size.csv");
 
 const parseCsvLine = (line) => {
   const values = [];
@@ -138,6 +111,25 @@ const getProductImageUrls = () => {
   return imageUrlByProductCode;
 };
 
+const getSizeByProductCode = () => {
+  if (!fs.existsSync(SIZE_CSV_PATH)) {
+    return new Map();
+  }
+
+  const sizeByProductCode = new Map();
+
+  for (const row of parseCsv(fs.readFileSync(SIZE_CSV_PATH, "utf8"))) {
+    const productCode = (row.ma || "").trim().toUpperCase();
+    const size = (row.size || "").trim();
+
+    if (productCode && size) {
+      sizeByProductCode.set(productCode, size);
+    }
+  }
+
+  return sizeByProductCode;
+};
+
 const buildProducts = (categoryCode, prefix, fullDayPrices, sixHPrices = fullDayPrices) =>
   fullDayPrices.map((fullDayPrice, index) => ({
     code: `${prefix}${String(index + 1).padStart(2, "0")}`,
@@ -163,10 +155,10 @@ const DEFAULT_PRODUCTS = [
   ...buildProducts("Q", "Q", Array(37).fill(0))
 ];
 
+const sizeByProductCode = getSizeByProductCode();
+
 for (const product of DEFAULT_PRODUCTS) {
-  if (product.categoryCode === "G") {
-    product.size = shoeSizeByCode.get(product.code) || "";
-  }
+  product.size = sizeByProductCode.get(product.code) || "";
 }
 
 const seedProductData = async (userId, categories) => {
@@ -201,12 +193,10 @@ const seedProductData = async (userId, categories) => {
       };
     }
 
-    if (product.categoryCode === "G") {
-      update.$set = {
-        ...update.$set,
-        size: product.size
-      };
-    }
+    update.$set = {
+      ...update.$set,
+      size: product.size
+    };
 
     update.$unset = { eightHPrice: "", fiveHPrice: "" };
     await Product.updateOne({ code: product.code }, update, { upsert: true });
@@ -225,7 +215,7 @@ const seedProductData = async (userId, categories) => {
 };
 
 module.exports = {
-  DEFAULT_SHOE_SIZES,
   DEFAULT_PRODUCTS,
+  getSizeByProductCode,
   seedProductData
 };
