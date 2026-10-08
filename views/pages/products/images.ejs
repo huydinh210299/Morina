@@ -5,6 +5,7 @@
       const params = new URLSearchParams();
       if (filters.category) params.set("category", filters.category);
       if (filters.productCode) params.set("productCode", filters.productCode);
+      if (filters.size) params.set("size", filters.size);
       params.set("page", String(page));
       return `/products/images?${params.toString()}`;
     };
@@ -22,7 +23,7 @@
     </div>
   </div>
 
-  <form method="GET" action="/products/images" class="grid gap-4 rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
+  <form method="GET" action="/products/images" class="grid gap-4 rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60 md:grid-cols-2 md:items-end xl:grid-cols-4">
     <label class="block">
       <span class="mb-2 block text-sm font-semibold text-slate-700">Danh mục</span>
       <select name="category" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100">
@@ -35,6 +36,16 @@
           >
             <%= category.description ? `${category.code} - ${category.description}` : category.code %>
           </option>
+        <% }) %>
+      </select>
+    </label>
+
+    <label class="block">
+      <span class="mb-2 block text-sm font-semibold text-slate-700">Kích cỡ</span>
+      <select name="size" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100">
+        <option value="">Tất cả kích cỡ</option>
+        <% sizes.forEach((size) => { %>
+          <option value="<%= size %>" <%= filters.size === size ? "selected" : "" %>><%= size %></option>
         <% }) %>
       </select>
     </label>
@@ -126,6 +137,9 @@
         <% } %>
         <% if (filters.productCode) { %>
           <input type="hidden" name="productCode" value="<%= filters.productCode %>" />
+        <% } %>
+        <% if (filters.size) { %>
+          <input type="hidden" name="size" value="<%= filters.size %>" />
         <% } %>
         <label class="sr-only" for="product-images-page-input">Đến trang</label>
         <input

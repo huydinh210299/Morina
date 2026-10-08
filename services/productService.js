@@ -4,6 +4,7 @@ const Order = require("../models/Order");
 const mongoose = require("mongoose");
 const { setCreateAuditFields, setUpdateAuditFields } = require("../utils/audit");
 const { getCachedImageUrl } = require("../utils/imageProxy");
+const { PRODUCT_SIZES } = require("../utils/constants");
 
 const PAGE_SIZE = 10;
 const IMAGE_PAGE_SIZE = 24;
@@ -11,6 +12,11 @@ const IMAGE_PAGE_SIZE = 24;
 const getCategories = () => Category.find().sort({ code: 1 });
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const normalizeFilterValue = (value) => (typeof value === "string" ? value.trim() : "");
+const normalizeSizeFilter = (value) => {
+  const normalizedSize = normalizeFilterValue(value).toUpperCase();
+  return PRODUCT_SIZES.includes(normalizedSize) ? normalizedSize : "";
+};
 
 const findProductOrFail = async (id) => {
   const product = await Product.findById(id);
@@ -27,8 +33,9 @@ const findProductOrFail = async (id) => {
 const getIndexData = async (query = {}) => {
   const requestedPage = Math.max(parseInt(query.page, 10) || 1, 1);
   const filters = {
-    category: query.category?.trim() || "",
-    productCode: query.productCode?.trim() || ""
+    category: normalizeFilterValue(query.category),
+    productCode: normalizeFilterValue(query.productCode),
+    size: normalizeSizeFilter(query.size)
   };
   const conditions = {
     isDeleted: false
@@ -40,6 +47,7 @@ const getIndexData = async (query = {}) => {
         title: "Sản phẩm",
         products: [],
         categories: await getCategories(),
+        sizes: PRODUCT_SIZES,
         filters,
         pagination: {
           currentPage: 1,
@@ -60,6 +68,13 @@ const getIndexData = async (query = {}) => {
   if (filters.productCode) {
     conditions.code = {
       $regex: escapeRegex(filters.productCode),
+      $options: "i"
+    };
+  }
+
+  if (filters.size) {
+    conditions.size = {
+      $regex: `^${escapeRegex(filters.size)}$`,
       $options: "i"
     };
   }
@@ -99,6 +114,7 @@ const getIndexData = async (query = {}) => {
     title: "Sản phẩm",
     products: productsWithRentCount,
     categories,
+    sizes: PRODUCT_SIZES,
     filters,
     pagination: {
       currentPage,
@@ -116,8 +132,9 @@ const getIndexData = async (query = {}) => {
 const getImageIndexData = async (query = {}) => {
   const requestedPage = Math.max(parseInt(query.page, 10) || 1, 1);
   const filters = {
-    category: query.category?.trim() || "",
-    productCode: query.productCode?.trim() || ""
+    category: normalizeFilterValue(query.category),
+    productCode: normalizeFilterValue(query.productCode),
+    size: normalizeSizeFilter(query.size)
   };
   const conditions = {
     isDeleted: false
@@ -129,6 +146,7 @@ const getImageIndexData = async (query = {}) => {
         title: "Hình ảnh sản phẩm",
         products: [],
         categories: await getCategories(),
+        sizes: PRODUCT_SIZES,
         filters,
         pagination: {
           currentPage: 1,
@@ -149,6 +167,13 @@ const getImageIndexData = async (query = {}) => {
   if (filters.productCode) {
     conditions.code = {
       $regex: escapeRegex(filters.productCode),
+      $options: "i"
+    };
+  }
+
+  if (filters.size) {
+    conditions.size = {
+      $regex: `^${escapeRegex(filters.size)}$`,
       $options: "i"
     };
   }
@@ -175,6 +200,7 @@ const getImageIndexData = async (query = {}) => {
     title: "Hình ảnh sản phẩm",
     products: productsWithDisplayImages,
     categories,
+    sizes: PRODUCT_SIZES,
     filters,
     pagination: {
       currentPage,

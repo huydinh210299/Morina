@@ -8,7 +8,22 @@ const PAYMENT_TYPES = {
   CASH: 1
 };
 
+const PRODUCT_SIZES = Object.freeze([
+  "XS",
+  "S",
+  "M",
+  "L",
+  "XL",
+  "XXL",
+  "36",
+  "37",
+  "38",
+  "39",
+  "40"
+]);
+
 module.exports = {
   USER_ROLES,
-  PAYMENT_TYPES
+  PAYMENT_TYPES,
+  PRODUCT_SIZES
 };
