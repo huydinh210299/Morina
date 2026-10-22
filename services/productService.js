@@ -35,7 +35,8 @@ const getIndexData = async (query = {}) => {
   const filters = {
     category: normalizeFilterValue(query.category),
     productCode: normalizeFilterValue(query.productCode),
-    size: normalizeSizeFilter(query.size)
+    size: normalizeSizeFilter(query.size),
+    rentSort: ["asc", "desc"].includes(query.rentSort) ? query.rentSort : ""
   };
   const conditions = {
     isDeleted: false
@@ -86,15 +87,48 @@ const getIndexData = async (query = {}) => {
 
   const totalPages = Math.max(Math.ceil(totalItems / PAGE_SIZE), 1);
   const currentPage = Math.min(requestedPage, totalPages);
-  const products = await Product.find(conditions)
-    .populate("category")
-    .sort({ code: 1 })
-    .skip((currentPage - 1) * PAGE_SIZE)
-    .limit(PAGE_SIZE)
-    .lean();
+  let products;
+
+  if (filters.rentSort) {
+    const aggregateConditions = { ...conditions };
+    if (filters.category) {
+      aggregateConditions.category = new mongoose.Types.ObjectId(filters.category);
+    }
+
+    products = await Product.aggregate([
+      { $match: aggregateConditions },
+      {
+        $lookup: {
+          from: Order.collection.name,
+          localField: "_id",
+          foreignField: "products.product",
+          let: { productId: "$_id" },
+          pipeline: [
+            { $unwind: "$products" },
+            { $match: { $expr: { $eq: ["$products.product", "$$productId"] } } },
+            { $count: "count" }
+          ],
+          as: "rentalStats"
+        }
+      },
+      { $addFields: { rentCount: { $ifNull: [{ $arrayElemAt: ["$rentalStats.count", 0] }, 0] } } },
+      { $sort: { rentCount: filters.rentSort === "asc" ? 1 : -1, code: 1, _id: 1 } },
+      { $skip: (currentPage - 1) * PAGE_SIZE },
+      { $limit: PAGE_SIZE },
+      { $project: { rentalStats: 0 } }
+    ]);
+    await Product.populate(products, { path: "category" });
+  } else {
+    products = await Product.find(conditions)
+      .populate("category")
+      .sort({ code: 1 })
+      .skip((currentPage - 1) * PAGE_SIZE)
+      .limit(PAGE_SIZE)
+      .lean();
+  }
 
   const productIds = products.map((product) => product._id);
-  const rentCounts = productIds.length
+  const rentCounts = !filters.rentSort && productIds.length
     ? await Order.aggregate([
         { $unwind: "$products" },
         { $match: { "products.product": { $in: productIds } } },
@@ -107,7 +141,7 @@ const getIndexData = async (query = {}) => {
   const productsWithRentCount = products.map((product) => ({
     ...product,
     displayImageUrl: getCachedImageUrl(product.imageUrl),
-    rentCount: rentCountByProductId.get(product._id.toString()) || 0
+    rentCount: product.rentCount ?? rentCountByProductId.get(product._id.toString()) ?? 0
   }));
 
   return {
