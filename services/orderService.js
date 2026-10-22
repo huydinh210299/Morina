@@ -231,6 +231,7 @@ const getDayRange = (date) => {
 };
 
 const buildOrderFilters = (query = {}) => {
+  const createdTodayOrders = parseCheckbox(query.createdTodayOrders);
   const currentDate = new Date();
   const { start } = getMonthRange(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   const { end } = getMonthRange(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
@@ -240,12 +241,13 @@ const buildOrderFilters = (query = {}) => {
 
   const filters = {
     phone: typeof query.phone === "string" ? query.phone.trim() : "",
-    rentStartDate: typeof query.rentStartDate === "string" && query.rentStartDate ? query.rentStartDate : formatDateInput(start),
+    rentStartDate: createdTodayOrders ? "" : typeof query.rentStartDate === "string" && query.rentStartDate ? query.rentStartDate : formatDateInput(start),
     rentEndDate:
-      typeof query.rentEndDate === "string" && query.rentEndDate ? query.rentEndDate : formatDateInput(defaultEndDate),
+      createdTodayOrders ? "" : typeof query.rentEndDate === "string" && query.rentEndDate ? query.rentEndDate : formatDateInput(defaultEndDate),
     returnStartDate: typeof query.returnStartDate === "string" ? query.returnStartDate : "",
     returnEndDate: typeof query.returnEndDate === "string" ? query.returnEndDate : "",
     todayOrders: parseCheckbox(query.todayOrders),
+    createdTodayOrders,
     tomorrowOrders: parseCheckbox(query.tomorrowOrders),
     returnDueToday: parseCheckbox(query.returnDueToday),
     overdueUnreturned: parseCheckbox(query.overdueUnreturned),
@@ -261,6 +263,14 @@ const buildOrderFilters = (query = {}) => {
   const mongoFilter = {};
   const startDate = new Date(filters.rentStartDate);
   const endDate = new Date(filters.rentEndDate);
+
+  if (filters.createdTodayOrders) {
+    const todayRange = getDayRange(new Date());
+    mongoFilter.createdAt = {
+      $gte: todayRange.start,
+      $lte: todayRange.end
+    };
+  }
 
   if (!Number.isNaN(startDate.getTime()) && !Number.isNaN(endDate.getTime())) {
     const normalizedStart = new Date(startDate);

@@ -9,6 +9,7 @@
   if (currentFilters.returnStartDate) queryParams.set("returnStartDate", currentFilters.returnStartDate);
   if (currentFilters.returnEndDate) queryParams.set("returnEndDate", currentFilters.returnEndDate);
   if (currentFilters.todayOrders) queryParams.set("todayOrders", "on");
+  if (currentFilters.createdTodayOrders) queryParams.set("createdTodayOrders", "on");
   if (currentFilters.tomorrowOrders) queryParams.set("tomorrowOrders", "on");
   if (currentFilters.returnDueToday) queryParams.set("returnDueToday", "on");
   if (currentFilters.overdueUnreturned) queryParams.set("overdueUnreturned", "on");
@@ -115,6 +116,10 @@
         Chưa lấy hàng
       </label>
 
+      <label class="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700">
+        <input name="createdTodayOrders" type="checkbox" <%= currentFilters.createdTodayOrders ? "checked" : "" %> class="size-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500" />
+        Đơn tạo hôm nay
+      </label>
       <label class="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700">
         <input name="todayOrders" type="checkbox" <%= currentFilters.todayOrders ? "checked" : "" %> class="size-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500" />
         Đơn hôm nay
