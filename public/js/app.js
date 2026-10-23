@@ -603,14 +603,34 @@ if (orderForm) {
   syncAllLineTimes();
   updateOrderAmountState();
 
-  orderForm.addEventListener("submit", async (event) => {
-    const conflictOverrideInput = getConflictOverrideInput();
+  let isOrderSubmitting = false;
+  const submitButtons = Array.from(orderForm.querySelectorAll('[type="submit"]'));
+  const submitButtonLabels = submitButtons.map((button) => button.textContent);
+  const setOrderSubmitting = (submitting) => {
+    isOrderSubmitting = submitting;
+    orderForm.setAttribute("aria-busy", String(submitting));
+    submitButtons.forEach((button, index) => {
+      button.disabled = submitting;
+      button.textContent = submitting ? "Đang lưu đơn hàng..." : submitButtonLabels[index];
+    });
+  };
 
-    if (conflictOverrideInput?.value === "true") {
+  window.addEventListener("pageshow", () => setOrderSubmitting(false));
+
+  orderForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (isOrderSubmitting) {
       return;
     }
 
-    event.preventDefault();
+    setOrderSubmitting(true);
+    const conflictOverrideInput = getConflictOverrideInput();
+
+    if (conflictOverrideInput?.value === "true") {
+      orderForm.submit();
+      return;
+    }
 
     try {
       const response = await fetch(orderForm.dataset.conflictCheckUrl || "/orders/conflicts", {
@@ -639,6 +659,8 @@ if (orderForm) {
           conflictOverrideInput.value = "true";
         }
         orderForm.submit();
+      } else {
+        setOrderSubmitting(false);
       }
     } catch (error) {
       orderForm.submit();
