@@ -5,7 +5,8 @@ const mongoose = require("mongoose");
 const migrations = [
   require("./remove-uuid-ids"),
   require("./add-payment-date"),
-  require("./add-user-active")
+  require("./add-user-active"),
+  require("./backfill-customers")
 ];
 const HISTORY_COLLECTION = "migration_history";
 
@@ -32,14 +33,10 @@ const normalizeLegacyHistoryRecord = async (history, migration) => {
   return history.findOne({ name: migration.id });
 };
 
-const runMigrations = async () => {
-  if (!process.env.MONGODB_URI) {
-    throw new Error("MONGODB_URI is not defined in environment variables.");
+const runMigrations = async (db = mongoose.connection.db) => {
+  if (!db) {
+    throw new Error("Connect to MongoDB before running migrations.");
   }
-
-  await mongoose.connect(process.env.MONGODB_URI);
-
-  const db = mongoose.connection.db;
   const history = db.collection(HISTORY_COLLECTION);
   await history.createIndex({ name: 1 }, { unique: true, sparse: true });
 
@@ -67,10 +64,23 @@ const runMigrations = async () => {
   }
 };
 
-runMigrations()
-  .then(() => mongoose.disconnect())
-  .catch(async (error) => {
+const runFromCommandLine = async () => {
+  try {
+    if (!process.env.MONGODB_URI) {
+      throw new Error("MONGODB_URI is not defined in environment variables.");
+    }
+    await mongoose.connect(process.env.MONGODB_URI);
+    await runMigrations();
+  } catch (error) {
     console.error("Migration failed:", error);
-    await mongoose.disconnect().catch(() => {});
-    process.exit(1);
-  });
+    process.exitCode = 1;
+  } finally {
+    await mongoose.disconnect();
+  }
+};
+
+if (require.main === module) {
+  runFromCommandLine();
+}
+
+module.exports = { runMigrations };

@@ -2,6 +2,7 @@ const Order = require("../models/Order");
 const Product = require("../models/Product");
 const Accessory = require("../models/Accessory");
 const User = require("../models/User");
+const customerService = require("./customerService");
 const { parseOrderPayload } = require("../utils/requestParsers");
 const {
   orderSchema,
@@ -508,7 +509,14 @@ const createOrder = async ({ body, user }) => {
   payload.orderAmount = resolveOrderAmount(payload);
   await ensureOrderConflictConfirmed({ body, payload });
 
-  await Order.create(setCreateAuditFields(payload, user));
+  const order = await Order.create(setCreateAuditFields(payload, user));
+  try {
+    await customerService.recordOrder(payload);
+  } catch (error) {
+    // Do not leave a new order behind if customer tracking fails.
+    await Order.findByIdAndDelete(order._id);
+    throw error;
+  }
 
   const productIds = [...new Set(payload.products.map((item) => `${item.product}`))];
   if (productIds.length) {

@@ -39,7 +39,19 @@ Copy `.env.example` to `.env` and update the values for your machine.
 npm run dev
 ```
 
-The app runs on `http://localhost:3000` by default.
+The app runs on `http://localhost:3000` by default. On startup (`npm start`, `npm run dev`, or `node server.js`), it connects to MongoDB, applies pending migrations, seeds initial data, and then accepts requests. Completed migrations are skipped using `migration_history`. If a migration fails, startup stops so the app does not serve requests against an incomplete schema.
+
+## Customer data migration
+
+Customer data is migrated automatically on startup. You can also run pending migrations manually:
+
+```bash
+npm run migrate:customers
+```
+
+This uses `MONGODB_URI` from `.env` and the existing migration runner (including any earlier pending migrations). It creates a unique phone index and groups historical orders by trimmed phone, using the latest order's customer name and the number of orders as `totalOrder`. Orders without a usable string phone are skipped and reported. Back up the database before upgrading. Stop older app instances and start one instance first to finish migrations before starting any others. Migration history prevents subsequent runs from applying it again, and partial failures can be retried without adding counts twice.
+
+The `/customers` page supports name/phone search and pagination. Staff can view it; only admins can edit names/phones or delete customers. Counts increase only when a new order is created; order edits/deletions do not change lifetime counts. Editing a customer's phone does not rewrite historical orders. Deleting a customer keeps their orders; a later order with that phone creates a new customer with count 1. New orders preserve the stored customer name.
 
 ## Initial Data
 

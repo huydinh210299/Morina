@@ -10,6 +10,9 @@
     "seed:accessories": "node utils/seedAccessories.js",
     "migrate": "node scripts/migrate.js",
     "migrate:remove-uuid-ids": "node scripts/migrate.js",
+    "migrate:customers": "node scripts/migrate.js",
+    "test:customers": "node --test tests/customers.test.js",
+    "test:migrations": "node --test tests/migrations.test.js",
     "check:secrets": "node scripts/check-no-secrets.js",
     "check:ui-text": "node scripts/check-vietnamese-ui.js",
     "check:precommit": "npm run check:secrets && npm run check:ui-text"

@@ -1,0 +1,21 @@
+<section class="mx-auto max-w-3xl space-y-6">
+  <div class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">
+    <h1 class="text-3xl font-black text-slate-900"><%= title %></h1>
+    <% if (error) { %><p role="alert" class="mt-4 rounded-2xl bg-rose-50 p-4 text-rose-700"><%= error %></p><% } %>
+    <form action="/customers/<%= customer._id %>?_method=PUT" method="POST" class="mt-8 space-y-5">
+      <div>
+        <label for="customer-name" class="mb-2 block text-sm font-semibold text-slate-700">Tên khách hàng</label>
+        <input id="customer-name" name="name" type="text" required value="<%= customer.name || '' %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3" />
+      </div>
+      <div>
+        <label for="customer-phone" class="mb-2 block text-sm font-semibold text-slate-700">Số điện thoại</label>
+        <input id="customer-phone" name="phone" type="tel" required value="<%= customer.phone || '' %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3" />
+      </div>
+      <p class="text-sm text-slate-600">Số lần đặt hàng: <%= customer.totalOrder %>. Hệ thống tự động cập nhật khi tạo đơn hàng mới.</p>
+      <div class="flex gap-3">
+        <button type="submit" class="rounded-full bg-brand-500 px-6 py-3 font-semibold text-white">Lưu</button>
+        <a href="/customers" class="rounded-full bg-slate-100 px-6 py-3 font-semibold text-slate-700">Hủy</a>
+      </div>
+    </form>
+  </div>
+</section>

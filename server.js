@@ -8,6 +8,7 @@ const session = require("express-session");
 const expressLayouts = require("express-ejs-layouts");
 
 const connectDB = require("./config/db");
+const { runMigrations } = require("./scripts/migrate");
 const seedAdmin = require("./utils/seedAdmin");
 const seedSettings = require("./utils/seedSettings");
 const seedCatalogData = require("./utils/seedCatalogData");
@@ -21,6 +22,7 @@ const categoryRoutes = require("./routes/categoryRoutes");
 const productRoutes = require("./routes/productRoutes");
 const accessoryRoutes = require("./routes/accessoryRoutes");
 const orderRoutes = require("./routes/orderRoutes");
+const customerRoutes = require("./routes/customerRoutes");
 const userRoutes = require("./routes/userRoutes");
 const financeRoutes = require("./routes/financeRoutes");
 const noteRoutes = require("./routes/noteRoutes");
@@ -117,6 +119,7 @@ app.use("/categories", categoryRoutes);
 app.use("/products", productRoutes);
 app.use("/accessories", accessoryRoutes);
 app.use("/orders", orderRoutes);
+app.use("/customers", customerRoutes);
 app.use("/finance", financeRoutes);
 app.use("/notes", noteRoutes);
 app.use("/cash", (req, res) => res.redirect("/users"));
@@ -127,6 +130,7 @@ app.use(errorHandler);
 
 const startServer = async () => {
   await connectDB();
+  await runMigrations();
   const admin = await seedAdmin();
   await seedSettings();
   await seedCatalogData(admin);

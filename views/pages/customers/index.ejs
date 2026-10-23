@@ -1,0 +1,57 @@
+<section class="min-w-0 space-y-6">
+  <div>
+    <h1 class="text-3xl font-black text-slate-900">Khách hàng</h1>
+    <p class="mt-1 text-slate-500">Thông tin khách hàng và số lần đặt hàng.</p>
+  </div>
+  <form action="/customers" method="GET" class="flex flex-wrap gap-3 rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
+    <label for="customer-keyword" class="sr-only">Tìm kiếm khách hàng</label>
+    <input id="customer-keyword" type="search" name="keyword" value="<%= keyword %>" placeholder="Tìm theo tên hoặc số điện thoại" class="min-w-0 flex-1 rounded-2xl border border-slate-200 px-4 py-3" />
+    <button type="submit" class="rounded-full bg-brand-500 px-5 py-3 font-semibold text-white">Tìm kiếm</button>
+    <a href="/customers" class="rounded-full bg-slate-100 px-5 py-3 font-semibold text-slate-700">Tất cả</a>
+  </form>
+  <div class="min-w-0 overflow-hidden rounded-3xl bg-white shadow-lg shadow-slate-200/60">
+    <div class="table-scroll">
+      <table class="min-w-full divide-y divide-slate-200">
+        <thead class="bg-slate-50">
+          <tr>
+            <th class="px-6 py-4 text-left text-sm font-bold text-slate-500">Tên khách hàng</th>
+            <th class="px-6 py-4 text-left text-sm font-bold text-slate-500">Số điện thoại</th>
+            <th class="px-6 py-4 text-right text-sm font-bold text-slate-500">Số lần đặt hàng</th>
+            <% if (currentUser.role === "admin") { %><th class="px-6 py-4 text-right text-sm font-bold text-slate-500">Thao tác</th><% } %>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          <% if (!customers.length) { %>
+            <tr><td colspan="<%= currentUser.role === 'admin' ? 4 : 3 %>" class="px-6 py-8 text-center text-slate-500">Không có dữ liệu</td></tr>
+          <% } %>
+          <% customers.forEach((customer) => { %>
+            <tr>
+              <td class="px-6 py-4 font-semibold text-slate-900"><%= customer.name %></td>
+              <td class="px-6 py-4 text-slate-600"><%= customer.phone %></td>
+              <td class="px-6 py-4 text-right text-slate-600"><%= customer.totalOrder %></td>
+              <% if (currentUser.role === "admin") { %>
+                <td class="px-6 py-4"><div class="flex justify-end gap-2">
+                  <a href="/customers/<%= customer._id %>/edit" class="rounded-full bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-800">Chỉnh sửa</a>
+                  <form action="/customers/<%= customer._id %>?_method=DELETE" method="POST" onsubmit="return confirm('Xóa khách hàng này? Các đơn hàng hiện có vẫn được giữ lại.');">
+                    <button type="submit" class="rounded-full bg-rose-100 px-4 py-2 text-sm font-semibold text-rose-800">Xóa</button>
+                  </form>
+                </div></td>
+              <% } %>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="flex flex-wrap items-center justify-between gap-3 rounded-3xl bg-white px-6 py-4 text-sm text-slate-600">
+    <span>Trang <%= pagination.page %>/<%= pagination.totalPages %> · Tổng <%= pagination.totalItems %> khách hàng</span>
+    <div class="flex gap-2">
+      <% if (pagination.page > 1) { %>
+        <a href="/customers?page=<%= pagination.page - 1 %>&amp;keyword=<%= encodeURIComponent(keyword) %>" class="rounded-full bg-slate-100 px-4 py-2 font-semibold">Trang trước</a>
+      <% } %>
+      <% if (pagination.page < pagination.totalPages) { %>
+        <a href="/customers?page=<%= pagination.page + 1 %>&amp;keyword=<%= encodeURIComponent(keyword) %>" class="rounded-full bg-brand-50 px-4 py-2 font-semibold text-brand-700">Trang sau</a>
+      <% } %>
+    </div>
+  </div>
+</section>

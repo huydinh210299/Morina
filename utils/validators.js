@@ -1,5 +1,10 @@
 const Joi = require("joi");
 
+const customerSchema = Joi.object({
+  name: Joi.string().trim().required().label("Tên khách hàng"),
+  phone: Joi.string().trim().required().label("Số điện thoại")
+});
+
 const userLoginSchema = Joi.object({
   username: Joi.string().trim().required(),
   password: Joi.string().required()
@@ -201,6 +206,7 @@ const orderSchema = Joi.object({
 });
 
 module.exports = {
+  customerSchema,
   userLoginSchema,
   userCreateSchema,
   userUpdateSchema,

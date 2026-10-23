@@ -13,7 +13,14 @@ const migrateAuditFields = async (db, userIdMap) => {
 };
 
 const dropIdIndexes = async (collection) => {
-  const indexes = await collection.indexes();
+  let indexes;
+  try {
+    indexes = await collection.indexes();
+  } catch (error) {
+    // A fresh database may not have this collection yet.
+    if (error.code === 26) return [];
+    throw error;
+  }
   const idIndexes = indexes.filter((index) => {
     const keys = Object.keys(index.key || {});
     return keys.length === 1 && keys[0] === "id";
