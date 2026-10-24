@@ -311,7 +311,7 @@ const closeSearchDropdown = (wrapper) => {
   dropdown.innerHTML = "";
 };
 
-const applySearchSelection = (wrapper, item) => {
+const applySearchSelection = (wrapper, item, { updateInput = true } = {}) => {
   if (!wrapper) {
     return;
   }
@@ -323,7 +323,7 @@ const applySearchSelection = (wrapper, item) => {
   const row = wrapper.closest("[data-line-row]");
   const type = wrapper.dataset.searchSelect;
 
-  if (input) {
+  if (input && updateInput) {
     input.value = item?.label || "";
   }
 
@@ -355,7 +355,9 @@ const renderSearchOptions = (wrapper, query = "") => {
   }
 
   const normalizedQuery = normalizeSearch(query);
-  const filteredItems = items.filter((item) => !normalizedQuery || item.searchText.includes(normalizedQuery));
+  const filteredItems = items.filter((item) =>
+    !normalizedQuery || item.searchText.includes(normalizedQuery) || normalizeSearch(item.label).includes(normalizedQuery)
+  );
 
   if (filteredItems.length === 0) {
     dropdown.innerHTML =
@@ -499,7 +501,7 @@ const autofillProductRow = (row) => {
     return;
   }
 
-  applySearchSelection(wrapper, product);
+  applySearchSelection(wrapper, product, { updateInput: false });
 };
 
 const autofillAccessoryRow = (row) => {
@@ -511,15 +513,14 @@ const autofillAccessoryRow = (row) => {
     return;
   }
 
-  const exactMatch = findExactSearchItem("accessory", input.value);
-  const accessory = exactMatch || accessoryById.get(idInput.value);
+  const accessory = findExactSearchItem("accessory", input.value);
 
   if (!accessory) {
     idInput.value = "";
     return;
   }
 
-  applySearchSelection(wrapper, accessory);
+  applySearchSelection(wrapper, accessory, { updateInput: false });
 };
 
 const updateOrderAmountState = () => {
