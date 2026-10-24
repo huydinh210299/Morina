@@ -6,6 +6,7 @@ const vietnameseValidationMessages = {
   "string.min": "Nội dung phải có ít nhất {#limit} ký tự",
   "string.pattern.base": "Định dạng đã nhập không hợp lệ",
   "number.base": "Giá trị đã nhập phải là một số",
+  "number.integer": "Giá trị đã nhập phải là số nguyên",
   "number.min": "Giá trị đã nhập phải lớn hơn hoặc bằng {#limit}",
   "date.base": "Ngày đã nhập không hợp lệ",
   "date.min": "Ngày kết thúc phải sau hoặc bằng ngày bắt đầu",

@@ -28,12 +28,12 @@
 
       <div>
         <label class="mb-2 block text-sm font-semibold text-slate-700">Giá cả ngày</label>
-        <input name="fullDayPrice" type="number" min="0" step="0.01" required value="<%= product?.fullDayPrice ?? '' %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+        <input name="fullDayPrice" type="number" min="0" step="1" required value="<%= product?.fullDayPrice ?? '' %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
       </div>
 
       <div>
         <label class="mb-2 block text-sm font-semibold text-slate-700">Giá 6 giờ</label>
-        <input name="sixHPrice" type="number" min="0" step="0.01" required value="<%= product?.sixHPrice ?? '' %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+        <input name="sixHPrice" type="number" min="0" step="1" required value="<%= product?.sixHPrice ?? '' %>" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
       </div>
 
 

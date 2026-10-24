@@ -27,7 +27,7 @@ const userUpdateSchema = Joi.object({
 const shiftSchema = Joi.object({
   name: Joi.string().trim().required(),
   hour: Joi.number().min(0).required(),
-  salary: Joi.number().min(0).allow(null, ""),
+  salary: Joi.number().integer().min(0).allow(null, ""),
   description: Joi.string().trim().allow("").default("")
 });
 
@@ -37,7 +37,7 @@ const timekeepingCreateSchema = Joi.object({
 });
 
 const settingValueSchema = Joi.object({
-  value: Joi.number().min(0).required()
+  value: Joi.number().integer().min(0).required()
 });
 
 const payrollPaymentSchema = Joi.object({
@@ -50,7 +50,7 @@ const payrollSalaryUpdateSchema = Joi.object({
   month: Joi.string()
     .pattern(/^\d{4}-\d{2}$/)
     .required(),
-  salary: Joi.number().min(0).required(),
+  salary: Joi.number().integer().min(0).required(),
   description: Joi.string().trim().allow("").default("")
 });
 
@@ -66,19 +66,19 @@ const payrollAdjustmentSchema = Joi.object({
     .pattern(/^\d{4}-\d{2}$/)
     .allow(""),
   date: Joi.date().required(),
-  amount: Joi.number().min(0).required(),
+  amount: Joi.number().integer().min(0).required(),
   description: Joi.string().trim().allow("").default("")
 });
 
 const financePaymentSchema = Joi.object({
-  amount: Joi.number().min(0).required(),
+  amount: Joi.number().integer().min(0).required(),
   description: Joi.string().trim().allow("").default(""),
   paymentDate: Joi.date().required()
 });
 
 const financeEntrySchema = Joi.object({
   entryType: Joi.string().valid("income", "expense").required(),
-  amount: Joi.number().min(0).required(),
+  amount: Joi.number().integer().min(0).required(),
   description: Joi.string().trim().allow("").default(""),
   transactionDate: Joi.date().required()
 });
@@ -102,8 +102,8 @@ const saleEventSchema = Joi.object({
 
 const productSchema = Joi.object({
   code: Joi.string().trim().required(),
-  fullDayPrice: Joi.number().min(0).required(),
-  sixHPrice: Joi.number().min(0).required(),
+  fullDayPrice: Joi.number().integer().min(0).required(),
+  sixHPrice: Joi.number().integer().min(0).required(),
   note: Joi.string().trim().allow(""),
   size: Joi.string().trim().allow(""),
   imageUrl: Joi.string().trim().uri().allow(""),
@@ -113,7 +113,7 @@ const productSchema = Joi.object({
 const accessorySchema = Joi.object({
   code: Joi.string().trim().required(),
   name: Joi.string().trim().required(),
-  price: Joi.number().min(0).required(),
+  price: Joi.number().integer().min(0).required(),
   amount: Joi.number().integer().min(0).default(0),
   note: Joi.string().trim().allow("").default(""),
   imageUrl: Joi.string().trim().uri().allow("")
@@ -121,7 +121,7 @@ const accessorySchema = Joi.object({
 
 const orderItemSchema = Joi.object({
   product: Joi.string().trim().required(),
-  price: Joi.number().min(0).required(),
+  price: Joi.number().integer().min(0).required(),
   useGeneralTimes: Joi.boolean().truthy("on").truthy("true").truthy("1").falsy("off").falsy("false").falsy("0").falsy("").default(true),
   startTime: Joi.date().required(),
   endTime: Joi.date().min(Joi.ref("startTime")).required()
@@ -129,7 +129,7 @@ const orderItemSchema = Joi.object({
 
 const accessoryItemSchema = Joi.object({
   accessory: Joi.string().trim().required(),
-  price: Joi.number().min(0).required(),
+  price: Joi.number().integer().min(0).required(),
   amount: Joi.number().integer().min(1).default(1),
   useGeneralTimes: Joi.boolean().truthy("on").truthy("true").truthy("1").falsy("off").falsy("false").falsy("0").falsy("").default(true),
   startTime: Joi.date().required(),
@@ -137,33 +137,33 @@ const accessoryItemSchema = Joi.object({
 });
 
 const paymentSchema = Joi.object({
-  amount: Joi.number().min(0).required(),
+  amount: Joi.number().integer().min(0).required(),
   type: Joi.number().valid(0, 1).required()
 });
 
 const orderProductAdditionItemSchema = Joi.object({
   productCode: Joi.string().trim().required(),
-  price: Joi.number().min(0).required()
+  price: Joi.number().integer().min(0).required()
 });
 
 const orderProductAdditionSchema = Joi.object({
   products: Joi.array().items(orderProductAdditionItemSchema).min(1).required(),
-  orderAmount: Joi.number().min(0).required()
+  orderAmount: Joi.number().integer().min(0).required()
 });
 
 const orderAccessoryAdditionItemSchema = Joi.object({
   accessoryCode: Joi.string().trim().required(),
-  price: Joi.number().min(0).required(),
+  price: Joi.number().integer().min(0).required(),
   amount: Joi.number().integer().min(1).required()
 });
 
 const orderAccessoryAdditionSchema = Joi.object({
   accessories: Joi.array().items(orderAccessoryAdditionItemSchema).min(1).required(),
-  orderAmount: Joi.number().min(0).required()
+  orderAmount: Joi.number().integer().min(0).required()
 });
 
 const orderDepositUpdateSchema = Joi.object({
-  deposit: Joi.number().min(0).required()
+  deposit: Joi.number().integer().min(0).required()
 });
 
 const orderRentalDateUpdateSchema = Joi.object({
@@ -188,12 +188,12 @@ const orderNoteSchema = Joi.object({
 const orderSchema = Joi.object({
   phone: Joi.string().trim().required(),
   customerName: Joi.string().trim().required(),
-  surcharge: Joi.number().min(0).required(),
-  deposit: Joi.number().min(0).required(),
+  surcharge: Joi.number().integer().min(0).required(),
+  deposit: Joi.number().integer().min(0).required(),
   bookship: Joi.boolean().truthy("on").falsy("off").falsy("").default(false),
   important: Joi.boolean().truthy("on").falsy("off").falsy("").default(false),
   note: Joi.string().trim().allow("").default(""),
-  orderAmount: Joi.number().min(0).optional(),
+  orderAmount: Joi.number().integer().min(0).optional(),
   createdAt: Joi.date().default(() => new Date()),
   generalStartTime: Joi.date().required(),
   generalEndTime: Joi.date().min(Joi.ref("generalStartTime")).required(),
