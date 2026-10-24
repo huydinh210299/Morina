@@ -11,6 +11,15 @@ const toNumber = (value) => {
 
 const normalizeCode = (value) => `${value || ""}`.trim().toUpperCase();
 
+// Blur before the browser steps a focused number input, while allowing page scrolling.
+document.addEventListener("wheel", (event) => {
+  const input = event.target;
+
+  if (input instanceof HTMLInputElement && input.type === "number" && document.activeElement === input) {
+    input.blur();
+  }
+}, { capture: true, passive: true });
+
 const orderForm = document.querySelector("form[data-conflict-check-url]");
 const orderFormDataNode = document.getElementById("order-form-data");
 const orderFormData = orderFormDataNode ? JSON.parse(orderFormDataNode.textContent) : { products: [], accessories: [] };
