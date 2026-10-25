@@ -769,27 +769,30 @@ const updateOrderDeposit = async ({ id, body, user }) => {
   };
 };
 
-const updateOrderRentalDates = async ({ id, body, user }) => {
-  const order = await findOrderOrFail(id);
+const applyOrderRentalDates = async ({ order, body }) => {
   const rentalDates = validatePayload(orderRentalDateUpdateSchema, {
     generalStartTime: body.generalStartTime,
     generalEndTime: body.generalEndTime
   });
 
-  const products = order.products.map((item) => ({
-    product: item.product,
-    startTime: item.useGeneralTimes !== false ? rentalDates.generalStartTime : item.startTime,
-    endTime: item.useGeneralTimes !== false ? rentalDates.generalEndTime : item.endTime
-  }));
-  const conflicts = await findConflictingProductLines({
-    payload: { products },
-    excludeOrderId: id
-  });
+  const datesChanged = order.generalStartTime.getTime() !== rentalDates.generalStartTime.getTime() ||
+    order.generalEndTime.getTime() !== rentalDates.generalEndTime.getTime();
+  if (datesChanged) {
+    const products = order.products.map((item) => ({
+      product: item.product,
+      startTime: item.useGeneralTimes !== false ? rentalDates.generalStartTime : item.startTime,
+      endTime: item.useGeneralTimes !== false ? rentalDates.generalEndTime : item.endTime
+    }));
+    const conflicts = await findConflictingProductLines({
+      payload: { products },
+      excludeOrderId: order._id
+    });
 
-  if (conflicts.length) {
-    const error = new Error(buildConflictMessage(conflicts));
-    error.statusCode = 409;
-    throw error;
+    if (conflicts.length) {
+      const error = new Error(buildConflictMessage(conflicts));
+      error.statusCode = 409;
+      throw error;
+    }
   }
 
   order.generalStartTime = rentalDates.generalStartTime;
@@ -801,6 +804,11 @@ const updateOrderRentalDates = async ({ id, body, user }) => {
       item.endTime = rentalDates.generalEndTime;
     }
   }
+};
+
+const updateOrderRentalDates = async ({ id, body, user }) => {
+  const order = await findOrderOrFail(id);
+  await applyOrderRentalDates({ order, body });
 
   Object.assign(order, setUpdateAuditFields({}, user));
   await order.save();
@@ -831,6 +839,15 @@ const updateOrderStatus = async ({ id, body, user }) => {
       }
     };
     const status = statusByAction[action];
+
+    if (action === "pickup") {
+      if (order.alreadyPickup) {
+        const error = new Error("Đơn hàng đã được xác nhận nhận hàng.");
+        error.statusCode = 400;
+        throw error;
+      }
+      await applyOrderRentalDates({ order, body });
+    }
 
     order[status.field] = true;
     Object.assign(order, setUpdateAuditFields({}, user));

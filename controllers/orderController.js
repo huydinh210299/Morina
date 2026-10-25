@@ -160,13 +160,21 @@ const updateRentalDates = async (req, res) => {
 };
 
 const updateStatus = async (req, res) => {
-  const result = await orderService.updateOrderStatus({
-    id: req.params.id,
-    body: req.body,
-    user: req.user
-  });
-  req.session.success = result.successMessage;
-  res.redirect(result.redirectTo);
+  try {
+    const result = await orderService.updateOrderStatus({
+      id: req.params.id,
+      body: req.body,
+      user: req.user
+    });
+    req.session.success = result.successMessage;
+    res.redirect(result.redirectTo);
+  } catch (error) {
+    if (![400, 409].includes(error.statusCode)) {
+      throw error;
+    }
+    req.session.error = error.message;
+    res.redirect(`/orders/${req.params.id}`);
+  }
 };
 
 const updateNote = async (req, res) => {

@@ -44,12 +44,9 @@
     <div class="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-5">
       <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Thao tác đơn hàng</p>
       <div class="mt-4 flex flex-wrap gap-3">
-        <form action="/orders/<%= order._id %>/status" method="POST">
-          <input type="hidden" name="action" value="pickup" />
-          <button type="submit" <%= order.alreadyPickup ? "disabled" : "" %> class="rounded-full bg-sky-100 px-5 py-3 font-semibold text-sky-800 transition hover:bg-sky-200 disabled:cursor-not-allowed disabled:opacity-60">
-            <%= order.alreadyPickup ? "Đã nhận hàng" : "Xác nhận nhận hàng" %>
-          </button>
-        </form>
+        <button type="button" data-pickup-open <%= order.alreadyPickup ? "disabled" : "" %> class="rounded-full bg-sky-100 px-5 py-3 font-semibold text-sky-800 transition hover:bg-sky-200 disabled:cursor-not-allowed disabled:opacity-60">
+          <%= order.alreadyPickup ? "Đã nhận hàng" : "Xác nhận nhận hàng" %>
+        </button>
         <form action="/orders/<%= order._id %>/status" method="POST">
           <input type="hidden" name="action" value="return" />
           <button type="submit" <%= order.returned ? "disabled" : "" %> class="rounded-full bg-emerald-100 px-5 py-3 font-semibold text-emerald-800 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-60">
@@ -72,6 +69,29 @@
       </div>
     <% } %>
   </div>
+
+  <dialog data-pickup-modal data-original-start="<%= formatDateTimeLocal(order.generalStartTime) %>" data-original-end="<%= formatDateTimeLocal(order.generalEndTime) %>" class="w-full max-w-lg rounded-3xl border-0 bg-transparent p-0 backdrop:bg-slate-950/70">
+    <form action="/orders/<%= order._id %>/status" method="POST" data-pickup-form class="rounded-3xl bg-white p-6 shadow-2xl">
+      <input type="hidden" name="action" value="pickup" />
+      <h2 class="text-2xl font-black text-slate-900">Xác nhận nhận hàng</h2>
+      <p class="mt-2 text-sm text-slate-600">Kiểm tra và cập nhật lịch thuê trước khi xác nhận.</p>
+      <div class="mt-5 grid gap-4">
+        <label>
+          <span class="mb-2 block text-sm font-semibold text-slate-700">Ngày giờ lấy hàng</span>
+          <input name="generalStartTime" type="datetime-local" required value="<%= formatDateTimeLocal(order.generalStartTime) %>" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+        </label>
+        <label>
+          <span class="mb-2 block text-sm font-semibold text-slate-700">Ngày giờ trả hàng</span>
+          <input name="generalEndTime" type="datetime-local" required value="<%= formatDateTimeLocal(order.generalEndTime) %>" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+        </label>
+      </div>
+      <p data-pickup-error class="mt-3 hidden text-sm font-semibold text-rose-700" role="alert"></p>
+      <div class="mt-6 flex justify-end gap-3">
+        <button type="button" data-pickup-close class="rounded-full bg-slate-100 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-200">Hủy</button>
+        <button type="submit" class="rounded-full bg-sky-100 px-5 py-3 font-semibold text-sky-800 transition hover:bg-sky-200">Xác nhận nhận hàng</button>
+      </div>
+    </form>
+  </dialog>
 
   <div class="grid gap-6 lg:grid-cols-2">
     <div class="rounded-[2rem] bg-white p-8 shadow-xl shadow-slate-200/60">

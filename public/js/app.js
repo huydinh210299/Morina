@@ -75,6 +75,37 @@ const addOrderAccessoryModal = document.querySelector("[data-add-order-accessory
 const addOrderAccessoryForm = document.querySelector("[data-add-order-accessory-form]");
 const addOrderAccessoriesContainer = document.getElementById("add-order-accessories-container");
 const addOrderAccessoryRowTemplate = document.getElementById("add-order-accessory-row-template");
+const pickupModal = document.querySelector("[data-pickup-modal]");
+const pickupForm = pickupModal?.querySelector("[data-pickup-form]");
+const pickupStartInput = pickupForm?.querySelector('input[name="generalStartTime"]');
+const pickupEndInput = pickupForm?.querySelector('input[name="generalEndTime"]');
+const pickupError = pickupForm?.querySelector("[data-pickup-error]");
+
+const openPickupModal = () => {
+  if (!pickupModal || pickupModal.open) {
+    return;
+  }
+
+  const { originalStart, originalEnd } = pickupModal.dataset;
+  const sameDay = originalStart.slice(0, 10) === originalEnd.slice(0, 10);
+  const now = new Date();
+  const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  pickupStartInput.value = sameDay ? originalStart : `${originalStart.slice(0, 10)}T${currentTime}`;
+  pickupEndInput.value = sameDay ? originalEnd : `${originalEnd.slice(0, 10)}T${currentTime}`;
+  pickupError.classList.add("hidden");
+  pickupModal.showModal();
+};
+
+pickupForm?.addEventListener("submit", (event) => {
+  if (pickupEndInput.value >= pickupStartInput.value) {
+    return;
+  }
+
+  event.preventDefault();
+  pickupError.textContent = "Ngày giờ trả hàng phải sau hoặc bằng ngày giờ lấy hàng.";
+  pickupError.classList.remove("hidden");
+  pickupEndInput.focus();
+});
 
 const addOrderProductRow = () => {
   if (!addOrderProductsContainer || !addOrderProductRowTemplate) {
@@ -713,6 +744,16 @@ document.addEventListener("click", (event) => {
 
   if (event.target.closest("[data-add-order-product-open]")) {
     openAddOrderProductModal();
+    return;
+  }
+
+  if (event.target.closest("[data-pickup-open]")) {
+    openPickupModal();
+    return;
+  }
+
+  if (event.target.closest("[data-pickup-close]") || event.target === pickupModal) {
+    pickupModal.close();
     return;
   }
 
