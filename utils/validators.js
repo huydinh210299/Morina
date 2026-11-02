@@ -42,8 +42,14 @@ const settingValueSchema = Joi.object({
 
 const payrollPaymentSchema = Joi.object({
   month: Joi.string()
-    .pattern(/^\d{4}-\d{2}$/)
+    .pattern(/^[2-9]\d{3}-(0[1-9]|1[0-2])$/)
     .required()
+    .messages({
+      "string.base": "Vui lòng chọn tháng thanh toán hợp lệ.",
+      "string.empty": "Vui lòng chọn tháng thanh toán.",
+      "string.pattern.base": "Tháng thanh toán phải hợp lệ và từ năm 2000.",
+      "any.required": "Vui lòng chọn tháng thanh toán."
+    })
 });
 
 const payrollSalaryUpdateSchema = Joi.object({

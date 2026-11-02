@@ -9,15 +9,23 @@
         <input name="month" type="month" value="<%= selectedMonth %>" class="rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
         <button type="submit" class="rounded-full bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-700">Xem tháng</button>
       </form>
-      <% if (userItem.role === "staff") { %>
-        <form action="/users/<%= userItem._id %>/payroll/pay" method="POST" onsubmit="return confirm('Thanh toán lương và đặt lại công, hoa hồng, lỗi phạt của tháng này?');">
-          <input type="hidden" name="month" value="<%= selectedMonth %>" />
-          <button type="submit" class="rounded-full bg-brand-500 px-5 py-3 font-semibold text-white transition hover:bg-brand-700">Thanh toán lương</button>
-        </form>
-      <% } %>
       <a href="/users/<%= userItem._id %>" class="rounded-full bg-slate-100 px-5 py-3 font-semibold text-slate-700">Quay lại</a>
     </div>
   </div>
+
+  <% if (userItem.role === "staff") { %>
+    <form action="/users/<%= userItem._id %>/payroll/pay" method="POST" class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60" onsubmit="const [year, month] = this.elements.month.value.split('-'); return confirm('Thanh toán lương tháng ' + month + '/' + year + ' và chốt công, hoa hồng, lỗi phạt của tháng này? Số đơn đã tạo sẽ được đặt về 0.');">
+      <h2 class="text-xl font-black text-slate-900">Thanh toán lương</h2>
+      <p class="mt-2 text-sm text-slate-500">Công, hoa hồng bổ sung và lỗi phạt được tính theo tháng thanh toán. Số đơn đã tạo sẽ về 0 sau khi thanh toán.</p>
+      <div class="mt-4 flex flex-wrap items-end gap-3">
+        <label class="block">
+          <span class="mb-2 block text-sm font-semibold text-slate-700">Tháng thanh toán</span>
+          <input name="month" type="month" required min="2000-01" max="9999-12" value="<%= selectedMonth %>" class="rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+        </label>
+        <button type="submit" class="rounded-full bg-brand-500 px-5 py-3 font-semibold text-white transition hover:bg-brand-700">Thanh toán lương</button>
+      </div>
+    </form>
+  <% } %>
 
   <div class="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
     <div class="rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">
