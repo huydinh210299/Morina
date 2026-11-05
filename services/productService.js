@@ -163,7 +163,52 @@ const getIndexData = async (query = {}) => {
   };
 };
 
-const getImageIndexData = async (query = {}) => {
+const getRentalSchedulesByProduct = async (products, now) => {
+  const schedules = new Map(products.map((product) => [String(product._id), []]));
+  if (!products.length) return schedules;
+
+  const orders = await Order.find({
+    returned: false,
+    products: { $elemMatch: { product: { $in: products.map((product) => product._id) }, endTime: { $gte: now } } }
+  }).select("customerName phone products").lean();
+
+  for (const order of orders) {
+    for (const item of order.products) {
+      const schedule = schedules.get(String(item.product));
+      if (!schedule || new Date(item.endTime) < now) continue;
+
+      schedule.push({
+        orderId: order._id,
+        orderCode: String(order._id).slice(-6).toUpperCase(),
+        customerName: order.customerName,
+        phone: order.phone,
+        startTime: item.startTime,
+        endTime: item.endTime,
+        isCurrent: new Date(item.startTime) <= now
+      });
+    }
+  }
+
+  for (const schedule of schedules.values()) {
+    schedule.sort((left, right) => new Date(left.startTime) - new Date(right.startTime));
+  }
+  return schedules;
+};
+
+const getImageIndexData = async (query = {}, { scheduledOnly = false } = {}) => {
+  const now = new Date();
+  const title = scheduledOnly ? "Mẫu có lịch thuê" : "Hình ảnh sản phẩm";
+  const gallery = {
+    path: scheduledOnly ? "/products/rental-images" : "/products/images",
+    activeTab: scheduledOnly ? "rental-images" : "product-images",
+    showRentSchedule: scheduledOnly,
+    description: scheduledOnly
+      ? "Xem ảnh các mẫu đang trong lịch thuê hoặc có lịch thuê sắp tới, kèm đơn hàng và khung giờ thuê."
+      : "Xem mã sản phẩm và ảnh từ Google Drive.",
+    emptyMessage: scheduledOnly
+      ? "Không có mẫu nào đang trong lịch thuê hoặc có lịch thuê sắp tới phù hợp với bộ lọc."
+      : "Không có sản phẩm phù hợp với bộ lọc hiện tại."
+  };
   const requestedPage = Math.max(parseInt(query.page, 10) || 1, 1);
   const filters = {
     category: normalizeFilterValue(query.category),
@@ -177,7 +222,8 @@ const getImageIndexData = async (query = {}) => {
   if (filters.category) {
     if (!mongoose.Types.ObjectId.isValid(filters.category)) {
       return {
-        title: "Hình ảnh sản phẩm",
+        title,
+        gallery,
         products: [],
         categories: await getCategories(),
         sizes: PRODUCT_SIZES,
@@ -212,6 +258,16 @@ const getImageIndexData = async (query = {}) => {
     };
   }
 
+  if (scheduledOnly) {
+    const scheduledProducts = await Order.aggregate([
+      { $match: { returned: false, "products.endTime": { $gte: now } } },
+      { $unwind: "$products" },
+      { $match: { "products.product": { $ne: null }, "products.endTime": { $gte: now } } },
+      { $group: { _id: "$products.product" } }
+    ]);
+    conditions._id = { $in: scheduledProducts.map((item) => item._id) };
+  }
+
   const [categories, totalItems] = await Promise.all([
     getCategories(),
     Product.countDocuments(conditions)
@@ -225,13 +281,16 @@ const getImageIndexData = async (query = {}) => {
     .skip((currentPage - 1) * IMAGE_PAGE_SIZE)
     .limit(IMAGE_PAGE_SIZE)
     .lean();
+  const schedules = scheduledOnly ? await getRentalSchedulesByProduct(products, now) : new Map();
   const productsWithDisplayImages = products.map((product) => ({
     ...product,
-    displayImageUrl: getCachedImageUrl(product.imageUrl)
+    displayImageUrl: getCachedImageUrl(product.imageUrl),
+    ...(scheduledOnly ? { rentSchedule: schedules.get(String(product._id)) } : {})
   }));
 
   return {
-    title: "Hình ảnh sản phẩm",
+    title,
+    gallery,
     products: productsWithDisplayImages,
     categories,
     sizes: PRODUCT_SIZES,
@@ -248,6 +307,8 @@ const getImageIndexData = async (query = {}) => {
     }
   };
 };
+
+const getRentalImageIndexData = (query = {}) => getImageIndexData(query, { scheduledOnly: true });
 
 const getCreateData = async () => ({
   title: "Tạo sản phẩm",
@@ -382,6 +443,7 @@ const archiveProduct = async ({ id, user }) => {
 module.exports = {
   getIndexData,
   getImageIndexData,
+  getRentalImageIndexData,
   getCreateData,
   createProduct,
   getEditData,

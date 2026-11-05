@@ -1,5 +1,5 @@
 <section class="min-w-0 space-y-6">
-  <%- include("../../partials/product-management-tabs", { activeProductManagementTab: "product-images" }) %>
+  <%- include("../../partials/product-management-tabs", { activeProductManagementTab: gallery.activeTab }) %>
   <%
     const buildPageUrl = (page) => {
       const params = new URLSearchParams();
@@ -7,7 +7,7 @@
       if (filters.productCode) params.set("productCode", filters.productCode);
       if (filters.size) params.set("size", filters.size);
       params.set("page", String(page));
-      return `/products/images?${params.toString()}`;
+      return `${gallery.path}?${params.toString()}`;
     };
 
     const startItem = pagination.totalItems === 0 ? 0 : (pagination.currentPage - 1) * pagination.pageSize + 1;
@@ -18,15 +18,16 @@
 
   <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
     <div>
-      <h1 class="text-3xl font-black text-slate-900">Hình ảnh sản phẩm</h1>
-      <p class="mt-1 text-slate-500">Xem mã sản phẩm và ảnh từ Google Drive.</p>
+      <h1 class="text-3xl font-black text-slate-900"><%= title %></h1>
+      <p class="mt-1 text-slate-500"><%= gallery.description %></p>
     </div>
   </div>
 
-  <form method="GET" action="/products/images" class="grid gap-4 rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60 md:grid-cols-2 md:items-end xl:grid-cols-4">
-    <label class="block">
-      <span class="mb-2 block text-sm font-semibold text-slate-700">Danh mục</span>
-      <select name="category" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100">
+  <form method="GET" action="<%= gallery.path %>" class="grid gap-4 rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60 md:grid-cols-2 md:items-end xl:grid-cols-4">
+    <div class="block">
+      <label for="image-category-filter" class="mb-2 block text-sm font-semibold text-slate-700">Danh mục</label>
+      <input type="search" placeholder="Tìm kiếm danh mục" aria-label="Tìm kiếm danh mục" aria-controls="image-category-filter" data-image-category-search class="mb-2 w-full rounded-2xl border border-slate-200 px-4 py-2 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100" />
+      <select id="image-category-filter" name="category" class="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100">
         <option value="">Tất cả danh mục</option>
         <% categories.forEach((category) => { %>
           <option
@@ -38,7 +39,7 @@
           </option>
         <% }) %>
       </select>
-    </label>
+    </div>
 
     <label class="block">
       <span class="mb-2 block text-sm font-semibold text-slate-700">Kích cỡ</span>
@@ -63,7 +64,7 @@
 
     <div class="flex gap-3">
       <button type="submit" class="inline-flex rounded-full bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-700">Lọc</button>
-      <a href="/products/images" class="inline-flex rounded-full bg-slate-100 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-200">Đặt lại</a>
+      <a href="<%= gallery.path %>" class="inline-flex rounded-full bg-slate-100 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-200">Đặt lại</a>
     </div>
   </form>
 
@@ -104,19 +105,42 @@
                 <p class="mt-1 truncate text-sm font-semibold text-slate-700">Giá 1 ngày: <%= formatCurrency(product.fullDayPrice) %></p>
                 <p class="mt-1 truncate text-sm font-semibold text-slate-700">Giá 6 giờ: <%= formatCurrency(product.sixHPrice) %></p>
               </div>
-              <% if (product.imageUrl) { %>
+              <% if (gallery.showRentSchedule) { %>
+                <span class="shrink-0 rounded-full bg-brand-50 px-3 py-1 text-xs font-bold text-brand-700"><%= product.rentSchedule.length %> lịch</span>
+              <% } else if (product.imageUrl) { %>
                 <span class="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">OK</span>
               <% } else { %>
                 <span class="shrink-0 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">Chưa có ảnh</span>
               <% } %>
             </div>
           </button>
+          <% if (gallery.showRentSchedule) { %>
+            <div class="border-t border-slate-100 p-4">
+              <h3 class="text-sm font-bold text-slate-900">Đơn hàng và khung giờ thuê</h3>
+              <ul class="mt-3 space-y-3">
+                <% product.rentSchedule.forEach((item) => { %>
+                  <li class="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                      <a href="/orders/<%= item.orderId %>" class="font-bold text-brand-700 transition hover:underline">Đơn #<%= item.orderCode %></a>
+                      <span class="rounded-full px-2 py-1 text-xs font-semibold <%= item.isCurrent ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' %>"><%= item.isCurrent ? "Đang trong lịch thuê" : "Sắp bắt đầu" %></span>
+                    </div>
+                    <p class="mt-2 break-words font-semibold text-slate-900"><%= item.customerName %></p>
+                    <p class="mt-1 text-slate-500"><%= item.phone %></p>
+                    <dl class="mt-3 space-y-1 text-slate-600">
+                      <div><dt class="inline">Từ: </dt><dd class="inline font-semibold text-slate-900"><%= formatDateTime(item.startTime) %></dd></div>
+                      <div><dt class="inline">Đến: </dt><dd class="inline font-semibold text-slate-900"><%= formatDateTime(item.endTime) %></dd></div>
+                    </dl>
+                  </li>
+                <% }) %>
+              </ul>
+            </div>
+          <% } %>
         </article>
       <% }) %>
     </div>
   <% } else { %>
     <div class="rounded-3xl bg-white px-6 py-12 text-center text-slate-500 shadow-lg shadow-slate-200/60">
-      Không có sản phẩm phù hợp với bộ lọc hiện tại.
+      <%= gallery.emptyMessage %>
     </div>
   <% } %>
 
@@ -131,7 +155,7 @@
 
       <span class="rounded-full bg-brand-50 px-4 py-2 text-sm font-semibold text-brand-700">Trang <%= pagination.currentPage %>/<%= pagination.totalPages %></span>
 
-      <form method="GET" action="/products/images" class="flex items-center gap-2">
+      <form method="GET" action="<%= gallery.path %>" class="flex items-center gap-2">
         <% if (filters.category) { %>
           <input type="hidden" name="category" value="<%= filters.category %>" />
         <% } %>
@@ -216,3 +240,4 @@
     </div>
   </div>
 </section>
+<script src="/js/product-image-filters.js?v=20261105-1" defer></script>

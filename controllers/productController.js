@@ -9,6 +9,10 @@ const renderImages = async (req, res) => {
   res.render("pages/products/images", await productService.getImageIndexData(req.query));
 };
 
+const renderRentalImages = async (req, res) => {
+  res.render("pages/products/images", await productService.getRentalImageIndexData(req.query));
+};
+
 const renderCreate = async (req, res) => {
   res.render("pages/products/form", await productService.getCreateData());
 };
@@ -53,6 +57,7 @@ const remove = async (req, res) => {
 module.exports = wrapControllerHandlers({
   renderIndex,
   renderImages,
+  renderRentalImages,
   renderCreate,
   create,
   renderShow,
