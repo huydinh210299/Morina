@@ -23,7 +23,7 @@ const loadRunner = (migrations) => {
   return { ...module.exports, calls };
 };
 
-const migrationNames = ["./remove-uuid-ids", "./add-payment-date", "./add-user-active", "./backfill-customers"];
+const migrationNames = ["./remove-uuid-ids", "./add-payment-date", "./add-user-active", "./backfill-customers", "./add-customer-feedback"];
 
 test("importing migrations does not connect, disconnect, or execute anything", () => {
   const { calls, runMigrations } = loadRunner({});
@@ -47,7 +47,7 @@ test("pending migrations run in order once and subsequent startup skips them", a
   await runMigrations(db);
   await runMigrations(db);
   assert.deepEqual(applied, migrationNames);
-  assert.equal(records.size, 4);
+  assert.equal(records.size, migrationNames.length);
   assert.deepEqual(calls, []);
 });
 

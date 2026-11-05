@@ -31,4 +31,15 @@ const remove = async (req, res) => {
   res.redirect("/customers");
 };
 
-module.exports = wrapControllerHandlers({ renderIndex, renderEdit, update, remove });
+const updateFeedback = async (req, res) => {
+  await customerService.updateCustomerFeedback({ id: req.params.id, body: req.body });
+  req.session.success = "Cập nhật trạng thái feedback thành công.";
+  const params = new URLSearchParams();
+  const keyword = typeof req.query.keyword === "string" ? req.query.keyword.trim() : "";
+  const page = Number.parseInt(req.query.page, 10);
+  if (keyword) params.set("keyword", keyword);
+  if (Number.isSafeInteger(page) && page > 1) params.set("page", String(page));
+  res.redirect(303, `/customers${params.size ? `?${params.toString()}` : ""}`);
+};
+
+module.exports = wrapControllerHandlers({ renderIndex, renderEdit, update, updateFeedback, remove });

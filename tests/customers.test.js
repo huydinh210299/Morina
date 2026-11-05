@@ -126,11 +126,12 @@ test("migration batches large histories and retries with absolute counts", async
   assert.equal(records.get("0900").name, "An");
 });
 
-test("customer routes allow staff reads and block every staff write", async (t) => {
+test("customer routes allow staff feedback updates while keeping profile edits and deletion admin-only", async (t) => {
   t.mock.method(customerService, "getIndexData", async () => ({ customers: [] }));
   t.mock.method(customerService, "getEditData", async () => ({ customer }));
   const updated = t.mock.method(customerService, "updateCustomer", async () => {});
   const removed = t.mock.method(customerService, "deleteCustomer", async () => {});
+  const feedback = t.mock.method(customerService, "updateCustomerFeedback", async () => {});
   const app = express();
   app.use(express.json());
   app.use((req, res, next) => {
@@ -142,8 +143,9 @@ test("customer routes allow staff reads and block every staff write", async (t) 
   app.use("/customers", require("../routes/customerRoutes"));
   const server = await new Promise((resolve) => { const value = app.listen(0, "127.0.0.1", () => resolve(value)); });
   t.after(() => new Promise((resolve) => server.close(resolve)));
-  const request = (role, method, suffix = "") => fetch(`http://127.0.0.1:${server.address().port}/customers${suffix}`, {
-    method, headers: role ? { "x-role": role } : {}, redirect: "manual"
+  const request = (role, method, suffix = "", body) => fetch(`http://127.0.0.1:${server.address().port}/customers${suffix}`, {
+    method, headers: { ...(role ? { "x-role": role } : {}), ...(body ? { "content-type": "application/json" } : {}) },
+    ...(body ? { body: JSON.stringify(body) } : {}), redirect: "manual"
   });
   assert.equal((await request(null, "GET")).headers.get("location"), "/auth/login");
   assert.equal((await request("staff", "GET")).status, 200);
@@ -158,6 +160,16 @@ test("customer routes allow staff reads and block every staff write", async (t) 
   await request("admin", "DELETE", `/${customerId}`);
   assert.equal(updated.mock.callCount(), 1);
   assert.equal(removed.mock.callCount(), 1);
+  assert.equal((await request(null, "PUT", `/${customerId}/feedback`, { hasFeedback: true })).headers.get("location"), "/auth/login");
+  assert.equal((await request("guest", "PUT", `/${customerId}/feedback`, { hasFeedback: true })).headers.get("location"), "/dashboard");
+  assert.equal(feedback.mock.callCount(), 0);
+  for (const role of ["staff", "admin"]) {
+    const response = await request(role, "PUT", `/${customerId}/feedback?page=2&keyword=An`, { hasFeedback: true });
+    assert.equal(response.status, 303);
+    assert.equal(response.headers.get("location"), "/customers?keyword=An&page=2");
+  }
+  assert.equal(feedback.mock.callCount(), 2);
+  assert.deepEqual(feedback.mock.calls[0].arguments[0], { id: customerId, body: { hasFeedback: true } });
 });
 
 test("customer templates escape names and show editing only to admins", async () => {
@@ -167,10 +179,86 @@ test("customer templates escape names and show editing only to admins", async ()
   assert.match(staff, /&lt;script&gt;/);
   assert.doesNotMatch(staff, /_method=DELETE|\/edit/);
   assert.match(staff, /page=3&amp;keyword=An/);
+  assert.match(staff, /Chưa có feedback/);
+  assert.match(staff, /name="hasFeedback" value="true"/);
+  assert.match(staff, /\/feedback\?_method=PUT&amp;page=2&amp;keyword=An/);
   const admin = await ejs.renderFile(filename, { ...data, currentUser: { role: "admin" } });
   assert.match(admin, /_method=DELETE/);
+  assert.match(admin, /\/feedback\?_method=PUT/);
+  const hasFeedback = await ejs.renderFile(filename, { ...data, customers: [{ ...customer, hasFeedback: true }], currentUser: { role: "staff" } });
+  assert.match(hasFeedback, /Đã có feedback/);
+  assert.match(hasFeedback, /name="hasFeedback" value="false"/);
   const empty = await ejs.renderFile(filename, { ...data, customers: [], currentUser: { role: "staff" } });
   assert.match(empty, /Không có dữ liệu/);
   const form = await ejs.renderFile(path.join(__dirname, "../views/pages/customers/form.ejs"), { title: "Chỉnh sửa khách hàng", customer, error: "Số điện thoại đã tồn tại." });
   assert.match(form, /role="alert"/);
+});
+
+test("new and legacy customers default to no feedback", () => {
+  assert.equal(new Customer({ name: customer.name, phone: customer.phone }).hasFeedback, false);
+  assert.equal(Customer.hydrate(customer).hasFeedback, false);
+});
+
+test("feedback updates set an explicit boolean and preserve the customer profile and order count", async (t) => {
+  const stored = { ...customer, hasFeedback: false };
+  const writes = t.mock.method(Customer, "findByIdAndUpdate", async (id, update, options) => {
+    assert.equal(id, customerId);
+    assert.equal(options.runValidators, true);
+    assert.equal(options.new, true);
+    assert.deepEqual(Object.keys(update), ["$set"]);
+    assert.deepEqual(Object.keys(update.$set), ["hasFeedback"]);
+    Object.assign(stored, update.$set);
+    return stored;
+  });
+  for (const hasFeedback of [true, "true", "false", false]) {
+    await customerService.updateCustomerFeedback({ id: customerId, body: { hasFeedback } });
+    assert.deepEqual(stored, { ...customer, hasFeedback: hasFeedback === true || hasFeedback === "true" });
+  }
+  assert.equal(writes.mock.callCount(), 4);
+});
+
+test("invalid feedback payloads and customer IDs cannot change customer data", async (t) => {
+  const writes = t.mock.method(Customer, "findByIdAndUpdate", async () => null);
+  for (const body of [undefined, {}, { hasFeedback: "yes" }, { hasFeedback: null }, { hasFeedback: 1 }, { hasFeedback: [true] },
+    { hasFeedback: true, totalOrder: 999 }, { hasFeedback: true, name: "Tên khác" }]) {
+    await assert.rejects(customerService.updateCustomerFeedback({ id: customerId, body }), { statusCode: 400 });
+  }
+  await assert.rejects(customerService.updateCustomerFeedback({ id: "invalid", body: { hasFeedback: true } }), { statusCode: 404 });
+  assert.equal(writes.mock.callCount(), 0);
+  await assert.rejects(customerService.updateCustomerFeedback({ id: customerId, body: { hasFeedback: true } }), { statusCode: 404 });
+});
+
+test("recording another order preserves existing feedback", async (t) => {
+  const stored = { ...customer, hasFeedback: true };
+  t.mock.method(Customer, "updateOne", async (filter, update) => {
+    assert.equal(filter.phone, customer.phone);
+    assert.equal(update.$set?.hasFeedback, undefined);
+    stored.totalOrder += update.$inc.totalOrder;
+  });
+  await customerService.recordOrder({ phone: customer.phone, customerName: customer.name });
+  assert.equal(stored.hasFeedback, true);
+  assert.equal(stored.totalOrder, customer.totalOrder + 1);
+});
+
+test("feedback migration fills missing values once and preserves existing feedback states", async () => {
+  const { up } = require("../scripts/add-customer-feedback");
+  const customers = [{ ...customer }, { hasFeedback: true }, { hasFeedback: false }];
+  const db = { collection(name) {
+    assert.equal(name, "customers");
+    return { async updateMany(filter, update) {
+      assert.deepEqual(filter, { hasFeedback: { $exists: false } });
+      assert.deepEqual(update, { $set: { hasFeedback: false } });
+      let modifiedCount = 0;
+      for (const record of customers) {
+        if (!("hasFeedback" in record)) {
+          Object.assign(record, update.$set);
+          modifiedCount += 1;
+        }
+      }
+      return { modifiedCount };
+    } };
+  } };
+  await up(db);
+  await up(db);
+  assert.deepEqual(customers, [{ ...customer, hasFeedback: false }, { hasFeedback: true }, { hasFeedback: false }]);
 });

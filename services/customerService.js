@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const Customer = require("../models/Customer");
-const { customerSchema } = require("../utils/validators");
+const { customerSchema, customerFeedbackSchema } = require("../utils/validators");
 const validationOptions = require("../utils/validationOptions");
 
 const findCustomerOrFail = async (id) => {
@@ -66,4 +66,21 @@ const deleteCustomer = async (id) => {
   await Customer.findByIdAndDelete(id);
 };
 
-module.exports = { recordOrder, getIndexData, getEditData, updateCustomer, deleteCustomer };
+const updateCustomerFeedback = async ({ id, body }) => {
+  const { error, value } = customerFeedbackSchema.validate(body, validationOptions);
+  if (error) {
+    const validationError = new Error(error.details.map((detail) => detail.message).join(", "));
+    validationError.statusCode = 400;
+    throw validationError;
+  }
+  const customer = mongoose.isObjectIdOrHexString(id)
+    ? await Customer.findByIdAndUpdate(id, { $set: { hasFeedback: value.hasFeedback } }, { new: true, runValidators: true })
+    : null;
+  if (!customer) {
+    const notFoundError = new Error("Không tìm thấy khách hàng.");
+    notFoundError.statusCode = 404;
+    throw notFoundError;
+  }
+};
+
+module.exports = { recordOrder, getIndexData, getEditData, updateCustomer, updateCustomerFeedback, deleteCustomer };

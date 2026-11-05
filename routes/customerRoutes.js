@@ -6,6 +6,7 @@ const { USER_ROLES } = require("../utils/constants");
 const router = express.Router();
 router.use(requireAuth, allowRoles(USER_ROLES.ADMIN, USER_ROLES.STAFF));
 router.get("/", controller.renderIndex);
+router.put("/:id/feedback", controller.updateFeedback);
 router.get("/:id/edit", allowRoles(USER_ROLES.ADMIN), controller.renderEdit);
 router.put("/:id", allowRoles(USER_ROLES.ADMIN), controller.update);
 router.delete("/:id", allowRoles(USER_ROLES.ADMIN), controller.remove);

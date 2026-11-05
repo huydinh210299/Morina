@@ -6,7 +6,8 @@ const migrations = [
   require("./remove-uuid-ids"),
   require("./add-payment-date"),
   require("./add-user-active"),
-  require("./backfill-customers")
+  require("./backfill-customers"),
+  require("./add-customer-feedback")
 ];
 const HISTORY_COLLECTION = "migration_history";
 

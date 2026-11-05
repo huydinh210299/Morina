@@ -5,6 +5,10 @@ const customerSchema = Joi.object({
   phone: Joi.string().trim().required().label("Số điện thoại")
 });
 
+const customerFeedbackSchema = Joi.object({
+  hasFeedback: Joi.boolean().required().label("Trạng thái feedback")
+}).required();
+
 const userLoginSchema = Joi.object({
   username: Joi.string().trim().required(),
   password: Joi.string().required()
@@ -213,6 +217,7 @@ const orderSchema = Joi.object({
 
 module.exports = {
   customerSchema,
+  customerFeedbackSchema,
   userLoginSchema,
   userCreateSchema,
   userUpdateSchema,
