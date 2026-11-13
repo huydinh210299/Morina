@@ -153,7 +153,8 @@ const DEFAULT_PRODUCTS = [
   ...buildProducts("H", "H", [35, 35, 40]),
   ...buildProducts("N", "N", Array(7).fill(30), Array(7).fill(20)),
   ...buildProducts("Q", "Q", Array(38).fill(0)),
-  ...buildProducts("Q", "Q", Array(21).fill(0), undefined, 47)
+  ...buildProducts("Q", "Q", Array(26).fill(0), undefined, 47),
+  ...buildProducts("AD", "AD", [125, 155, 125, 125, 110], [100, 125, 100, 100, 85], 68)
 ];
 
 const sizeByProductCode = getSizeByProductCode();
