@@ -154,7 +154,7 @@ const DEFAULT_PRODUCTS = [
   ...buildProducts("N", "N", Array(7).fill(30), Array(7).fill(20)),
   ...buildProducts("Q", "Q", Array(38).fill(0)),
   ...buildProducts("Q", "Q", Array(26).fill(0), undefined, 47),
-  ...buildProducts("AD", "AD", [125, 155, 125, 125, 110], [100, 125, 100, 100, 85], 68)
+  ...buildProducts("AD", "AD", [140, 150, 135, 135, 135], [110, 130, 100, 100, 100], 68)
 ];
 
 const sizeByProductCode = getSizeByProductCode();
