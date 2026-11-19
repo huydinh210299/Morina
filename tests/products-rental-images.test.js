@@ -30,22 +30,21 @@ const renderGallery = (data) => ejs.renderFile(path.join(__dirname, "../views/pa
   ...data, formatCurrency: (value) => `${value} đ`, formatDateTime: (value) => new Date(value).toISOString()
 });
 
-test("rental gallery groups current and future item times by product, excludes past lines and sorts schedules", async (t) => {
+test("rental gallery includes overdue, current and future unreturned items and sorts schedules", async (t) => {
   mockCatalog(t);
-  let cutoff;
+  const cutoff = new Date("2026-11-19T08:00:00.000Z");
+  t.mock.timers.enable({ apis: ["Date"], now: cutoff.getTime() });
   t.mock.method(Order, "aggregate", async (pipeline) => {
-    assert.equal(pipeline[0].$match.returned, false);
-    cutoff = pipeline[0].$match["products.endTime"].$gte;
+    assert.deepEqual(pipeline[0], { $match: { returned: false } });
     assert.deepEqual(pipeline[1], { $unwind: "$products" });
-    // Recheck the individual line: an upcoming line must not include past siblings.
-    assert.equal(pipeline[2].$match["products.endTime"].$gte, cutoff);
+    assert.deepEqual(pipeline[2], { $match: { "products.product": { $ne: null } } });
     return [{ _id: productId }];
   });
   const offset = (ms) => new Date(cutoff.getTime() + ms);
   t.mock.method(Order, "find", (filter) => {
     assert.equal(filter.returned, false);
     assert.deepEqual(filter.products.$elemMatch.product.$in, [productId]);
-    assert.equal(filter.products.$elemMatch.endTime.$gte, cutoff);
+    assert.equal(filter.products.$elemMatch.endTime, undefined);
     return chain([
       { _id: orderId, customerName: "Lan <script>", phone: "0901234567", products: [
         { product: productId, startTime: offset(10000), endTime: offset(20000) },
@@ -62,14 +61,16 @@ test("rental gallery groups current and future item times by product, excludes p
   const data = await productService.getRentalImageIndexData();
   assert.equal(data.products.length, 1);
   const schedule = data.products[0].rentSchedule;
-  assert.equal(schedule.length, 3);
-  assert.deepEqual(schedule.map((item) => item.isCurrent), [true, true, false]);
-  assert.equal(schedule[2].orderId, orderId);
-  assert.equal(schedule[2].startTime.getTime(), cutoff.getTime() + 10000);
+  assert.equal(schedule.length, 4);
+  assert.deepEqual(schedule.map((item) => item.isCurrent), [false, true, true, false]);
+  assert.deepEqual(schedule.map((item) => item.isOverdue), [true, false, false, false]);
+  assert.equal(schedule[3].orderId, orderId);
+  assert.equal(schedule[3].startTime.getTime(), cutoff.getTime() + 10000);
   const html = await renderGallery(data);
   assert.match(html, /Mẫu có lịch thuê/);
   assert.match(html, /Đang trong lịch thuê/);
   assert.match(html, /Sắp bắt đầu/);
+  assert.match(html, /Quá hạn trả/);
   assert.match(html, new RegExp(`/orders/${orderId}`));
   assert.match(html, /Lan &lt;script&gt;/);
   assert.match(html, /Chưa có ảnh/);
@@ -109,11 +110,11 @@ test("empty rental gallery and malformed category render safely without loading 
   assert.equal(data.filters.size, "");
   assert.equal(data.pagination.currentPage, 1);
   assert.equal(foundOrders.mock.callCount(), 0);
-  assert.match(await renderGallery(data), /Không có mẫu nào đang trong lịch thuê/);
+  assert.match(await renderGallery(data), /Không có mẫu nào quá hạn trả, đang trong lịch thuê/);
   const invalid = await productService.getRentalImageIndexData({ category: "invalid" });
   assert.equal(invalid.pagination.totalItems, 0);
   assert.equal(counted.mock.callCount(), 1);
-  assert.match(await renderGallery(invalid), /Không có mẫu nào đang trong lịch thuê/);
+  assert.match(await renderGallery(invalid), /Không có mẫu nào quá hạn trả, đang trong lịch thuê/);
 });
 
 test("ordinary image gallery still includes all products and never queries rental schedules", async (t) => {

@@ -122,7 +122,7 @@
                   <li class="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm">
                     <div class="flex flex-wrap items-center justify-between gap-2">
                       <a href="/orders/<%= item.orderId %>" class="font-bold text-brand-700 transition hover:underline">Đơn #<%= item.orderCode %></a>
-                      <span class="rounded-full px-2 py-1 text-xs font-semibold <%= item.isCurrent ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' %>"><%= item.isCurrent ? "Đang trong lịch thuê" : "Sắp bắt đầu" %></span>
+                      <span class="rounded-full px-2 py-1 text-xs font-semibold <%= item.isOverdue ? 'bg-rose-100 text-rose-800' : item.isCurrent ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' %>"><%= item.isOverdue ? "Quá hạn trả" : item.isCurrent ? "Đang trong lịch thuê" : "Sắp bắt đầu" %></span>
                     </div>
                     <p class="mt-2 break-words font-semibold text-slate-900"><%= item.customerName %></p>
                     <p class="mt-1 text-slate-500"><%= item.phone %></p>

@@ -169,13 +169,13 @@ const getRentalSchedulesByProduct = async (products, now) => {
 
   const orders = await Order.find({
     returned: false,
-    products: { $elemMatch: { product: { $in: products.map((product) => product._id) }, endTime: { $gte: now } } }
+    products: { $elemMatch: { product: { $in: products.map((product) => product._id) } } }
   }).select("customerName phone products").lean();
 
   for (const order of orders) {
     for (const item of order.products) {
       const schedule = schedules.get(String(item.product));
-      if (!schedule || new Date(item.endTime) < now) continue;
+      if (!schedule) continue;
 
       schedule.push({
         orderId: order._id,
@@ -184,7 +184,8 @@ const getRentalSchedulesByProduct = async (products, now) => {
         phone: order.phone,
         startTime: item.startTime,
         endTime: item.endTime,
-        isCurrent: new Date(item.startTime) <= now
+        isCurrent: new Date(item.startTime) <= now && new Date(item.endTime) >= now,
+        isOverdue: new Date(item.endTime) < now
       });
     }
   }
@@ -203,10 +204,10 @@ const getImageIndexData = async (query = {}, { scheduledOnly = false } = {}) => 
     activeTab: scheduledOnly ? "rental-images" : "product-images",
     showRentSchedule: scheduledOnly,
     description: scheduledOnly
-      ? "Xem ảnh các mẫu đang trong lịch thuê hoặc có lịch thuê sắp tới, kèm đơn hàng và khung giờ thuê."
+      ? "Xem ảnh các mẫu quá hạn trả, đang trong lịch thuê hoặc có lịch thuê sắp tới, kèm đơn hàng chưa trả và khung giờ thuê."
       : "Xem mã sản phẩm và ảnh từ Google Drive.",
     emptyMessage: scheduledOnly
-      ? "Không có mẫu nào đang trong lịch thuê hoặc có lịch thuê sắp tới phù hợp với bộ lọc."
+      ? "Không có mẫu nào quá hạn trả, đang trong lịch thuê hoặc có lịch thuê sắp tới phù hợp với bộ lọc."
       : "Không có sản phẩm phù hợp với bộ lọc hiện tại."
   };
   const requestedPage = Math.max(parseInt(query.page, 10) || 1, 1);
@@ -260,9 +261,9 @@ const getImageIndexData = async (query = {}, { scheduledOnly = false } = {}) => 
 
   if (scheduledOnly) {
     const scheduledProducts = await Order.aggregate([
-      { $match: { returned: false, "products.endTime": { $gte: now } } },
+      { $match: { returned: false } },
       { $unwind: "$products" },
-      { $match: { "products.product": { $ne: null }, "products.endTime": { $gte: now } } },
+      { $match: { "products.product": { $ne: null } } },
       { $group: { _id: "$products.product" } }
     ]);
     conditions._id = { $in: scheduledProducts.map((item) => item._id) };
